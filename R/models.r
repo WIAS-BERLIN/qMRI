@@ -125,7 +125,7 @@ R1conf <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     CIE1 <- (th1-th2*fc1)/(th1*fc2-th2*fc3)
     CIR1 <- -log(CIE1)/TR
     qqn <- if(is.null(df)) qnorm(1-alpha/2) else qt(1-alpha/2,df)
-    CIR2star <- R2star + c(-1,1)*qqn*sqrt(si2["R2star","R2star"])
+    CIR2star <- R2star + c(-qqn,qqn)/sqrt(si2["R2star","R2star"])
     list(E1=E1,CIE1=sort(CIE1),R1=R1,CIR1=sort(CIR1),R2star=R2star,CIR2star=CIR2star)
    }
    

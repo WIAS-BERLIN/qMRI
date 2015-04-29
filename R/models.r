@@ -98,8 +98,8 @@ R1conf <- function(theta,si2,aT1,aPD,TR=1,alpha=0.05){
        }
     th <- theta[c("ST1","SPD")]
     Amat <- si2[c("ST1","SPD"),c("ST1","SPD")][c(1,2,4)]
-    qnsq <- qnorm(1-alpha/2)^2
-    
+#    qnsq <- qnorm(1-alpha/2)^2
+    qnsq <- qchisq(1-alpha,2)    
     th2ofth1 <- function(th1,th,Amat,qnsq){
         th1diff <- (th1-th[1])
         p <- th[2]- th1diff*Amat[2]/Amat[3]

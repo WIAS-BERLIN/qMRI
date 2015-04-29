@@ -80,11 +80,12 @@ reparamtrizeconstTR <- function(th,a1,a2,TR){
    M <- th[2]/th[3]
 }
 
-R1conf <- function(theta,si2,aT1,aPD,TR=1,alpha=0.05){
+R1conf <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     ##
     ##   construct confidence region for parameter E1 
     ##   parameters are expected to be named as "ST1", "SPD" and "R2star", 
     ##          parameter "SMT" is not used
+    ##  si2 - inverse covariance matrix of parameters 
     ##
     fc1 <- sin(aT1)/sin(aPD)
     fc2 <- cos(aT1)
@@ -92,14 +93,15 @@ R1conf <- function(theta,si2,aT1,aPD,TR=1,alpha=0.05){
     th <- theta[c("ST1","SPD")]
     E1 <- (th[1]-th[2]*fc1)/(th[1]*fc2-th[2]*fc3)
     R1 <- -log(E1)/TR
+    R2star <- theta["R2star"]
     if(any(theta==0)){
     ## no interior solution, unable to provide confidence regions
-       return(list(E1=E1,CIE1=c(NA,NA),R1=R1,CIR1=c(NA,NA)))
+       return(list(E1=E1,CIE1=c(NA,NA),R1=R1,CIR1=c(NA,NA),R2star=R2star,CIR2star=c(NA,NA)))
        }
     th <- theta[c("ST1","SPD")]
     Amat <- si2[c("ST1","SPD"),c("ST1","SPD")][c(1,2,4)]
 #    qnsq <- qnorm(1-alpha/2)^2
-    qnsq <- qchisq(1-alpha,2)    
+    qnsq <- if(is.null(df)) qchisq(1-alpha,2) else 2*qf(1-alpha,2,df)    
     th2ofth1 <- function(th1,th,Amat,qnsq){
         th1diff <- (th1-th[1])
         p <- th[2]- th1diff*Amat[2]/Amat[3]
@@ -122,7 +124,9 @@ R1conf <- function(theta,si2,aT1,aPD,TR=1,alpha=0.05){
     th2 <- th2ofth1(th1[2],th,Amat,qnsq)
     CIE1 <- (th1-th2*fc1)/(th1*fc2-th2*fc3)
     CIR1 <- -log(CIE1)/TR
-    list(E1=E1,CIE1=sort(CIE1),R1=R1,CIR1=sort(CIR1))
+    qqn <- if(is.null(df)) qnorm(1-alpha/2) else qt(1-alpha/2,df)
+    CIR2star <- R2star + c(-1,1)*qqn*sqrt(si2["R2star","R2star"])
+    list(E1=E1,CIE1=sort(CIE1),R1=R1,CIR1=sort(CIR1),R2star=R2star,CIR2star=CIR2star)
    }
    
    

@@ -1,7 +1,7 @@
 rimage <- function(x = seq(0, 1, length.out = nrow(z)), 
                    y = seq(0, 1, length.out = ncol(z)),
                    z, zlim=NULL, col=grey(0:255/255),
-                   low="blue", up="red", ...){
+                   low="blue", up="gold", NAcolor="red",...){
   if (missing(z)) {
     if (!missing(x)) {
       if (is.list(x)) {
@@ -26,4 +26,5 @@ rimage <- function(x = seq(0, 1, length.out = nrow(z)),
      col <- c(low,col,up)
    }
    image(x, y, z, zlim=zlim, col=col, ...)
+   if(any(is.na(z))) image(x,y,is.na(z),col=c(NA,NAcolor),add=TRUE)
 }

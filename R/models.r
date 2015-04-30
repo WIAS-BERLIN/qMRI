@@ -80,7 +80,8 @@ reparamtrizeconstTR <- function(th,a1,a2,TR){
    M <- th[2]/th[3]
 }
 
-R1conf <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
+#   R1conf <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
+ESTATICS.confidence <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     ##
     ##   construct confidence region for parameter E1 
     ##   parameters are expected to be named as "ST1", "SPD" and "R2star", 

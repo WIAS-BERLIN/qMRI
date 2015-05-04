@@ -1,2 +1,4 @@
 useDynLib(qMRI)
 exportPattern("^[[:alpha:]]+")
+
+import(oro.nifti, stringr)

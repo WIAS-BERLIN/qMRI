@@ -826,7 +826,7 @@ setMethod("estimateESTATICS",
   
              modelCoeff <- new("ESTATICSModel",
                                isConv = array(FALSE, sdim),
-                               invCov = array(0, c(npar, npar, sdim))
+                               invCov = array(0, c(npar, npar, sdim)),
                                TEScale = TEScale,
                                dataScale = dataScale,
                                mask = object@mask,

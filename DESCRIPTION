@@ -8,7 +8,7 @@ Author@R: c(person("Joerg", "Polzehl", role = c("aut", "cre"),
           person("Karsten", "Tabelow", role = c("aut"),
                     email = "karsten.tabelow@wias-berlin.de")) 
 Depends: R (>= 3.1.0), awsMethods (>= 1.0-1), adimpro, rgl
-Imports: methods, parallel, oro.nifti (>= 0.3.9), oro.dicom, gsl
+Imports: methods, parallel, oro.nifti (>= 0.3.9), oro.dicom, gsl, stringr
 LazyData: TRUE
 Description: This package contains a selection of tools for quantitave 
         analysis of MR images or (multimodal) collections of such images

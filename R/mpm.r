@@ -762,12 +762,14 @@ readMPMdata <- function(t1Files  = NULL,
   }
   
   invisible(new("mpmData",
+                .Data = ddata,
                 t1Files = t1Files,
                 mtFiles = mtFiles,
                 pdFiles = pdFiles,
                 TR = TR,
                 TE = TE,
                 FA = FA,
+                smoothPar = c(0, 1, 1),
                 maskFile = maskFile,
                 mask = mask,
                 model = as.integer(model),
@@ -825,10 +827,13 @@ setMethod("estimateESTATICS",
              }
   
              modelCoeff <- new("ESTATICSModel",
-                               isConv = array(FALSE, sdim),
-                               invCov = array(0, c(npar, npar, sdim)),
+                               .Data = array(0, c(npar, object@sdim)),
+                               isConv = array(FALSE, object@sdim),
+                               invCov = array(0, c(npar, npar, object@sdim)),
+                               bi = array(1, object@sdim),
                                TEScale = TEScale,
                                dataScale = dataScale,
+                               smoothPar = c(0, 1, 1),
                                mask = object@mask,
                                model = object@model,
                                sdim = object@sdim,
@@ -877,7 +882,7 @@ setMethod("estimateESTATICS",
                      }
                      sres <- summary(res) 
                      modelCoeff@isConv[x, y, z] <- res$convInfo$isConv
-                     modelCoeff[, x, y, z] <- sres$coefficients[, 1]
+                     modelCoeff@.Data[, x, y, z] <- sres$coefficients[, 1]
                      if (sres$sigma != 0) {
                        modelCoeff@invCov[, , x, y, z] <- solve(sres$cov.unscaled) / sres$sigma^2
                      } else {
@@ -902,8 +907,9 @@ setGeneric("smoothESTATICS", function(object,  ...) standardGeneric("smoothESTAT
 setMethod("smoothESTATICS", 
           "ESTATICSModel",
           function(object, 
+                   mpmData = NULL,
+                   smoothedDataFile = NULL,
                    kstar = 16, 
-                   smoothData = FALSE,
                    alpha = 0.05, 
                    wghts = NULL,
                    verbose = TRUE) {
@@ -930,7 +936,16 @@ setMethod("smoothESTATICS",
             bi <- zobj$bi
             
             ## if we plan to smooth the original data too, we take special care in the last step
-            if (smoothData) kstar <- kstar-1
+            if (!is.null(mpmData)) {
+              if (is.null(smoothedDataFile)) stop("need file name for smoothed data")
+              if (file.exists(smoothedDataFile)) {
+                cont <- readline("file", smoothedDataFile, "already exists. Continue [Y/N]?")
+                if (toupper(cont) != "Y") stop("stopping")
+              }
+              if(length(mpmData) != 4 | any(object@sdim != dim(mpmData)[-1]))  
+                stop("incompatible dimensions of model parameters and original data")
+              kstar <- kstar-1
+            }
             
             ## find the number of usable cores
             mc.cores <- setCores(, reprt = FALSE)
@@ -993,7 +1008,7 @@ setMethod("smoothESTATICS",
               gc()
               
             }
-            if (smoothData) { ##  modified last step; smoothing data, too
+            if (!is.null(mpmData)) { ##  modified last step; smoothing data, too
               
               ## we need the number of files for some array dimensions
               nve <- object@nFiles
@@ -1012,7 +1027,7 @@ setMethod("smoothESTATICS",
                                as.integer(n1),
                                as.integer(n2),
                                as.integer(n3),
-                               as.double(get("ddata", thisEnv)),
+                               as.double(mpmData@.Data),
                                as.integer(nve),
                                hakt = as.double(hakt),
                                as.double(lambda),
@@ -1031,6 +1046,22 @@ setMethod("smoothESTATICS",
               ## assign the smoothed data
               dim(zobj$thext) <- c(object@nFiles, object@sdim)
               
+              mpmDatasmoothed <- new("mpmData",
+                                     .Data = zobj$thext,
+                                     t1Files = mpmData@t1Files,
+                                     mtFiles = mpmData@mtFiles,
+                                     pdFiles = mpmData@pdFiles,
+                                     TR = mpmData@TR,
+                                     TE = mpmData@TE,
+                                     FA = mpmData@FA,
+                                     smoothPar = c(lambda, hakt, alpha),
+                                     maskFile = mpmData@maskFile,
+                                     mask = mpmData@mask,
+                                     model = mpmData@model,
+                                     sdim = mpmData@sdim,
+                                     nFiles = mpmData@nFiles)
+              save(mpmDatasmoothed, file = smootheDataFile)
+              
               ## use maximum ni
               zobj$bi <- pmax(bi, zobj$bi)
               
@@ -1044,11 +1075,7 @@ setMethod("smoothESTATICS",
                 mae <- c(mae, m1)
                 setTxtProgressBar(pb, i)
               }
-              
-              
-              
-            } else {
-              thest <- NULL
+                            
             }
             if (verbose) close(pb)
             if (verbose) print(protocol)
@@ -1058,16 +1085,21 @@ setMethod("smoothESTATICS",
             dim(zobj$bi) <- c(n1, n2, n3)
             
             ## assign values
-            assign("lambda", lambda, thisEnv)
-            assign("hakt", hakt, thisEnv)
-            assign("alpha", alpha, thisEnv)
-            assign("mae", mae, thisEnv)
-            assign("modelCoeffSmoothed", zobj$theta, thisEnv)      
-            assign("bi", zobj$bi, thisEnv)      
+            modelCoeffsmooth <- new("ESTATICSModel",
+                                    .Data = zobj$theta,
+                                    isConv = object@isConv,
+                                    invCov = object@invCov,
+                                    bi = zobj$bi,
+                                    TEScale = object@TEScale,
+                                    dataScale = object@dataScale,
+                                    smoothPar = c(lambda, hakt, alpha),
+                                    mask = object@mask,
+                                    model = object@model,
+                                    sdim = object@sdim,
+                                    nFiles = object@nFiles)
             
-            ## END function smoothESTATICS()      
-            
-            
+            return(invisible(modelCoeffsmooth))
+            ## END function smoothESTATICS()  
           })
 
 

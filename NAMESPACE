@@ -1,4 +1,5 @@
 useDynLib(qMRI)
 exportPattern("^[[:alpha:]]+")
+#exportClasses("mpmData")
 
 import(oro.nifti, stringr)

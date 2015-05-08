@@ -473,10 +473,11 @@ calculateQI <- function(mpmESTATICSModel,
     mtFA <- mpmESTATICSModel$FA[length(mpmESTATICSModel$t1Files) + 1]
     mtTR <- mpmESTATICSModel$TR[length(mpmESTATICSModel$t1Files) + 1]
     alphamt <- b1Map * mtFA / 180 * pi
-    E2 <- E1^(mtTR/(mtTR-TR2))
-    enom <- mpmESTATICSModel$modelCoeff[2, , , ] - (1 - E2) * sin(alphamt) * PD
-    denom <- mpmESTATICSModel$modelCoeff[2, , , ] * cos(alphamt) *E1*E2 - PD * E2 * (1 - E1) * sin(alphamt)
-    delta <- enom / denom
+    E1mt <- E1^(mtTR/t1TR)
+    E2mt <- E1^(TR2/t1TR)
+    enom <- mpmESTATICSModel$modelCoeff[2, , , ]  * mpmESTATICSModel$dataScale - (1 - E2mt) * sin(alphamt) * PD
+    denom <- mpmESTATICSModel$modelCoeff[2, , , ]  * mpmESTATICSModel$dataScale * cos(alphamt) *E1mt + PD * (E2mt  - E1mt) * sin(alphamt)
+    delta <- 1 - enom / denom
     rm(alphamt, enom, denom)
     if (verbose) cat("done\n")
   } else {
@@ -533,7 +534,7 @@ imageQI <- function(qi,
     rimage(indx, indy, r2star, zlim = c(0, 0.05), main = "R2star")
     rimage(indx, indy, r1, zlim = c(0.0002, 0.0015), main = "R1")
     rimage(indx, indy, pd, zlim = c(0, 10000), main = "PD")
-    rimage(indx, indy, delta, zlim = c(0, 1), main = "MT")
+    rimage(indx, indy, delta, zlim = c(0, 0.03), main = "MT")
   } else {
     def.par <- par(mfrow = c(2, 2), mar = c(3, 3, 3, 0))
     rimage(indx, indy, r2star, zlim = c(0, 0.05), main = "R2star")
@@ -697,7 +698,8 @@ writeESTATICS <- function(mpmESTATICSModel,
   
 }
 
-estimateQIconf <- function(mpmESTATICSmodel) {
+estimateQIconf <- function(mpmESTATICSmodel,
+                           verbose = TRUE) {
 
   if (mpmESTATICSmodel$model != 2) stop("only full model implemented!")
   
@@ -709,11 +711,15 @@ estimateQIconf <- function(mpmESTATICSmodel) {
   CIR1 <- array(0, c(2, mpmESTATICSmodel$sdim))
   R2 <- array(0, mpmESTATICSmodel$sdim)
   CIR2 <- array(0, c(2, mpmESTATICSmodel$sdim))
-  for (x in 1:mpmESTATICSmodel$sdim[1]) {
-    for (x in 1:mpmESTATICSmodel$sdim[2]) {
-      for (z in 1:mpmESTATICSmodel$sdim[3]) {
+  for (z in 1:mpmESTATICSmodel$sdim[3]) {
+    for (y in 1:mpmESTATICSmodel$sdim[2]) {
+      for (x in 1:mpmESTATICSmodel$sdim[1]) {
         if (mpmESTATICSmodel$mask[x, y, z]) {
-          zz <- R1conf(mpmESTATICSmodel$modelCoeff[, x, y, z], mpmESTATICSmodel$invCov[, , x, y, z] / sqrt(mpmESTATICSmodel$bi[x, y, z]), mpmESTATICSmodel$FA[1]*pi/180, mpmESTATICSmodel$FA[length(mpmESTATICSmodel$t1Files) + length(mpmESTATICSmodel$mtFiles) + 1]*pi/180, mpmESTATICSmodel$TR[1], df=mpmESTATICSmodel$nFiles-4, 0.05)
+          if (is.null(mpmESTATICSmodel$bi)) {
+            zz <- ESTATICS.confidence(mpmESTATICSmodel$modelCoeff[, x, y, z], mpmESTATICSmodel$invCov[, , x, y, z], mpmESTATICSmodel$FA[1]*pi/180, mpmESTATICSmodel$FA[length(mpmESTATICSmodel$t1Files) + length(mpmESTATICSmodel$mtFiles) + 1]*pi/180, mpmESTATICSmodel$TR[1], df=mpmESTATICSmodel$nFiles-4, 0.05)            
+          } else {
+            zz <- ESTATICS.confidence(mpmESTATICSmodel$modelCoeff[, x, y, z], mpmESTATICSmodel$invCov[, , x, y, z] * mpmESTATICSmodel$bi[x, y, z], mpmESTATICSmodel$FA[1]*pi/180, mpmESTATICSmodel$FA[length(mpmESTATICSmodel$t1Files) + length(mpmESTATICSmodel$mtFiles) + 1]*pi/180, mpmESTATICSmodel$TR[1], df=mpmESTATICSmodel$nFiles-4, 0.05)
+          }
           R2[x, y, z] <- zz$R2star
           R1[x, y, z] <- zz$R1
           CIR1[, x, y, z] <- zz$CIR1
@@ -721,17 +727,18 @@ estimateQIconf <- function(mpmESTATICSmodel) {
         }
       }
     }
+    if (verbose) cat(z, format(Sys.time()), "\n")
   }
   
   invisible(list(R1 = R1,
                  CIR1 = CIR1,
                  R2star = R2,
-                 CIR2star = CIR2star,
-                 model = mpmESTATICSModel$model,
-                 t1Files = mpmESTATICSModel$t1Files,
-                 mtFiles = mpmESTATICSModel$mtFiles,
-                 pdFiles = mpmESTATICSModel$pdFiles,
-                 mask = mpmESTATICSModel$mask))
+                 CIR2star = CIR2,
+                 model = mpmESTATICSmodel$model,
+                 t1Files = mpmESTATICSmodel$t1Files,
+                 mtFiles = mpmESTATICSmodel$mtFiles,
+                 pdFiles = mpmESTATICSmodel$pdFiles,
+                 mask = mpmESTATICSmodel$mask))
 }
 
 writeQIconf <- function(qiConf,
@@ -754,7 +761,7 @@ writeQIconf <- function(qiConf,
     r2Ufile <- "R2upper"
   }
   
-  ds <- readNIfTI(mpmESTATICSModel$t1Files[1], reorient = FALSE)
+  ds <- readNIfTI(qiConf$t1Files[1], reorient = FALSE)
   ds@datatype <- 16
   ds@magic <- "n+1"
   ds@vox_offset <- 352

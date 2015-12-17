@@ -151,7 +151,7 @@ estimateESTATICS <- function(mpmdata,
     indPD <- order(mpmdata$TE[as.logical(xmat[, 3])])[1] + sum(xmat[, 1]) + sum(xmat[, 2]) 
     npar <- 4
   } else {
-    indPD <- order(.self$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1]) 
+    indPD <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1]) 
     npar <- 3
   }
   
@@ -428,6 +428,7 @@ calculateQI <- function(mpmESTATICSModel,
     if (verbose) cat("reading B1 correction file from", b1File, "\n")
     b1Map <- readNIfTI(b1File, reorient = FALSE)/100
     b1Map[b1Map < 0] <- 0
+    if (any(dim(b1Map) != mpmESTATICSModel$sdim)) stop("dimension of B1 map does not match data dimension")
   } else {
     if (verbose) cat("no B1 correction\n")
     b1Map <- array(1, mpmESTATICSModel$sdim)

@@ -3,6 +3,9 @@ readMPMData  <-  function(t1Files  = NULL,
                           mtFiles  = NULL,
                           maskFile = NULL,
                           sdim     = NULL,
+                          TR       = NULL,
+                          TE       = NULL,
+                          FA       = NULL,
                           verbose  = TRUE) {
   
   ## we need at least T1w and PDw files
@@ -27,7 +30,15 @@ readMPMData  <-  function(t1Files  = NULL,
   ddata <- array(0, c(nFiles, prod(sdim)))
   
   ## for each files we have a TR, TE, and flip angle (FA)
-  TR <- TE <- FA <- numeric(nFiles)
+  if (is.null(TR) || is.null(TE) || is.null(FA)) {
+    TR <- TE <- FA <- numeric(nFiles)
+    readParameterFlag <- TRUE
+  } else {
+    if (length(TR) != nFiles) stop("not enough TR value, need as many as file!")
+    if (length(TE) != nFiles) stop("not enough TE value, need as many as file!")
+    if (length(FA) != nFiles) stop("not enough FA value, need as many as file!")
+    readParameterFlag <- FALSE
+  } 
   
   ## ... now we read all data volumes and extract the TR, TE, and FA values for each ...
   ii <- 1
@@ -37,13 +48,15 @@ readMPMData  <-  function(t1Files  = NULL,
   for (i in 1:length(t1Files)) {
     ds <- readNIfTI(t1Files[i], reorient = FALSE)
     ddata[ii, ] <- ds
-    ## IMPORTANT: This is special to Siawoosh data
-    res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
-    for (nn in 1:dim(res[[1]])[1]) {
-      if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
-      if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
-      if (res[[1]][nn, 2] == "FA") FA[ii] <- as.numeric(res[[1]][nn, 3])
-    }
+    if(readParameterFlag) {
+      ## IMPORTANT: This is special to Siawoosh data
+      res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
+      for (nn in 1:dim(res[[1]])[1]) {
+        if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
+        if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
+        if (res[[1]][nn, 2] == "FA") FA[ii] <- as.numeric(res[[1]][nn, 3])
+      }
+    } 
     ii <- ii + 1
     if (verbose) setTxtProgressBar(pb, i)
   }
@@ -55,12 +68,14 @@ readMPMData  <-  function(t1Files  = NULL,
     for (i in 1:length(mtFiles)) {
       ds <- readNIfTI(mtFiles[i], reorient = FALSE)
       ddata[ii, ] <- ds
-      ## IMPORTANT: This is special to Siawoosh data
-      res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
-      for (nn in 1:dim(res[[1]])[1]) {
-        if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
-        if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
-        if (res[[1]][nn, 2] == "FA") FA[ii] <- as.numeric(res[[1]][nn, 3])
+      if(readParameterFlag) {
+        ## IMPORTANT: This is special to Siawoosh data
+        res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
+        for (nn in 1:dim(res[[1]])[1]) {
+          if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
+          if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
+          if (res[[1]][nn, 2] == "FA") FA[ii] <- as.numeric(res[[1]][nn, 3])
+        }
       }
       ii <- ii + 1
       if (verbose) setTxtProgressBar(pb, i)
@@ -73,12 +88,14 @@ readMPMData  <-  function(t1Files  = NULL,
   for (i in 1:length(pdFiles)) {
     ds <- readNIfTI(pdFiles[i], reorient = FALSE)
     ddata[ii, ] <- ds
-    ## IMPORTANT: This is special to Siawoosh data
-    res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
-    for (nn in 1:dim(res[[1]])[1]) {
-      if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
-      if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
-      if (res[[1]][nn, 2] == "FA") FA[ii] <- as.numeric(res[[1]][nn, 3])
+    if(readParameterFlag) {
+      ## IMPORTANT: This is special to Siawoosh data
+      res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
+      for (nn in 1:dim(res[[1]])[1]) {
+        if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
+        if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
+        if (res[[1]][nn, 2] == "FA") FA[ii] <- as.numeric(res[[1]][nn, 3])
+      }
     }
     ii <- ii + 1
     if (verbose) setTxtProgressBar(pb, i)
@@ -438,6 +455,7 @@ calculateQI <- function(mpmESTATICSModel,
   t1FA <- mpmESTATICSModel$FA[1]
   pdFA <- mpmESTATICSModel$FA[length(mpmESTATICSModel$t1Files) + length(mpmESTATICSModel$mtFiles) + 1]
   t1TR <- mpmESTATICSModel$TR[1]
+  pdTR <- mpmESTATICSModel$TR[length(mpmESTATICSModel$t1Files) + length(mpmESTATICSModel$mtFiles) + 1]
   
   ## calculate E1
   if (verbose) cat("calculating R1 ... ")
@@ -458,6 +476,16 @@ calculateQI <- function(mpmESTATICSModel,
   E1 <- enum/denom
   rm(enum, denom, COSalphapd, SINalphapd)
   R1 <- -log(E1)/t1TR
+
+  ### RF spoiling correction Preibisch and Deichmann MRM 61 (2009) 125-135
+  ### These coefficients depend on the sequence!! See getPolynomsP2_ab and
+  ### MTprot in VBQ
+  P2_a = getPolynomsP2_ab(pdTR, t1TR, pdFA, t1FA, verbose)$P2_a;
+  P2_b = getPolynomsP2_ab(pdTR, t1TR, pdFA, t1FA, verbose)$P2_b;
+  R1 = R1 / ((P2_a[1]*b1Map.^2 + P2_a[2]*b1Map + P2_a[3]) .* R1 + (P2_b[1]*b1Map.^2 + P2_b[2]*b1Map + P2_b[3]));
+  E1 = exp(- R1 * t1TR);
+  ### END spoiling correction
+  
   if (verbose) cat("done\n")
   
   ## calculate PD
@@ -480,14 +508,18 @@ calculateQI <- function(mpmESTATICSModel,
     denom <- mpmESTATICSModel$modelCoeff[2, , , ]  * mpmESTATICSModel$dataScale * cos(alphamt) *E1mt + PD * (E2mt  - E1mt) * sin(alphamt)
     delta <- 1 - enom / denom
     rm(alphamt, enom, denom)
+    
+    ### correction for MT saturation pulse. see Helms ISMRM 23 (2015) 3360
+    delta = 100 .* delta .* (1 - 0.4) ./ (1 - 0.4 * b1Map) ./ b1Map.^2;
+
     if (verbose) cat("done\n")
   } else {
     delta <- NULL
   }  
   
   invisible(list(b1Map = b1Map,
-                 R1 = R1,
-                 R2star = if (mpmESTATICSModel$model == 2) mpmESTATICSModel$modelCoeff[4, , , ]/mpmESTATICSModel$TEScale else mpmESTATICSModel$modelCoeff[3, , , ]/mpmESTATICSModel$TEScale,
+                 R1 = R1 * 1000,
+                 R2star = if (mpmESTATICSModel$model == 2) 1000 * mpmESTATICSModel$modelCoeff[4, , , ]/mpmESTATICSModel$TEScale else 1000 * mpmESTATICSModel$modelCoeff[3, , , ]/mpmESTATICSModel$TEScale,
                  PD = PD,
                  delta = delta,
                  model = mpmESTATICSModel$model,
@@ -793,4 +825,62 @@ writeQIconf <- function(qiConf,
   writeNIfTI(as.nifti(qiConf$CIR2star[2, , , ], ds), file = r2Ufile)
   if (verbose) cat("done\n")
   
+}
+
+getPolynomsP2_ab <- function(TR_pdw, TR_t1w, fa_pdw, fa_t1w, verbose = TRUE) {
+
+  ## Settings for R. Deichmann steady state correction using T2 = 64ms at 3T
+  ## Correction parameters were calculated for 3 different parameter sets:
+  if ((TR_pdw == 23.7) && (TR_t1w == 18.7) && (fa_pdw == 6) && (fa_t1w == 20)) {
+    ## 1) classic FIL protocol (Weiskopf et al., Neuroimage 2011):
+    ## PD-weighted: TR=23.7ms; a=6deg; T1-weighted: TR=18.7ms; a=20deg
+    if (verbose) cat("Spoiling correction ... Classic FIL protocol\n")
+    P2_a <- c(78.9228195006542,   -101.113338489192,    47.8783287525126)
+    P2_b <- c(-0.147476233142129,    0.126487385091045,  0.956824374979504)    
+  } else if ((TR_pdw == 24.5) && (TR_t1w == 24.5) && (fa_pdw == 5) && (fa_t1w == 29)) {
+    ## 2) new FIL/Helms protocol
+    ## PD-weighted: TR=24.5ms; a=5deg; T1-weighted: TR=24.5ms; a=29deg
+    if (verbose) cat("Spoiling correction ... New FIL/Helms protocol\n")
+    P2_a <- c(93.455034845930480, -120.5752858196904,   55.911077913369060)
+    P2_b <- c(-0.167301931434861,    0.113507432776106,  0.961765216743606)
+  } else if ((TR_pdw == 24.0) && (TR_t1w == 19.0) && (fa_pdw == 6) && (fa_t1w == 20)) {
+    ## 3) Siemens product sequence protocol used in Lausanne (G Krueger)
+    ## PD-weighted: TR=24ms; a=6deg; T1-weighted: TR=19ms; a=20deg
+    if (verbose) cat("Spoiling correction ... Siemens product Lausanne (GK) protocol\n")
+    P2_a <- c(67.023102027100880, -86.834117103841540, 43.815818592349870)
+    P2_b <- c(-0.130876849571103,   0.117721807209409,  0.959180058389875)
+  } else if ((TR_pdw == 23.7) && (TR_t1w == 23.7) && (fa_pdw == 6) && (fa_t1w == 28)) {
+    ## 4) High-res (0.8mm) FIL protocol:
+    ## PD-weighted: TR=23.7ms; a=6deg; T1-weighted: TR=23.7ms; a=28deg
+    if (verbose) cat("Spoiling correction ... High-res FIL protocol\n")
+    P2_a <- c( 1.317257319014170e+02, -1.699833074433892e+02, 73.372595677371650)
+    P2_b <- c(-0.218804328507184,      0.178745853134922,      0.939514554747592)
+  } else if ((TR_pdw == 25.25) && (TR_t1w == 25.25) && (fa_pdw == 5) && (fa_t1w == 29)) {
+    ## 4)NEW  High-res (0.8mm) FIL protocol:
+    ## PD-weighted: TR=25.25ms; a=5deg; T1-weighted: TR=TR=25.25ms; a=29deg
+    if (verbose) cat("Spoiling correction ... High-res FIL protocol\n")
+    P2_a <- c(88.8623036106612,   -114.526218941363,    53.8168602253166)
+    P2_b <- c(-0.132904017579521,    0.113959390779008,  0.960799295622202)
+  } else if ((TR_pdw == 24.5) && (TR_t1w == 24.5) && (fa_pdw == 6) && (fa_t1w == 21)) {
+    ## 5)NEW  1mm protocol - seq version v2k:
+    ## PD-weighted: TR=24.5ms; a=6deg; T1-weighted: TR=24.5ms; a=21deg
+    if (verbose) cat("Spoiling correction ... v2k protocol")
+    P2_a <- c(71.2817617982844,   -92.2992876164017,   45.8278193851731)
+    P2_b <- c(-0.137859046784839,   0.122423212397157,  0.957642744668469)
+  } else if ((TR_pdw == 25.0) && (TR_t1w == 25.0) && (fa_pdw == 6) && (fa_t1w == 21)) {
+    ## 6) 800um protocol - seq version v3* released used by MEG group:
+    ## TR = 25ms for all volumes; flipAngles = [6, 21 deg] for PDw and T1w
+    ## Correction parameters below were determined via Bloch-Torrey 
+    ## simulations but end result agrees well with EPG-derived correction 
+    ## for this RF spoiling increment of 137 degrees.
+    ## See: Callaghan et al. ISMRM, 2015, #1694
+    if (verbose) cat("Spoiling correction ... v3* 0.8mm R4 protocol\n")
+    P2_a <- c(57.427573706259864, -79.300742898810441,  39.218584751863879)
+    P2_b <- c(-0.121114060111119,   0.121684347499374,   0.955987357483519)
+  } else {
+    if (verbose) cat("Spoiling correction ... not defined for this protocol. No correction being applied.\n")
+    P2_a <- c(0, 0, 0)
+    P2_b <- c(0, 0, 1)
+  }
+  list(P2_a = P2_a, P2_b = P2_b)
 }

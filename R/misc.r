@@ -28,3 +28,19 @@ rimage <- function(x = seq(0, 1, length.out = nrow(z)),
    image(x, y, z, zlim=zlim, col=col, ...)
    if(any(is.na(z))) image(x,y,is.na(z),col=c(NA,NAcolor),add=TRUE)
 }
+
+hg1f1 <- function(a, b, z){
+  ##
+  ##  Confluent Hypergeometric 1F1 (a,b scalar, z vector)
+  ##  rel accuracy 1e-13 for z in -1400:700 for a=-.5, .5 
+  ##  rel accuracy 2e-4 for z < -1400 for a=-.5, .5 
+  ##
+  n <- length(z)
+  .Fortran("hg1f1",
+           as.double(a),
+           as.double(b),
+           as.double(z),
+           as.integer(n),
+           fz = double(n),
+           PACKAGE = "qMRI")$fz
+}

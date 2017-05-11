@@ -130,11 +130,302 @@ readMPMData  <-  function(t1Files  = NULL,
                  FA = FA))
 }
 
+estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=10,hsig=5,lambda=12,verbose=TRUE){
+  ## kmin = 10 corresponds to an initial bandwidth of 1.47 giving positive weight to direct neighbors and 
+  ## 2D diagonal neigbors 
+  args <- sys.call(-1)
+  sdim <- dim(mask)
+  if(!is.numeric(magnitude)){
+     if (verbose) cat("reading Magnitude file ... ")
+     R <- readNIfTI(magnitude, reorient = FALSE)
+  } else {
+  R <- magnitude
+  }
+  if(!is.numeric(phase)){
+    if (verbose) cat("reading Phase file ... ")
+     Ph <- readNIfTI(phase, reorient = FALSE)
+  } else {
+     Ph <- phase
+  }
+  ComplImg <- array(0,c(2,sdim))
+  ComplImg[1,,,] <- R*cos(Ph)
+  ComplImg[2,,,] <- R*sin(Ph)
+  ## find the number of usable cores
+  mc.cores <- setCores(, reprt = FALSE)
+##
+##  start smoothing and variance estimation
+##
+  n <- prod(sdim)
+  lambda0 <- 1e40
+  sigma2 <- array(1e10,sdim)
+# just inilitialize with something large, first step is nonadaptive due to lambda0 
+  k <- kmin
+  hmax <- 1.25^(kstar/3)
+  ## preparations for median smoothing
+  nwmd <- (2*as.integer(hsig)+1)^3
+  parammd <- .Fortran("paramw3",
+                      as.double(hsig),
+                      as.double(c(1,1)),
+                      ind=integer(3*nwmd),
+                      w=double(nwmd),
+                      n=as.integer(nwmd),
+                      PACKAGE = "qMRI")[c("ind","w","n")]
+  nwmd <- parammd$n
+  parammd$ind <- parammd$ind[1:(3*nwmd)]
+  dim(parammd$ind) <- c(3,nwmd)
+  
+  if (verbose) pb <- txtProgressBar(min = 0, max = kstar-kmin+1, style = 3)
+  bi <- array(1,sdim)
+  zobj <- list(theta=ComplImg, bi=bi)
+  if (verbose) {
+    mae <- NULL
+    protocol <- matrix("", kstar-kmin+1, 1, dimnames = list(paste("step", kmin:kstar), "protocol"))
+  }
+  while (k <= kstar) {
+    ## determine the actual bandwidth for this step
+    hakt <- gethani(1, 1.25*hmax, 2, 1.25^k, c(1,1), 1e-4)
+    
+    ## we need the (approx.) size of the weigthing scheme array
+    dlw <- (2*trunc(hakt/c(1, 1, 1))+1)[1:3]
+    
+    ## perform the actual adaptive smoothing
+    zobj <- .Fortran("vaws2",
+                     as.double(ComplImg),
+                     as.logical(mask),
+                     as.integer(2),
+                     as.integer(sdim[1]),
+                     as.integer(sdim[2]),
+                     as.integer(sdim[3]),
+                     hakt = as.double(hakt),
+                     as.double(lambda0),
+                     as.double(zobj$theta),
+                     as.double(sigma2),
+                     bi = as.double(zobj$bi),
+                     theta = double(2*n),
+                     sigma2 = double(n),
+                     as.integer(mc.cores),
+                     double(prod(dlw)),
+                     as.double(c(1,1)),
+                     double(2 * mc.cores),
+                     PACKAGE = "qMRI")[c("bi", "theta", "hakt","sigma2")]
+    ##
+    ##  now get local median variance estimates
+    ##
+    dim(zobj$sigma2) <- sdim
+    sigma2 <- .Fortran("mediansm",
+                      as.double(zobj$sigma2),
+                      as.logical(mask),
+                      as.integer(sdim[1]),
+                      as.integer(sdim[2]),
+                      as.integer(sdim[3]),
+                      as.integer(parammd$ind),
+                      as.integer(nwmd),
+                      double(nwmd*mc.cores), # work(nw,nthreds)
+                      as.integer(mc.cores),
+                      sigma2n = double(n),
+                      PACKAGE = "qMRI")$sigma2n/0.6931
+# sigma2n containes sum of 2 independent squared residuals
+# 0.6931 approximates  median \chi_2 /2  
+# needed to get correct results 
+    ## use maximum ni
+    bi <- zobj$bi <- pmax(bi, zobj$bi)
+    
+    ## some verbose stuff
+    if (verbose) {
+      protocol[k-kmin+1,1] <- paste("bandwidth: ", signif(hakt, 3),
+                           "sigma: mean: ", signif(sqrt(mean(sigma2[mask])),3),
+                           "median: ", signif(sqrt(median(sigma2[mask])),3),
+                           "sd: ", signif(sd(sqrt(sigma2[mask])),3),
+                           "median(bi):", signif(median(zobj$bi[mask]),3),
+                           "max(bi):", signif(max(zobj$bi[mask]),3))
+      setTxtProgressBar(pb, k-kmin+1)
+    }
+    
+    ## go for next iteration
+    k <- k+1
+    lambda0 <- lambda
+    gc()
+  }
+  dim(zobj$theta) <- c(2,sdim)
+  # return estimated parameters of rician distribution
+  z <-  list(sigma=array(sqrt(sigma2),sdim),
+       theta=array(sqrt(zobj$theta[1,,,]^2+zobj$theta[2,,,]^2),sdim),
+       sigmal=array(sqrt(zobj$sigma2),sdim),mask=mask, 
+       protocol=protocol,args=args)
+  class(z) <- "sigmaEstSENSE"
+  z
+}
+
+medianFilterSigma <- function(obj,hsig=10,mask=NULL){
+   if(class(obj)=="sigmaEstSENSE"){
+      sigma2 <- obj$sigmal^2
+      mask <- obj$mask
+   } else {
+      sigma2 <- obj^2
+   }
+   sdim <- dim(sigma2)
+   n <- prod(sdim)
+   if(length(sdim)!=3) stop("obj needs to be of class 'array' (3D) or 'sigmaEstSENSE'")
+   if(is.null(mask)) mask <- array(TRUE,sdim)
+   if(any(dim(mask)!=sdim)) stop("dimensions do not coinside")
+   nwmd <- (2*as.integer(hsig)+1)^3
+   parammd <- .Fortran("paramw3",
+                       as.double(hsig),
+                       as.double(c(1,1)),
+                       ind=integer(3*nwmd),
+                       w=double(nwmd),
+                       n=as.integer(nwmd),
+                       PACKAGE = "qMRI")[c("ind","w","n")]
+   nwmd <- parammd$n
+   parammd$ind <- parammd$ind[1:(3*nwmd)]
+   dim(parammd$ind) <- c(3,nwmd)
+   mc.cores <- setCores(, reprt = FALSE)
+   sigma2 <- .Fortran("mediansm",
+                      as.double(sigma2),
+                      as.logical(mask),
+                      as.integer(sdim[1]),
+                      as.integer(sdim[2]),
+                      as.integer(sdim[3]),
+                      as.integer(parammd$ind),
+                      as.integer(nwmd),
+                      double(nwmd*mc.cores), # work(nw,nthreds)
+                      as.integer(mc.cores),
+                      sigma2n = double(n),
+                      PACKAGE = "qMRI")$sigma2n/0.6931
+   dim(sigma2) <- sdim
+   if(class(obj)=="sigmaEstSENSE"){
+      obj$sigma2 <- sqrt(sigma2)
+      obj$hsig <- hsig
+   } else {
+      obj <- sqrt(sigma2)
+   }
+   obj
+}
+# estimateESTATICS <- function(mpmdata,
+#                              TEScale = 100,
+#                              dataScale = 1000,
+#                              verbose = TRUE) {
+# 
+#   ## this is our design ...
+#   if (mpmdata$model == 2) {
+#     xmat <- matrix(0, mpmdata$nFiles, 4)
+#     xmat[1:length(mpmdata$t1Files), 1] <- 1
+#     xmat[(length(mpmdata$t1Files)+1):(length(mpmdata$t1Files)+length(mpmdata$mtFiles)), 2] <- 1
+#     xmat[(length(mpmdata$t1Files)+length(mpmdata$mtFiles)+1):mpmdata$nFiles, 3] <- 1
+#     xmat[, 4] <- mpmdata$TE / TEScale
+#     ## ... for our model in qflashpl() ...
+#     ## S_{T1} = par[1] * exp(- par[4] * TE)
+#     ## S_{MT} = par[2] * exp(- par[4] * TE)
+#     ## S_{PD} = par[3] * exp(- par[4] * TE)
+#   } else {
+#     xmat <- matrix(0, mpmdata$nFiles, 3)
+#     xmat[1:length(mpmdata$t1Files), 1] <- 1
+#     xmat[(length(mpmdata$t1Files)+1):mpmdata$nFiles, 2] <- 1
+#     xmat[, 3] <- mpmdata$TE / TEScale
+#     ## ... for our model in qflashpl2() ...
+#     ## S_{T1} = par[1] * exp(- par[3] * TE)
+#     ## S_{PD} = par[2] * exp(- par[3] * TE)
+#   }
+#   if (verbose) {
+#     cat("Design of the model:\n")
+#     print(xmat)
+#   }
+# 
+#   ## starting value for R* estimate
+#   R2star <- 0.05 * TEScale
+#   indT1 <- order(mpmdata$TE[as.logical(xmat[, 1])])[1]
+#   if (mpmdata$model == 2) {
+#     indMT <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1])
+#     indPD <- order(mpmdata$TE[as.logical(xmat[, 3])])[1] + sum(xmat[, 1]) + sum(xmat[, 2])
+#     npar <- 4
+#   } else {
+#     indPD <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1])
+#     npar <- 3
+#   }
+# 
+#   isConv <- array(FALSE, mpmdata$sdim)
+#   modelCoeff <- array(0, c(npar, mpmdata$sdim))
+#   invCov <- array(0, c(npar, npar, mpmdata$sdim))
+# 
+#   ## now perform the voxelwise regression
+#   if (verbose) Sys.time()
+#   for (z in 1:mpmdata$sdim[3]){
+#     for (y in 1:mpmdata$sdim[2]) {
+#       for (x in 1:mpmdata$sdim[1]) {
+#         if (mpmdata$mask[x, y, z]) {
+#           ivec  <- mpmdata$ddata[, x, y, z] / dataScale
+#           if (mpmdata$model == 2) {
+#             ## full ESTATICS model
+#             th <- c(ivec[indT1] * exp(-xmat[indT1, 4] * R2star), # par[1]
+#                     ivec[indMT] * exp(-xmat[indMT, 4] * R2star), # par[2]
+#                     ivec[indPD] * exp(-xmat[indPD, 4] * R2star), # par[3]
+#                     R2star)                                      # par[4]
+#             res <- try(nls(ivec ~ qflashpl(par, xmat),
+#                            start = list(par = th),
+#                            control = list(maxiter = 200,
+#                                           warnOnly = TRUE)))
+#             if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
+#               res <- nls(ivec ~ qflashpl(par, xmat),
+#                          start = list(par = th),
+#                          algorithm = "port",
+#                          control = list(warnOnly = TRUE,
+#                                         printEval = TRUE),
+#                          lower = rep(0, 4))
+#           } else {
+#             ## reduced ESTATICS model without MT
+#             th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), # par[1]
+#                     ivec[indPD] * exp(-xmat[indPD, 3] * R2star), # par[2]
+#                     R2star)                                      # par[3]
+#             res <- try(nls(ivec ~ qflashpl2(par, xmat),
+#                            start = list(par = th),
+#                            control = list(maxiter = 200,
+#                                           warnOnly = TRUE)))
+#             if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
+#               res <- nls(ivec ~ qflashpl2(par, xmat),
+#                          start = list(par = th),
+#                          algorithm = "port",
+#                          control = list(warnOnly = TRUE,
+#                                         printEval = TRUE),
+#                          lower = rep(0, 3))
+#           }
+#           sres <- summary(res)
+#           isConv[x, y, z] <- res$convInfo$isConv
+#           modelCoeff[, x, y, z] <- sres$coefficients[, 1]
+#           if (sres$sigma != 0) {
+#             invCov[, , x, y, z] <- solve(sres$cov.unscaled) / sres$sigma^2
+#           }
+#         }
+#       }
+#     }
+#     if (verbose) cat(z, format(Sys.time()), "\n")
+#   }
+#   if (verbose) Sys.time()
+# 
+#   invisible(list(modelCoeff = modelCoeff,
+#                  invCov = invCov,
+#                  isConv = isConv,
+#                  sdim = mpmdata$sdim,
+#                  nFiles = mpmdata$nFiles,
+#                  t1Files = mpmdata$t1Files,
+#                  pdFiles = mpmdata$pdFiles,
+#                  mtFiles = mpmdata$mtFiles,
+#                  model = mpmdata$model,
+#                  maskFile = mpmdata$maskFile,
+#                  mask = mpmdata$mask,
+#                  TR = mpmdata$TR,
+#                  TE = mpmdata$TE,
+#                  FA = mpmdata$FA,
+#                  TEScale = TEScale,
+#                  dataScale = dataScale))
+# 
+#   ## END function estimateESTATICS()
+# }
+
 estimateESTATICS <- function(mpmdata,
                              TEScale = 100,
                              dataScale = 1000,
                              verbose = TRUE) {
-
+  
   ## this is our design ...
   if (mpmdata$model == 2) {
     xmat <- matrix(0, mpmdata$nFiles, 4)
@@ -146,6 +437,12 @@ estimateESTATICS <- function(mpmdata,
     ## S_{T1} = par[1] * exp(- par[4] * TE)
     ## S_{MT} = par[2] * exp(- par[4] * TE)
     ## S_{PD} = par[3] * exp(- par[4] * TE)
+    #
+    #   check for voxel in mask with all zeros for a modality
+    #
+    zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
+                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0)|
+                               (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmsense$mask)
   } else {
     xmat <- matrix(0, mpmdata$nFiles, 3)
     xmat[1:length(mpmdata$t1Files), 1] <- 1
@@ -154,12 +451,21 @@ estimateESTATICS <- function(mpmdata,
     ## ... for our model in qflashpl2() ...
     ## S_{T1} = par[1] * exp(- par[3] * TE)
     ## S_{PD} = par[2] * exp(- par[3] * TE)
+    #
+    #   check for voxel in mask with all zeros for a modality
+    #
+    zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
+                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmsense$mask)
   }
   if (verbose) {
     cat("Design of the model:\n")
     print(xmat)
   }
-
+  #
+  #   deactivate voxel in mask with all zeros for a modality
+  #
+  mpmdata$mask[zerovoxel] <- FALSE
+  
   ## starting value for R* estimate
   R2star <- 0.05 * TEScale
   indT1 <- order(mpmdata$TE[as.logical(xmat[, 1])])[1]
@@ -171,11 +477,11 @@ estimateESTATICS <- function(mpmdata,
     indPD <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1])
     npar <- 3
   }
-
+  
   isConv <- array(FALSE, mpmdata$sdim)
   modelCoeff <- array(0, c(npar, mpmdata$sdim))
   invCov <- array(0, c(npar, npar, mpmdata$sdim))
-
+  
   ## now perform the voxelwise regression
   if (verbose) Sys.time()
   for (z in 1:mpmdata$sdim[3]){
@@ -229,7 +535,7 @@ estimateESTATICS <- function(mpmdata,
     if (verbose) cat(z, format(Sys.time()), "\n")
   }
   if (verbose) Sys.time()
-
+  
   invisible(list(modelCoeff = modelCoeff,
                  invCov = invCov,
                  isConv = isConv,
@@ -246,133 +552,268 @@ estimateESTATICS <- function(mpmdata,
                  FA = mpmdata$FA,
                  TEScale = TEScale,
                  dataScale = dataScale))
-
+  
   ## END function estimateESTATICS()
 }
+# estimateESTATICSQL <- function(mpmdata,
+#                                TEScale = 100,
+#                                dataScale = 1000,
+#                                sigma = NULL,
+#                                L = NULL,
+#                                verbose = TRUE) {
+# 
+#   ## this is our design ...
+#   if (mpmdata$model == 2) {
+#     xmat <- matrix(0, mpmdata$nFiles, 4)
+#     xmat[1:length(mpmdata$t1Files), 1] <- 1
+#     xmat[(length(mpmdata$t1Files)+1):(length(mpmdata$t1Files)+length(mpmdata$mtFiles)), 2] <- 1
+#     xmat[(length(mpmdata$t1Files)+length(mpmdata$mtFiles)+1):mpmdata$nFiles, 3] <- 1
+#     xmat[, 4] <- mpmdata$TE / TEScale
+#     ## ... for our model in qflashpl() ...
+#     ## S_{T1} = par[1] * exp(- par[4] * TE)
+#     ## S_{MT} = par[2] * exp(- par[4] * TE)
+#     ## S_{PD} = par[3] * exp(- par[4] * TE)
+#   } else {
+#     xmat <- matrix(0, mpmdata$nFiles, 3)
+#     xmat[1:length(mpmdata$t1Files), 1] <- 1
+#     xmat[(length(mpmdata$t1Files)+1):mpmdata$nFiles, 2] <- 1
+#     xmat[, 3] <- mpmdata$TE / TEScale
+#     ## ... for our model in qflashpl2() ...
+#     ## S_{T1} = par[1] * exp(- par[3] * TE)
+#     ## S_{PD} = par[2] * exp(- par[3] * TE)
+#   }
+#   if (verbose) {
+#     cat("Design of the model:\n")
+#     print(xmat)
+#   }
+# 
+#   sigma <- sigma / dataScale
+#   CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
+# 
+#   ## starting value for R* estimate
+#   R2star <- 0.05 * TEScale
+#   indT1 <- order(mpmdata$TE[as.logical(xmat[, 1])])[1]
+#   if (mpmdata$model == 2) {
+#     indMT <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1])
+#     indPD <- order(mpmdata$TE[as.logical(xmat[, 3])])[1] + sum(xmat[, 1]) + sum(xmat[, 2])
+#     npar <- 4
+#   } else {
+#     indPD <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1])
+#     npar <- 3
+#   }
+# 
+#   isConv <- array(FALSE, mpmdata$sdim)
+#   modelCoeff <- array(0, c(npar, mpmdata$sdim))
+#   invCov <- array(0, c(npar, npar, mpmdata$sdim))
+# 
+#   ## now perform the voxelwise regression
+#   if (verbose) Sys.time()
+#   for (z in 1:mpmdata$sdim[3]){
+#     for (y in 1:mpmdata$sdim[2]) {
+#       for (x in 1:mpmdata$sdim[1]) {
+#         if (mpmdata$mask[x, y, z]) {
+#           ivec  <- mpmdata$ddata[, x, y, z] / dataScale
+#           if (mpmdata$model == 2) {
+#             ## full ESTATICS model
+#             th <- c(ivec[indT1] * exp(-xmat[indT1, 4] * R2star), # par[1]
+#                     ivec[indMT] * exp(-xmat[indMT, 4] * R2star), # par[2]
+#                     ivec[indPD] * exp(-xmat[indPD, 4] * R2star), # par[3]
+#                     R2star)                                      # par[4]
+#             res <- try(nls(ivec ~ qflashplQL(par, xmat, CL, sigma, L),
+#                            start = list(par = th),
+#                            control = list(maxiter = 200,
+#                                           warnOnly = TRUE)))
+#             if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
+#               res <- nls(ivec ~ qflashplQL(par, xmat, CL, sigma, L),
+#                          start = list(par = th),
+#                          algorithm = "port",
+#                          control = list(warnOnly = TRUE,
+#                                         printEval = TRUE),
+#                          lower = rep(0, 4))
+#           } else {
+#             ## reduced ESTATICS model without MT
+#             th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), # par[1]
+#                     ivec[indPD] * exp(-xmat[indPD, 3] * R2star), # par[2]
+#                     R2star)                                      # par[3]
+#             res <- try(nls(ivec ~ qflashpl2QL(par, xmat, CL, sigma, L),
+#                            start = list(par = th),
+#                            control = list(maxiter = 200,
+#                                           warnOnly = TRUE)))
+#             if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
+#               res <- nls(ivec ~ qflashpl2QL(par, xmat, CL, sigma, L),
+#                          start = list(par = th),
+#                          algorithm = "port",
+#                          control = list(warnOnly = TRUE,
+#                                         printEval = TRUE),
+#                          lower = rep(0, 3))
+#           }
+#           sres <- summary(res)
+#           isConv[x, y, z] <- res$convInfo$isConv
+#           modelCoeff[, x, y, z] <- sres$coefficients[, 1]
+#           if (sres$sigma != 0) {
+#             invCov[, , x, y, z] <- solve(sres$cov.unscaled) / sres$sigma^2
+#           }
+#         }
+#       }
+#     }
+#     if (verbose) cat(z, format(Sys.time()), "\n")
+#   }
+#   if (verbose) Sys.time()
+# 
+#   invisible(list(modelCoeff = modelCoeff,
+#                  invCov = invCov,
+#                  isConv = isConv,
+#                  sdim = mpmdata$sdim,
+#                  nFiles = mpmdata$nFiles,
+#                  t1Files = mpmdata$t1Files,
+#                  pdFiles = mpmdata$pdFiles,
+#                  mtFiles = mpmdata$mtFiles,
+#                  model = mpmdata$model,
+#                  maskFile = mpmdata$maskFile,
+#                  mask = mpmdata$mask,
+#                  TR = mpmdata$TR,
+#                  TE = mpmdata$TE,
+#                  FA = mpmdata$FA,
+#                  TEScale = TEScale,
+#                  dataScale = dataScale))
+# 
+#   ## END function estimateESTATICS()
+# }
 
-estimateESTATICSQL <- function(mpmdata,
-                               TEScale = 100,
-                               dataScale = 1000,
-                               sigma = NULL,
-                               L = NULL,
-                               verbose = TRUE) {
-
-  ## this is our design ...
+estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma = NULL, 
+                                L = NULL, verbose = TRUE) 
+{
   if (mpmdata$model == 2) {
     xmat <- matrix(0, mpmdata$nFiles, 4)
     xmat[1:length(mpmdata$t1Files), 1] <- 1
-    xmat[(length(mpmdata$t1Files)+1):(length(mpmdata$t1Files)+length(mpmdata$mtFiles)), 2] <- 1
-    xmat[(length(mpmdata$t1Files)+length(mpmdata$mtFiles)+1):mpmdata$nFiles, 3] <- 1
-    xmat[, 4] <- mpmdata$TE / TEScale
-    ## ... for our model in qflashpl() ...
-    ## S_{T1} = par[1] * exp(- par[4] * TE)
-    ## S_{MT} = par[2] * exp(- par[4] * TE)
-    ## S_{PD} = par[3] * exp(- par[4] * TE)
-  } else {
+    xmat[(length(mpmdata$t1Files) + 1):(length(mpmdata$t1Files) + 
+                                          length(mpmdata$mtFiles)), 2] <- 1
+    xmat[(length(mpmdata$t1Files) + length(mpmdata$mtFiles) + 
+            1):mpmdata$nFiles, 3] <- 1
+    xmat[, 4] <- mpmdata$TE/TEScale
+    #
+    #   check for voxel in mask with all zeros for a modality
+    #
+    zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
+                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0)|
+                               (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmsense$mask)
+  }
+  else {
     xmat <- matrix(0, mpmdata$nFiles, 3)
     xmat[1:length(mpmdata$t1Files), 1] <- 1
-    xmat[(length(mpmdata$t1Files)+1):mpmdata$nFiles, 2] <- 1
-    xmat[, 3] <- mpmdata$TE / TEScale
-    ## ... for our model in qflashpl2() ...
-    ## S_{T1} = par[1] * exp(- par[3] * TE)
-    ## S_{PD} = par[2] * exp(- par[3] * TE)
+    xmat[(length(mpmdata$t1Files) + 1):mpmdata$nFiles, 2] <- 1
+    xmat[, 3] <- mpmdata$TE/TEScale
+    #
+    #   check for voxel in mask with all zeros for a modality
+    #
+    zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
+                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmsense$mask)
   }
   if (verbose) {
     cat("Design of the model:\n")
     print(xmat)
   }
-
-  sigma <- sigma / dataScale
-  CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-
-  ## starting value for R* estimate
+  
+  #
+  #   deactivate voxel in mask with all zeros for a modality
+  #
+  mpmdata$mask[zerovoxel] <- FALSE
+  
+  sigma <- sigma/dataScale
+  CL <- sigma * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
   R2star <- 0.05 * TEScale
   indT1 <- order(mpmdata$TE[as.logical(xmat[, 1])])[1]
   if (mpmdata$model == 2) {
-    indMT <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1])
-    indPD <- order(mpmdata$TE[as.logical(xmat[, 3])])[1] + sum(xmat[, 1]) + sum(xmat[, 2])
+    indMT <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + 
+      sum(xmat[, 1])
+    indPD <- order(mpmdata$TE[as.logical(xmat[, 3])])[1] + 
+      sum(xmat[, 1]) + sum(xmat[, 2])
     npar <- 4
-  } else {
-    indPD <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1])
+  }
+  else {
+    indPD <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + 
+      sum(xmat[, 1])
     npar <- 3
   }
-
   isConv <- array(FALSE, mpmdata$sdim)
   modelCoeff <- array(0, c(npar, mpmdata$sdim))
   invCov <- array(0, c(npar, npar, mpmdata$sdim))
-
-  ## now perform the voxelwise regression
-  if (verbose) Sys.time()
-  for (z in 1:mpmdata$sdim[3]){
+  if (verbose) 
+    Sys.time()
+  for (z in 1:mpmdata$sdim[3]) {
     for (y in 1:mpmdata$sdim[2]) {
       for (x in 1:mpmdata$sdim[1]) {
         if (mpmdata$mask[x, y, z]) {
-          ivec  <- mpmdata$ddata[, x, y, z] / dataScale
+          ivec <- mpmdata$ddata[, x, y, z]/dataScale
           if (mpmdata$model == 2) {
-            ## full ESTATICS model
-            th <- c(ivec[indT1] * exp(-xmat[indT1, 4] * R2star), # par[1]
-                    ivec[indMT] * exp(-xmat[indMT, 4] * R2star), # par[2]
-                    ivec[indPD] * exp(-xmat[indPD, 4] * R2star), # par[3]
-                    R2star)                                      # par[4]
-            res <- try(nls(ivec ~ qflashplQL(par, xmat, CL, sigma, L),
-                           start = list(par = th),
-                           control = list(maxiter = 200,
-                                          warnOnly = TRUE)))
-            if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
-              res <- nls(ivec ~ qflashplQL(par, xmat, CL, sigma, L),
-                         start = list(par = th),
-                         algorithm = "port",
-                         control = list(warnOnly = TRUE,
-                                        printEval = TRUE),
-                         lower = rep(0, 4))
-          } else {
-            ## reduced ESTATICS model without MT
-            th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), # par[1]
-                    ivec[indPD] * exp(-xmat[indPD, 3] * R2star), # par[2]
-                    R2star)                                      # par[3]
-            res <- try(nls(ivec ~ qflashpl2QL(par, xmat, CL, sigma, L),
-                           start = list(par = th),
-                           control = list(maxiter = 200,
-                                          warnOnly = TRUE)))
-            if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
-              res <- nls(ivec ~ qflashpl2QL(par, xmat, CL, sigma, L),
-                         start = list(par = th),
-                         algorithm = "port",
-                         control = list(warnOnly = TRUE,
-                                        printEval = TRUE),
-                         lower = rep(0, 3))
+            th <- c(ivec[indT1] * exp(-xmat[indT1, 4] * 
+                                        R2star), ivec[indMT] * exp(-xmat[indMT, 
+                                                                         4] * R2star), ivec[indPD] * exp(-xmat[indPD, 
+                                                                                                               4] * R2star), R2star)
+            res <- try(nls(ivec ~ qflashplQL(par, xmat, 
+                                             CL, sigma, L), start = list(par = th), 
+                           control = list(maxiter = 200, warnOnly = TRUE)))
+            if (class(res) == "try-error" || !res$convInfo$isConv || 
+                any(coefficients(res) < 0)) 
+              #                        cat("nls failed at x",x,"y",y,"z",z,"\n") 
+              #                    print(res)
+              res <- nls(ivec ~ qflashplQL(par, xmat, 
+                                           CL, sigma, L), start = list(par = th), 
+                         algorithm = "port", control = list(warnOnly = TRUE, 
+                                                            printEval = TRUE), lower = rep(0, 4))
+            #                    cat("result of port")
+            #                    print(res)
           }
-          sres <- summary(res)
-          isConv[x, y, z] <- res$convInfo$isConv
-          modelCoeff[, x, y, z] <- sres$coefficients[, 1]
-          if (sres$sigma != 0) {
-            invCov[, , x, y, z] <- solve(sres$cov.unscaled) / sres$sigma^2
+          else {
+            th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * 
+                                        R2star), ivec[indPD] * exp(-xmat[indPD, 
+                                                                         3] * R2star), R2star)
+            res <- try(nls(ivec ~ qflashpl2QL(par, xmat, 
+                                              CL, sigma, L), start = list(par = th), 
+                           control = list(maxiter = 200, warnOnly = TRUE)))
+            if (class(res) == "try-error" || !res$convInfo$isConv || 
+                any(coefficients(res) < 0)) 
+              #                        cat("nls failed at x",x,"y",y,"z",z,"\n") 
+              #                      print(res)
+              res <- nls(ivec ~ qflashpl2QL(par, xmat, 
+                                            CL, sigma, L), start = list(par = th), 
+                         algorithm = "port", control = list(warnOnly = TRUE, 
+                                                            printEval = TRUE), lower = rep(0, 3))
+            #                      cat("result of port")
+            #                      print(res)
+          }
+          sres <- try(summary(res))
+          if(class(sres)!="try-error"){
+            isConv[x, y, z] <- res$convInfo$isConv
+            modelCoeff[, x, y, z] <- sres$coefficients[, 
+                                                       1]
+            if (sres$sigma != 0) {
+              invCovtmp <- try(solve(sres$cov.unscaled))
+              if(class(invCovtmp) != "try-error"){
+                invCov[, , x, y, z] <- invCovtmp/sres$sigma^2
+              } 
+            } # else {
+            #                      cat("solve(sres$cov.unscaled) failed at x",x,"y",y,"z",z,"\n")
+            #                      print(sres$cov.unscaled)
+            #                      mpmdata$mask[x,y,z] <- FALSE
+            #                  }
+          } else {
+            mpmdata$mask[x,y,z] <- FALSE
           }
         }
       }
     }
-    if (verbose) cat(z, format(Sys.time()), "\n")
+    if (verbose) 
+      cat(z, format(Sys.time()), "\n")
   }
-  if (verbose) Sys.time()
-
-  invisible(list(modelCoeff = modelCoeff,
-                 invCov = invCov,
-                 isConv = isConv,
-                 sdim = mpmdata$sdim,
-                 nFiles = mpmdata$nFiles,
-                 t1Files = mpmdata$t1Files,
-                 pdFiles = mpmdata$pdFiles,
-                 mtFiles = mpmdata$mtFiles,
-                 model = mpmdata$model,
-                 maskFile = mpmdata$maskFile,
-                 mask = mpmdata$mask,
-                 TR = mpmdata$TR,
-                 TE = mpmdata$TE,
-                 FA = mpmdata$FA,
-                 TEScale = TEScale,
-                 dataScale = dataScale))
-
-  ## END function estimateESTATICS()
+  if (verbose) 
+    Sys.time()
+  invisible(list(modelCoeff = modelCoeff, invCov = invCov, 
+                 isConv = isConv, sdim = mpmdata$sdim, nFiles = mpmdata$nFiles, 
+                 t1Files = mpmdata$t1Files, pdFiles = mpmdata$pdFiles, 
+                 mtFiles = mpmdata$mtFiles, model = mpmdata$model, maskFile = mpmdata$maskFile, 
+                 mask = mpmdata$mask, TR = mpmdata$TR, TE = mpmdata$TE, 
+                 FA = mpmdata$FA, TEScale = TEScale, dataScale = dataScale))
 }
 
 smoothESTATICS <- function(mpmESTATICSModel,

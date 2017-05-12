@@ -5,7 +5,13 @@
 Estimate parameters in the ESTATICS model using quasi-likelihood regression.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Evaluation of the 
+ESTATICS model (Weisskopf (2013) using  a quasi-likelihood approach assuming a noncentral chi- or a Rician distribuion
+for the data. This function should be preferred over the nonlinear least squares approach in \code{\link{estimateESTATICS}} for the case of low SNR (high resolution) 
+data to avoid biased parameter estimates. The function requires
+a specification of the scale parameter sigma of the data distribution. For the case of 
+the Rician distribution paramter maps of sigma can be estimated from magnitude and phase images 
+(complex polar coordinates) using function \code{\link{estimateSigma}}.
 }
 \usage{
 estimateESTATICSQL(mpmdata, TEScale = 100, dataScale = 1000, sigma = NULL, L = NULL, verbose = TRUE)
@@ -13,28 +19,48 @@ estimateESTATICSQL(mpmdata, TEScale = 100, dataScale = 1000, sigma = NULL, L = N
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{mpmdata}{
-%%     ~~Describe \code{mpmdata} here~~
+  Object containing the measured MPM data.
 }
   \item{TEScale}{
-%%     ~~Describe \code{TEScale} here~~
+  scale factor for TE (used for improved numerical stability)
 }
   \item{dataScale}{
-%%     ~~Describe \code{dataScale} here~~
+  scale factor for image intensities (used for improved numerical stability)
 }
   \item{sigma}{
-%%     ~~Describe \code{sigma} here~~
+  scale parameter sigma of signal distribution (either a scalar or a 3D array)
 }
   \item{L}{
-%%     ~~Describe \code{L} here~~
+  effective number of receiver coils (2*L is degrees of freedom of the signal distribution).
+  L=1 for Rician distribution.
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+  logical: Monitor process.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
+ list with components
+                 \item{modelCoeff }{Estimated parameter maps}
+                 \item{invCov }{ map of inverse covariance matrices}
+                 \item{isConv }{ convergence indicator map}
+                 \item{sdim }{ image dimension}
+                 \item{nFiles }{ number of images}
+                 \item{t1Files }{ vector of T1 filenames}
+                 \item{pdFiles }{ vector of PD filenames}
+                 \item{mtFiles }{ vector of MT filenames}
+                 \item{model }{ model used (depends on specification of MT files)}
+                 \item{maskFile }{ filename of brain mask}
+                 \item{mask }{ brain mask}
+                 \item{sigma }{ sigma}
+                 \item{L }{ L}
+                 \item{TR }{ TR values}
+                 \item{TE }{ TE values}
+                 \item{FA }{ Flip angles (FA)}
+                 \item{TEScale }{ TEScale}
+                 \item{dataScale }{dataScale}
 %%  ~Describe the value returned
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}

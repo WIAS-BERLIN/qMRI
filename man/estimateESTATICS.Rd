@@ -5,7 +5,14 @@
 Estimate parameters in the ESTATICS model using nonlinear least squares regression.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Evaluation of the 
+ESTATICS model (Weisskopf (2013) using nonlinear least squares regression 
+and the second a quasi-likelihood approach assuming a noncentral chi- or a Rician distribuion
+for the data. The latter function should be preferred in case of low SNR (high resolution) 
+data to avoid biased parameter estimates. Function \code{\link{estimateESTATICSQL}} requires
+a specification of the scale parameter sigma of the data distribution. For the case of 
+the Rician distribution paramter maps of sigma can be estimated from magnitude and phase images 
+(complex polar coordinates) using function \code{\link{estimateSigma}}.
 }
 \usage{
 estimateESTATICS(mpmdata, TEScale = 100, dataScale = 1000, verbose = TRUE)
@@ -13,27 +20,39 @@ estimateESTATICS(mpmdata, TEScale = 100, dataScale = 1000, verbose = TRUE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{mpmdata}{
-%%     ~~Describe \code{mpmdata} here~~
+  Object containing the measured MPM data.
 }
   \item{TEScale}{
-%%     ~~Describe \code{TEScale} here~~
+  scale factor for TE (used for improved numerical stability)
 }
   \item{dataScale}{
-%%     ~~Describe \code{dataScale} here~~
+  scale factor for image intensities (used for improved numerical stability)
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+  logical: Monitor process.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+ list with components
+                 \item{modelCoeff }{Estimated parameter maps}
+                 \item{invCov }{ map of inverse covariance matrices}
+                 \item{isConv }{ convergence indicator map}
+                 \item{sdim }{ image dimension}
+                 \item{nFiles }{ number of images}
+                 \item{t1Files }{ vector of T1 filenames}
+                 \item{pdFiles }{ vector of PD filenames}
+                 \item{mtFiles }{ vector of MT filenames}
+                 \item{model }{ model used (depends on specification of MT files)}
+                 \item{maskFile }{ filename of brain mask}
+                 \item{mask }{ brain mask}
+                 \item{TR }{ TR values}
+                 \item{TE }{ TE values}
+                 \item{FA }{ Flip angles (FA)}
+                 \item{TEScale }{ TEScale}
+                 \item{dataScale }{dataScale}
 }
 \references{
 %% ~put references to the literature/web site here ~

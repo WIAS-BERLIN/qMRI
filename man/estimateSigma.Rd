@@ -5,7 +5,14 @@
 Estimate scale parameter maps for Rician distributed data from 3D magnitude and phase images.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Magnitude and phase images contain the measured complex image information after image reconstruction using e.g. SENSE
+in polar coordinates. This information is transformed in images containing the corresponding real and imaginary images.
+A vectorized adaptive weights algorithm (Polzehl and Spokoiny, 2006) is used to estimate the complex image intensities.
+In each step magnitude maps of the complex normalized residuals are obtained (these follow a Rician distribution) and smoothed using a spatial median filter with bandwidth \code{hsig} to obtain estimated maps of scale parameter sigma. The final magnitude maps of the complex normalized residuals, magnitude (intensity) maps and maps of sigma are returned.
+
+
+
+
 }
 \usage{
 estimateSigma(magnitude, phase, mask, kstar = 20, kmin = 10, hsig = 5, lambda = 12, verbose = TRUE)
@@ -13,35 +20,45 @@ estimateSigma(magnitude, phase, mask, kstar = 20, kmin = 10, hsig = 5, lambda = 
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{magnitude}{
-%%     ~~Describe \code{magnitude} here~~
+  Either a file name corresponding to a 3D magnitude image in Nifti (.nii) format or a 3D array containing the
+  image data.
 }
   \item{phase}{
-%%     ~~Describe \code{phase} here~~
+  Either a file name corresponding to a 3D phase image in Nifti (.nii) format or a 3D array containing the
+  image data.
 }
   \item{mask}{
-%%     ~~Describe \code{mask} here~~
+  Either a logical 3D array describing a brain mask or \code{NULL} 
 }
   \item{kstar}{
-%%     ~~Describe \code{kstar} here~~
+  Maximum number of steps in the adaptive smoothing algorithm used to estimate the spatial mean intensity map.
 }
   \item{kmin}{
-%%     ~~Describe \code{kmin} here~~
+  Number of steps without adaptation (the first \code{kmin-1} steps are not carried out.
 }
   \item{hsig}{
-%%     ~~Describe \code{hsig} here~~
+  bandwidth for spatial median filtering of sum of squared residuals
 }
   \item{lambda}{
-%%     ~~Describe \code{lambda} here~~
+  adaptation parameter (chosen by a propagation condition), smaller values may lead to severe underestimation
+  of the scale parameter due to adaptation to the data, significantly larger values may lead to
+  positively biased estimates. Please do not change ...
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+  Logical: Monitor the progress.
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
+An object of class 'sigmaEstSENSE' with components
+       \item{sigma}{3D scale parameter map}
+       \item{theta}{Magnitude image estimated by adaptive smoothing}
+       \item{sigmal}{Array of residual magnitudes}
+       \item{mask}{Brain mask used} 
+       \item{protocol}{Protocoll of iteration process}
+       \item{args}{Arguments of call}
 %%  If it is a LIST, use
 %%  \item{comp1 }{Description of 'comp1'}
 %%  \item{comp2 }{Description of 'comp2'}
@@ -51,7 +68,7 @@ estimateSigma(magnitude, phase, mask, kstar = 20, kmin = 10, hsig = 5, lambda = 
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Joerg Polzehl \email{joerg.polzehl@wias-berlin.de}
 }
 \note{
 %%  ~~further notes~~
@@ -60,7 +77,7 @@ estimateSigma(magnitude, phase, mask, kstar = 20, kmin = 10, hsig = 5, lambda = 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{estimateESTATICSQL}}, \code{\link{medianFilterSigma}} %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----
@@ -157,5 +174,5 @@ function (magnitude, phase, mask, kstar = 20, kmin = 10, hsig = 5,
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{ models }
+\keyword{ nonparametric }% __ONLY ONE__ keyword per line

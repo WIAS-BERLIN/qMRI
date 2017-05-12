@@ -821,7 +821,7 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
                  isConv = isConv, sdim = mpmdata$sdim, nFiles = mpmdata$nFiles, 
                  t1Files = mpmdata$t1Files, pdFiles = mpmdata$pdFiles, 
                  mtFiles = mpmdata$mtFiles, model = mpmdata$model, maskFile = mpmdata$maskFile, 
-                 mask = mpmdata$mask, TR = mpmdata$TR, TE = mpmdata$TE, 
+                 mask = mpmdata$mask, sigma = sigma, L = L, TR = mpmdata$TR, TE = mpmdata$TE, 
                  FA = mpmdata$FA, TEScale = TEScale, dataScale = dataScale))
 }
 

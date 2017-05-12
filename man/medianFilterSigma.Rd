@@ -6,7 +6,8 @@ Use a spatial median filter on residual sum of squares maps in objects
 produced by function \code{estimateSigma}.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Apply a spatial median filter with bandwidth \code{hsig} to an 3D array or to residual magnitude map in component \code{sigmal}
+of an object of class 'sigmaEstSENSE' returned by function \code{\link{estimateSigma}}
 }
 \usage{
 medianFilterSigma(obj, hsig = 10, mask = NULL)
@@ -14,30 +15,32 @@ medianFilterSigma(obj, hsig = 10, mask = NULL)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{obj}{
-%%     ~~Describe \code{obj} here~~
+     3D array or object of class 'sigmaEstSENSE'
 }
   \item{hsig}{
-%%     ~~Describe \code{hsig} here~~
+     bandwidth for median filter
 }
   \item{mask}{
-%%     ~~Describe \code{mask} here~~
+     brain mask
 }
 }
 \details{
 %%  ~~ If necessary, more details than the description above ~~
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+An array or an object of class 'sigmaEstSENSE' with components
+       \item{sigma}{3D scale parameter map (replaced by result)}
+       \item{theta}{Magnitude image estimated by adaptive smoothing}
+       \item{sigmal}{Array of residual magnitudes}
+       \item{mask}{Brain mask used} 
+       \item{protocol}{Protocoll of iteration process}
+       \item{args}{Arguments of call}
 }
 \references{
 %% ~put references to the literature/web site here ~
 }
 \author{
-%%  ~~who you are~~
+Joerg Polzehl \email{joerg.polzehl@wias-berlin.de}
 }
 \note{
 %%  ~~further notes~~
@@ -46,7 +49,7 @@ medianFilterSigma(obj, hsig = 10, mask = NULL)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{estimateSigma}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----
@@ -97,5 +100,5 @@ function (obj, hsig = 10, mask = NULL)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ ~kwd1 }
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+\keyword{ utility }
+\keyword{ smoothing }% __ONLY ONE__ keyword per line

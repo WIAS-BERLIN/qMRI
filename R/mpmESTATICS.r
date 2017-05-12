@@ -130,7 +130,7 @@ readMPMData  <-  function(t1Files  = NULL,
                  FA = FA))
 }
 
-estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=10,hsig=5,lambda=12,verbose=TRUE){
+estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=8,hsig=5,lambda=12,verbose=TRUE){
   ## kmin = 10 corresponds to an initial bandwidth of 1.47 giving positive weight to direct neighbors and 
   ## 2D diagonal neigbors 
   args <- sys.call(-1)
@@ -294,7 +294,7 @@ medianFilterSigma <- function(obj,hsig=10,mask=NULL){
                       PACKAGE = "qMRI")$sigma2n/0.6931
    dim(sigma2) <- sdim
    if(class(obj)=="sigmaEstSENSE"){
-      obj$sigma2 <- sqrt(sigma2)
+      obj$sigma <- sqrt(sigma2)
       obj$hsig <- hsig
    } else {
       obj <- sqrt(sigma2)
@@ -735,6 +735,14 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
       sum(xmat[, 1])
     npar <- 3
   }
+  if(length(sigma)==1){
+      homsigma <- TRUE
+      sig <- sigma
+  } else if(all(dim(sigma)==mpmdata$sdim)) {
+      homsigma <- FALSE
+  } else {
+      stop("wrong dimension of array sigma")
+  }
   isConv <- array(FALSE, mpmdata$sdim)
   modelCoeff <- array(0, c(npar, mpmdata$sdim))
   invCov <- array(0, c(npar, npar, mpmdata$sdim))
@@ -744,6 +752,7 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
     for (y in 1:mpmdata$sdim[2]) {
       for (x in 1:mpmdata$sdim[1]) {
         if (mpmdata$mask[x, y, z]) {
+          if(!homsigma) sig <- sigma[x, y, z]
           ivec <- mpmdata$ddata[, x, y, z]/dataScale
           if (mpmdata$model == 2) {
             th <- c(ivec[indT1] * exp(-xmat[indT1, 4] * 
@@ -751,14 +760,14 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
                                                                          4] * R2star), ivec[indPD] * exp(-xmat[indPD, 
                                                                                                                4] * R2star), R2star)
             res <- try(nls(ivec ~ qflashplQL(par, xmat, 
-                                             CL, sigma, L), start = list(par = th), 
+                                             CL, sig, L), start = list(par = th), 
                            control = list(maxiter = 200, warnOnly = TRUE)))
             if (class(res) == "try-error" || !res$convInfo$isConv || 
                 any(coefficients(res) < 0)) 
               #                        cat("nls failed at x",x,"y",y,"z",z,"\n") 
               #                    print(res)
               res <- nls(ivec ~ qflashplQL(par, xmat, 
-                                           CL, sigma, L), start = list(par = th), 
+                                           CL, sig, L), start = list(par = th), 
                          algorithm = "port", control = list(warnOnly = TRUE, 
                                                             printEval = TRUE), lower = rep(0, 4))
             #                    cat("result of port")
@@ -769,14 +778,14 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
                                         R2star), ivec[indPD] * exp(-xmat[indPD, 
                                                                          3] * R2star), R2star)
             res <- try(nls(ivec ~ qflashpl2QL(par, xmat, 
-                                              CL, sigma, L), start = list(par = th), 
+                                              CL, sig, L), start = list(par = th), 
                            control = list(maxiter = 200, warnOnly = TRUE)))
             if (class(res) == "try-error" || !res$convInfo$isConv || 
                 any(coefficients(res) < 0)) 
               #                        cat("nls failed at x",x,"y",y,"z",z,"\n") 
               #                      print(res)
               res <- nls(ivec ~ qflashpl2QL(par, xmat, 
-                                            CL, sigma, L), start = list(par = th), 
+                                            CL, sig, L), start = list(par = th), 
                          algorithm = "port", control = list(warnOnly = TRUE, 
                                                             printEval = TRUE), lower = rep(0, 3))
             #                      cat("result of port")

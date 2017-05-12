@@ -1,0 +1,101 @@
+\name{medianFilterSigma}
+\alias{medianFilterSigma}
+%- Also NEED an '\alias' for EACH other topic documented here.
+\title{
+Use a spatial median filter on residual sum of squares maps in objects
+produced by function \code{estimateSigma}.
+}
+\description{
+%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+}
+\usage{
+medianFilterSigma(obj, hsig = 10, mask = NULL)
+}
+%- maybe also 'usage' for other objects documented here.
+\arguments{
+  \item{obj}{
+%%     ~~Describe \code{obj} here~~
+}
+  \item{hsig}{
+%%     ~~Describe \code{hsig} here~~
+}
+  \item{mask}{
+%%     ~~Describe \code{mask} here~~
+}
+}
+\details{
+%%  ~~ If necessary, more details than the description above ~~
+}
+\value{
+%%  ~Describe the value returned
+%%  If it is a LIST, use
+%%  \item{comp1 }{Description of 'comp1'}
+%%  \item{comp2 }{Description of 'comp2'}
+%% ...
+}
+\references{
+%% ~put references to the literature/web site here ~
+}
+\author{
+%%  ~~who you are~~
+}
+\note{
+%%  ~~further notes~~
+}
+
+%% ~Make other sections like Warning with \section{Warning }{....} ~
+
+\seealso{
+%% ~~objects to See Also as \code{\link{help}}, ~~~
+}
+\examples{
+##---- Should be DIRECTLY executable !! ----
+##-- ==>  Define data, use random,
+##--	or do  help(data=index)  for the standard data sets.
+
+## The function is currently defined as
+function (obj, hsig = 10, mask = NULL) 
+{
+    if (class(obj) == "sigmaEstSENSE") {
+        sigma2 <- obj$sigmal^2
+        mask <- obj$mask
+    }
+    else {
+        sigma2 <- obj^2
+    }
+    sdim <- dim(sigma2)
+    n <- prod(sdim)
+    if (length(sdim) != 3) 
+        stop("obj needs to be of class 'array' (3D) or 'sigmaEstSENSE'")
+    if (is.null(mask)) 
+        mask <- array(TRUE, sdim)
+    if (any(dim(mask) != sdim)) 
+        stop("dimensions do not coinside")
+    nwmd <- (2 * as.integer(hsig) + 1)^3
+    parammd <- .Fortran("paramw3", as.double(hsig), as.double(c(1, 
+        1)), ind = integer(3 * nwmd), w = double(nwmd), n = as.integer(nwmd), 
+        PACKAGE = "qMRI")[c("ind", "w", "n")]
+    nwmd <- parammd$n
+    parammd$ind <- parammd$ind[1:(3 * nwmd)]
+    dim(parammd$ind) <- c(3, nwmd)
+    mc.cores <- setCores(, reprt = FALSE)
+    sigma2 <- .Fortran("mediansm", as.double(sigma2), as.logical(mask), 
+        as.integer(sdim[1]), as.integer(sdim[2]), as.integer(sdim[3]), 
+        as.integer(parammd$ind), as.integer(nwmd), double(nwmd * 
+            mc.cores), as.integer(mc.cores), sigma2n = double(n), 
+        PACKAGE = "qMRI")$sigma2n/0.6931
+    dim(sigma2) <- sdim
+    if (class(obj) == "sigmaEstSENSE") {
+        obj$sigma2 <- sqrt(sigma2)
+        obj$hsig <- hsig
+    }
+    else {
+        obj <- sqrt(sigma2)
+    }
+    obj
+  }
+}
+% Add one or more standard keywords, see file 'KEYWORDS' in the
+% R documentation directory.
+\keyword{ ~kwd1 }
+\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line

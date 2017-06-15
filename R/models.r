@@ -119,7 +119,7 @@ reparamtrizeconstTR <- function(th,a1,a2,TR){
 }
 
 #   R1conf <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
-ESTATICS.confidence <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
+ESTATICS.confidence.old <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     ##
     ##   construct confidence region for parameter E1 
     ##   parameters are expected to be named as "ST1", "SPD" and "R2star", 
@@ -168,4 +168,51 @@ ESTATICS.confidence <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     list(E1=E1,CIE1=sort(CIE1),R1=R1,CIR1=sort(CIR1),R2star=R2star,CIR2star=CIR2star)
    }
    
-   
+   ESTATICS.confidence <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
+    ##
+    ##   construct confidence region for parameter E1 
+    ##   parameters are expected to be named as "ST1", "SPD" and "R2star", 
+    ##          parameter "SMT" is not used
+    ##  si2 - inverse covariance matrix of parameters 
+    ##
+    fc1 <- sin(aT1)/sin(aPD)
+    fc2 <- cos(aT1)
+    fc3 <- fc1*cos(aPD)
+    th <- theta[c("ST1","SPD")]
+    E1 <- (th[1]-th[2]*fc1)/(th[1]*fc2-th[2]*fc3)
+    R1 <- -log(E1)/TR
+    R2star <- theta["R2star"]
+    if(any(theta==0)){
+    ## no interior solution, unable to provide confidence regions
+       return(list(E1=E1,CIE1=c(NA,NA),R1=R1,CIR1=c(NA,NA),R2star=R2star,CIR2star=c(NA,NA)))
+       }
+    th <- theta[c("ST1","SPD")]
+    Amat <- si2[c("ST1","SPD"),c("ST1","SPD")][c(1,2,4)]
+#    qnsq <- qnorm(1-alpha/2)^2
+    qnsq <- if(is.null(df)) qchisq(1-alpha,2) else 2*qf(1-alpha,2,df)    
+    th2ofth1 <- function(th1,th,Amat,qnsq){
+        th1diff <- (th1-th[1])
+        p <- th[2]- th1diff*Amat[2]/Amat[3]
+        q <- (qnsq - th1diff^2*Amat[1]+2*th1diff*th[2]*Amat[2])/Amat[3]-th[2]^2
+        D <- p^2+q
+        th2 <- if(D>=0) c(p-sqrt(D),p+sqrt(D)) else c(NA,NA)
+        th2
+    }
+    
+    ## now search for min/max of (1-fc1*th2(th1)/th1)/(fc2-fc3*th2(th1)/th1)
+    e1 <- th[2]+th[1]*Amat[2]/Amat[3]
+    e2 <- qnsq/Amat[3]
+    e3 <- (Amat[1]*Amat[3]-Amat[2]^2)/Amat[3]^2
+    e4 <- th[1]
+    e0 <- e3^2*e4^2+e1^2*e3
+    q <- (e3^2*e4^4+e2^2-2*e3*e4^2*e2-e1^2*e2+e1^2*e3*e4^2)/e0
+    p <- -(e2*e3*e4-e3^2*e4^3-e1^2*e3*e4)/e0
+    D <- p^2-q
+    th1 <- if(D>=0) c(p-sqrt(D),p+sqrt(D)) else c(NA,NA)
+    th2 <- th2ofth1(th1[2],th,Amat,qnsq)
+    CIE1 <- (th1-th2*fc1)/(th1*fc2-th2*fc3)
+    CIR1 <- -log(CIE1)/TR
+    qqn <- if(is.null(df)) qnorm(1-alpha/2) else qt(1-alpha/2,df)
+    CIR2star <- R2star + c(-qqn,qqn)/sqrt(si2["R2star","R2star"])
+    list(E1=E1,CIE1=sort(CIE1),R1=R1,CIR1=sort(CIR1),R2star=R2star,CIR2star=CIR2star)
+   }

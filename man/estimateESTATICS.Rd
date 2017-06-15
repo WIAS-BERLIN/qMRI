@@ -55,10 +55,10 @@ estimateESTATICS(mpmdata, TEScale = 100, dataScale = 1000, verbose = TRUE)
                  \item{dataScale }{dataScale}
 }
 \references{
-%% ~put references to the literature/web site here ~
+Weiskopf, N.; Suckling, J.; Williams, G.; Correia, M. M.; Inkster, B.; Tait, R.; Ooi, C.; Bullmore, E. T. & Lutti, A. Quantitative multi-parameter mapping of R1, PD(*), MT, and R2(*) at 3T: a multi-center validation. Front Neurosci, Wellcome Trust Centre for Neuroimaging, UCL Institute of Neurology, University College London London, UK., 2013, 7, 95
 }
 \author{
-%%  ~~who you are~~
+Karsten Tabelow \email{karsten.tabelow@wias-berlin.de}, Joerg Polzehl \email{joerg.polzehl@wias-berlin.de}
 }
 \note{
 %%  ~~further notes~~
@@ -67,7 +67,7 @@ estimateESTATICS(mpmdata, TEScale = 100, dataScale = 1000, verbose = TRUE)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{estimateQI}},\code{\link{estimateQIconf}},\code{\link{estimateESTATICSQL}},\code{\link{smoothESTATICS}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

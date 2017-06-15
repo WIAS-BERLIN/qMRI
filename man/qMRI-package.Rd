@@ -36,8 +36,6 @@ export the results as Nifti-Files.
 \author{
 Karsten Tabelow \email{karsten.tabelow@wias-berlin.de}, Joerg Polzehl \email{joerg.polzehl@wias-berlin.de}
 
-
-
 Maintainer: Karsten Tabelow \email{karsten.tabelow@wias-berlin.de}
 }
 \references{

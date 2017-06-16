@@ -442,7 +442,7 @@ estimateESTATICS <- function(mpmdata,
     #
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
                                (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0)|
-                               (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmsense$mask)
+                               (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmdata$mask)
   } else {
     xmat <- matrix(0, mpmdata$nFiles, 3)
     xmat[1:length(mpmdata$t1Files), 1] <- 1
@@ -455,7 +455,7 @@ estimateESTATICS <- function(mpmdata,
     #   check for voxel in mask with all zeros for a modality
     #
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
-                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmsense$mask)
+                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmdata$mask)
   }
   if (verbose) {
     cat("Design of the model:\n")
@@ -696,7 +696,7 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
     #
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
                                (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0)|
-                               (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmsense$mask)
+                               (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmdata$mask)
   }
   else {
     xmat <- matrix(0, mpmdata$nFiles, 3)
@@ -707,7 +707,7 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
     #   check for voxel in mask with all zeros for a modality
     #
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
-                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmsense$mask)
+                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmdata$mask)
   }
   if (verbose) {
     cat("Design of the model:\n")

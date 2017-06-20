@@ -40,6 +40,24 @@ qflashpl <- function(par,design){
   fval
 }
 
+qflashpl0 <- function(par,design,R2star){
+  #
+  #  partial linear model
+  #
+  n <- dim(design)[1]
+  z <- .Fortran("qflashp0",
+                as.double(par),
+                as.double(R2star),
+                as.double(design),
+                as.integer(n),
+                fval=double(n),
+                grad=double(3*n),
+                PACKAGE="qMRI")[c("fval","grad")]
+  fval <- z$fval
+  attr(fval,"gradient") <- matrix(z$grad,n,3)
+  fval
+}
+
 qflashplQL <- function(par, design, CL, sigma, L){
   #
   #  ESTATICS model with QL
@@ -53,9 +71,31 @@ qflashplQL <- function(par, design, CL, sigma, L){
                 grad = double(4*n),
                 PACKAGE = "qMRI")[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  fval <- CL * hg1f1(-.5, L, -z$fval*z$fval/2/sigma/sigma)
-  CC <- CL * hg1f1(.5, L+1, -z$fval*z$fval/2/sigma/sigma) * z$fval /2/L/sigma/sigma
+  sfval <- pmin(z$fval/sigma,1e10)
+  fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
+  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
   attr(fval, "gradient") <- matrix(CC*z$grad, n, 4)
+  fval
+}
+
+qflashpl0QL <- function(par, R2star, design, CL, sigma, L){
+  #
+  #  ESTATICS model with QL
+  #
+  n <- dim(design)[1]
+  z <- .Fortran("qflashpl",
+                as.double(par),
+                as.double(R2star),
+                as.double(design),
+                as.integer(n),
+                fval = double(n),
+                grad = double(3*n),
+                PACKAGE = "qMRI")[c("fval", "grad")]
+  # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
+  sfval <- pmin(z$fval/sigma,1e10)
+  fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
+  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
+  attr(fval, "gradient") <- matrix(CC*z$grad, n, 3)
   fval
 }
 
@@ -76,6 +116,24 @@ qflashpl2 <- function(par, design){
   fval
 }
 
+qflashpl20 <- function(par, R2star, design){
+  #
+  #  partial linear model without MT
+  #
+  n <- dim(design)[1]
+  z <- .Fortran("qflashp20",
+                as.double(par),
+                as.double(R2star),
+                as.double(design),
+                as.integer(n),
+                fval = double(n),
+                grad = double(2*n),
+                PACKAGE = "qMRI")[c("fval", "grad")]
+  fval <- z$fval
+  attr(fval, "gradient") <- matrix(z$grad, n, 2)
+  fval
+}
+
 qflashpl2QL <- function(par, design, CL, sigma, L){
   #
   #  partial linear model without MT
@@ -89,12 +147,33 @@ qflashpl2QL <- function(par, design, CL, sigma, L){
                 grad = double(3*n),
                 PACKAGE = "qMRI")[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  fval <- CL * hg1f1(-.5, L, -z$fval*z$fval/2/sigma/sigma)
-  CC <- CL * hg1f1(.5, L+1, -z$fval*z$fval/2/sigma/sigma) * z$fval /2/L/sigma/sigma
+  sfval <- pmin(z$fval/sigma,1e10)
+  fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
+  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
   attr(fval, "gradient") <- matrix(CC*z$grad, n, 3)
   fval
 }
 
+qflashpl20QL <- function(par, R2star, design, CL, sigma, L){
+  #
+  #  partial linear model without MT
+  #
+  n <- dim(design)[1]
+  z <- .Fortran("qflashp20",
+                as.double(par),
+                as.double(R2star),
+                as.double(design),
+                as.integer(n),
+                fval = double(n),
+                grad = double(2*n),
+                PACKAGE = "qMRI")[c("fval", "grad")]
+  # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
+  sfval <- pmin(z$fval/sigma,1e10)
+  fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
+  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
+  attr(fval, "gradient") <- matrix(CC*z$grad, n, 2)
+  fval
+}
 
 reparamtrizeconstTR <- function(th,a1,a2,TR){
 #

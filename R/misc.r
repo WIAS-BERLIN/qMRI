@@ -36,6 +36,8 @@ hg1f1 <- function(a, b, z){
   ##  rel accuracy 2e-4 for z < -1400 for a=-.5, .5 
   ##
   n <- length(z)
+  z[is.na(z)] <- -1e20
+  z[is.infinite(z)] <- 1e-20
   .Fortran("hg1f1",
            as.double(a),
            as.double(b),
@@ -43,4 +45,28 @@ hg1f1 <- function(a, b, z){
            as.integer(n),
            fz = double(n),
            PACKAGE = "qMRI")$fz
+}
+
+summary0.nls <- function (object) {
+  r <- as.vector(object$m$resid())
+  w <- object$weights
+  n <- if (!is.null(w)) 
+    sum(w > 0)
+  else length(r)
+  param <- coef(object)
+  pnames <- names(param)
+  p <- length(param)
+  rdf <- n - p
+  resvar <- if (rdf <= 0) 
+    NaN
+  else deviance(object)/rdf
+  Rmat <- object$m$Rmat()
+  XtX <- t(Rmat)%*%Rmat
+  dimnames(XtX) <- list(pnames, pnames)
+  ans <- list(formula = formula(object), residuals = r, sigma = sqrt(resvar), 
+              df = c(p, rdf), XtX = XtX, call = object$call, 
+              convInfo = object$convInfo, control = object$control, 
+              na.action = object$na.action, coefficients = param)
+  class(ans) <- "summary0.nls"
+  ans
 }

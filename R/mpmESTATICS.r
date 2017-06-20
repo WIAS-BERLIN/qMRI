@@ -424,6 +424,7 @@ medianFilterSigma <- function(obj,hsig=10,mask=NULL){
 estimateESTATICS <- function(mpmdata,
                              TEScale = 100,
                              dataScale = 1000,
+                             maxR2star = 50,
                              verbose = TRUE) {
   
   ## this is our design ...
@@ -681,7 +682,7 @@ estimateESTATICS <- function(mpmdata,
 # }
 
 estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma = NULL, 
-                                L = NULL, verbose = TRUE) 
+                                L = NULL, maxR2star=50, verbose = TRUE) 
 {
   if (mpmdata$model == 2) {
     xmat <- matrix(0, mpmdata$nFiles, 4)
@@ -697,6 +698,7 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
                                (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0)|
                                (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmdata$mask)
+    npar <- 4
   }
   else {
     xmat <- matrix(0, mpmdata$nFiles, 3)
@@ -708,6 +710,7 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
     #
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
                                (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmdata$mask)
+    npar <- 3
   }
   if (verbose) {
     cat("Design of the model:\n")
@@ -744,6 +747,7 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
       stop("wrong dimension of array sigma")
   }
   isConv <- array(FALSE, mpmdata$sdim)
+  isThresh <- array(FALSE, mpmdata$sdim)
   modelCoeff <- array(0, c(npar, mpmdata$sdim))
   invCov <- array(0, c(npar, npar, mpmdata$sdim))
   if (verbose) 
@@ -755,59 +759,60 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
           if(!homsigma) sig <- sigma[x, y, z]
           ivec <- mpmdata$ddata[, x, y, z]/dataScale
           if (mpmdata$model == 2) {
-            th <- c(ivec[indT1] * exp(-xmat[indT1, 4] * 
-                                        R2star), ivec[indMT] * exp(-xmat[indMT, 
-                                                                         4] * R2star), ivec[indPD] * exp(-xmat[indPD, 
-                                                                                                               4] * R2star), R2star)
+            th <- c(ivec[indT1] * exp(-xmat[indT1, 4] * R2star), 
+                    ivec[indMT] * exp(-xmat[indMT, 4] * R2star), 
+                    ivec[indPD] * exp(-xmat[indPD, 4] * R2star), R2star)
             res <- try(nls(ivec ~ qflashplQL(par, xmat, 
                                              CL, sig, L), start = list(par = th), 
                            control = list(maxiter = 200, warnOnly = TRUE)))
             if (class(res) == "try-error" || !res$convInfo$isConv || 
                 any(coefficients(res) < 0)) 
-              #                        cat("nls failed at x",x,"y",y,"z",z,"\n") 
-              #                    print(res)
-              res <- nls(ivec ~ qflashplQL(par, xmat, 
-                                           CL, sig, L), start = list(par = th), 
-                         algorithm = "port", control = list(warnOnly = TRUE, 
-                                                            printEval = TRUE), lower = rep(0, 4))
-            #                    cat("result of port")
-            #                    print(res)
+              res <- try(nls(ivec ~ qflashplQL(par, xmat, CL, sig, L), start = list(par = th), 
+                         algorithm = "port", control = list(warnOnly = TRUE, printEval = TRUE), lower = rep(0, 4)))
           }
           else {
-            th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * 
-                                        R2star), ivec[indPD] * exp(-xmat[indPD, 
-                                                                         3] * R2star), R2star)
+            th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), 
+                    ivec[indPD] * exp(-xmat[indPD, 3] * R2star), R2star)
             res <- try(nls(ivec ~ qflashpl2QL(par, xmat, 
                                               CL, sig, L), start = list(par = th), 
                            control = list(maxiter = 200, warnOnly = TRUE)))
-            if (class(res) == "try-error" || !res$convInfo$isConv || 
-                any(coefficients(res) < 0)) 
-              #                        cat("nls failed at x",x,"y",y,"z",z,"\n") 
-              #                      print(res)
-              res <- nls(ivec ~ qflashpl2QL(par, xmat, 
-                                            CL, sig, L), start = list(par = th), 
-                         algorithm = "port", control = list(warnOnly = TRUE, 
-                                                            printEval = TRUE), lower = rep(0, 3))
-            #                      cat("result of port")
-            #                      print(res)
+            if (class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0)){ 
+              cat("Convergence problem in voxel",x,y,z,"\n")
+              cat("Initial parameter",th,"\n")
+              cat("data",ivec,"\n")
+              cat("init",try(qflashpl2QL(th, xmat, CL, sig, L)),"\n")
+              cat("coef",try(coef(res)),"\n")
+              res <- try(nls(ivec ~ qflashpl2QL(par, xmat, CL, sig, L), start = list(par = th), 
+                         algorithm = "port", control = list(warnOnly = TRUE, printEval = TRUE), lower = rep(0, 3)))
+            }
           }
-          sres <- try(summary(res))
-          if(class(sres)!="try-error"){
+          if(class(res)!="try-error"&&coef(res)[npar]<maxR2star){
+            sres <- summary0.nls(res)
             isConv[x, y, z] <- res$convInfo$isConv
-            modelCoeff[, x, y, z] <- sres$coefficients[, 
-                                                       1]
+            modelCoeff[, x, y, z] <- sres$coefficients
             if (sres$sigma != 0) {
-              invCovtmp <- try(solve(sres$cov.unscaled))
-              if(class(invCovtmp) != "try-error"){
+              invCovtmp <- sres$XtX
                 invCov[, , x, y, z] <- invCovtmp/sres$sigma^2
-              } 
-            } # else {
-            #                      cat("solve(sres$cov.unscaled) failed at x",x,"y",y,"z",z,"\n")
-            #                      print(sres$cov.unscaled)
-            #                      mpmdata$mask[x,y,z] <- FALSE
-            #                  }
+            }  
           } else {
-            mpmdata$mask[x,y,z] <- FALSE
+            if(mpmdata$model == 2){
+               res <- try(nls(ivec ~ qflashpl20QL(par, maxR2star, xmat, 
+                                                CL, sig, L), start = list(par = th[-npar]), 
+                                                control = list(maxiter = 20, warnOnly = TRUE)))
+            } else {
+              res <- try(nls(ivec ~ qflashpl20QL(par, maxR2star, xmat, 
+                                                 CL, sig, L), start = list(par = th[-npar]), 
+                             control = list(maxiter = 20, warnOnly = TRUE)))
+            }
+             isThresh[x,y,z] <- TRUE
+             isConv[x, y, z] <- res$convInfo$isConv
+             sres <- summary0.nls(res)
+             modelCoeff[-npar, x, y, z] <- sres$coefficients
+             modelCoeff[npar, x, y, z] <- maxR2star
+             if (sres$sigma != 0) {
+               invCovtmp <- sres$XtX
+               invCov[-npar,-npar , x, y, z] <- invCovtmp/sres$sigma^2
+             }  
           }
         }
       }
@@ -817,7 +822,7 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
   }
   if (verbose) 
     Sys.time()
-  invisible(list(modelCoeff = modelCoeff, invCov = invCov, 
+  invisible(list(modelCoeff = modelCoeff, invCov = invCov, isThresh = isThresh,
                  isConv = isConv, sdim = mpmdata$sdim, nFiles = mpmdata$nFiles, 
                  t1Files = mpmdata$t1Files, pdFiles = mpmdata$pdFiles, 
                  mtFiles = mpmdata$mtFiles, model = mpmdata$model, maskFile = mpmdata$maskFile, 

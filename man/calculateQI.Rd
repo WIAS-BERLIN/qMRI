@@ -5,7 +5,12 @@
 Calculate quantitative imaging parameters from estimates in the ESTATICS model.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Quantitaive imaging parameters are calculated from the estimated parameters 
+in the ESTATICS model. This involves a correction for magnetic field inhomogeneities
+if the information is provided in argument \code{b1File} and use of a second 
+of a second recovery delay TR2 in case of Dual-Exitation FLASH measurements
+(Helms 2008).
+
 }
 \usage{
 calculateQI(mpmESTATICSModel, b1File = NULL, TR2 = 0, verbose = TRUE)
@@ -13,16 +18,15 @@ calculateQI(mpmESTATICSModel, b1File = NULL, TR2 = 0, verbose = TRUE)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{mpmESTATICSModel}{
-%%     ~~Describe \code{mpmESTATICSModel} here~~
+Object obtained using functions \code{\link{estimateESTATICS}} or \code{\link{estimateESTATICSQL}}.
 }
   \item{b1File}{
-%%     ~~Describe \code{b1File} here~~
+Name of a file containing a B1-field inhomogeneity map (.nii)
 }
-  \item{TR2}{
-%%     ~~Describe \code{TR2} here~~
+  \item{TR2}{second recovery delay TR2 in case of Dual-Exitation FLASH measurements.
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+Show progress
 }
 }
 \details{
@@ -31,15 +35,27 @@ calculateQI(mpmESTATICSModel, b1File = NULL, TR2 = 0, verbose = TRUE)
 \value{
 %%  ~Describe the value returned
 %%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
+List with components
+\item{b1Map }{ b1Map }
+\item{R1 }{ Estimated map of R1}
+\item{R2star }{ Estimated map of R2star}
+        \item{PD }{Estimated map of  PD}
+        \item{delta }{Estimated map of  delta (if MT-series was used)}
+        \item{model }{Type of ESTATICS model used} 
+        \item{t1Files }{filenames T1}
+        \item{mtFiles }{filenames MT}
+        \item{pdFiles }{filenames PD}
+        \item{mask }{brainmask}
 %% ...
 }
 \references{
 %% ~put references to the literature/web site here ~
+Helms, G.; Dathe, H.; Kallenberg, K. & Dechent, P. High-Resolution Maps of Magnetization Transfer with Inherent Correction for RF Inhomogeneity and T1 Relaxation Obtained from 3D FLASH MRI Magn. Res. Med., 2008, 60, 1396-1407
+
+Weiskopf, N.; Suckling, J.; Williams, G.; Correia, M. M.; Inkster, B.; Tait, R.; Ooi, C.; Bullmore, E. T. & Lutti, A. Quantitative multi-parameter mapping of R1, PD(*), MT, and R2(*) at 3T: a multi-center validation. Front Neurosci, Wellcome Trust Centre for Neuroimaging, UCL Institute of Neurology, University College London London, UK., 2013, 7, 95
 }
 \author{
-%%  ~~who you are~~
+Karsten Tabelow \email{karsten.tabelow@wias-berlin.de}
 }
 \note{
 %%  ~~further notes~~
@@ -48,7 +64,7 @@ calculateQI(mpmESTATICSModel, b1File = NULL, TR2 = 0, verbose = TRUE)
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{estimateESTATICS}},\code{\link{estimateESTATICSQL}},\code{\link{smoothESTATICS}},\code{\link{estimateQIconf}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

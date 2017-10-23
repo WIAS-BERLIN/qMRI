@@ -94,6 +94,40 @@ C
       RETURN
       END
 
+      subroutine qflashp0(th,r2star,des,n,fval,grad)
+C
+C  function values and gradients (3 parameters)
+C
+      implicit logical (a-z)
+      integer n
+      real*8 th(3),r2star,des(n,4),fval(n),grad(n,3)
+      integer i
+      real*8 z4,fv
+      DO i=1,n
+         z4=exp(-r2star*des(i,4))
+         if(des(i,1).gt.0) THEN
+            fv=z4*th(1)
+            grad(i,1)=z4
+            grad(i,2)=0.d0
+            grad(i,3)=0.d0
+         END IF
+         if(des(i,2).gt.0) THEN
+            fv=z4*th(2)
+            grad(i,1)=0.d0
+            grad(i,2)=z4
+            grad(i,3)=0.d0
+         END IF
+         if(des(i,3).gt.0) THEN
+            fv=z4*th(3)
+            grad(i,1)=0.d0
+            grad(i,2)=0.d0
+            grad(i,3)=z4
+         END IF
+         fval(i)=fv
+      END DO
+      RETURN
+      END
+
       subroutine qflashpl2(th,des,n,fval,grad)
 C
 C  function values and gradients (3parameters)

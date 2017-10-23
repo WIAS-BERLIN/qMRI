@@ -5,7 +5,11 @@
 Get confidence intervall for QI parameters
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Quantitaive imaging parameters are calculated from the estimated parameters 
+in the ESTATICS model. This involves a correction for magnetic field inhomogeneities
+if the information is provided in argument \code{b1File} and use of a second 
+of a second recovery delay TR2 in case of Dual-Exitation FLASH measurements
+(Helms 2008).
 }
 \usage{
 estimateQIconf(mpmESTATICSmodel, verbose = TRUE)

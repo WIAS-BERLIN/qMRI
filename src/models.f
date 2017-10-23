@@ -121,3 +121,24 @@ C
       RETURN
       END
 
+      subroutine qflashpl3(th,des,n,fval,grad)
+C
+C  function values and gradients (2parameters)
+C
+      implicit logical (a-z)
+      integer n
+      real*8 th(2),des(n,2),fval(n),grad(n,2)
+      integer i
+      real*8 z2,fv
+      DO i=1,n
+         z2=exp(-th(2)*des(i,2))
+         if(des(i,1).gt.0) THEN
+            fv=z2*th(1)
+            grad(i,1)=z2
+         END IF
+         grad(i,2)=-des(i,2)*fv
+         fval(i)=fv
+      END DO
+      RETURN
+      END
+

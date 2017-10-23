@@ -10,7 +10,7 @@ readMPMData  <-  function(t1Files  = NULL,
 
   ## we need at least T1w and PDw files
   if (is.null(t1Files)) stop("vector of T1 files required")
-  if (is.null(pdFiles)) stop("vector of PD files required")
+  # if (is.null(pdFiles)) stop("vector of PD files required")
   ## TODO: test whether there are enough files for the model?
 
   if (is.null(sdim)) stop("need spatial dimensionality of the data")
@@ -18,7 +18,11 @@ readMPMData  <-  function(t1Files  = NULL,
 
   ## select the model according to the existence of MTw files
   model <- if (is.null(mtFiles)) {
-    1L # the simple model without MT inclusion
+    if (is.null(pdFiles)) {
+      0L 
+    } else {
+      1L # the simple model without MT inclusion
+    }
   } else {
     2L # the model including MT
   }
@@ -80,27 +84,29 @@ readMPMData  <-  function(t1Files  = NULL,
       ii <- ii + 1
       if (verbose) setTxtProgressBar(pb, i)
     }
+    if (verbose) close(pb)
   }
-  if (verbose) close(pb)
   ## .. and for all PD volumes ...
-  if (verbose) cat("reading PD files\n")
-  if (verbose) pb <- txtProgressBar(min = 0, max = length(pdFiles), style = 3)
-  for (i in 1:length(pdFiles)) {
-    ds <- readNIfTI(pdFiles[i], reorient = FALSE)
-    ddata[ii, ] <- ds
-    if(readParameterFlag) {
-      ## IMPORTANT: This is special to Siawoosh data
-      res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
-      for (nn in 1:dim(res[[1]])[1]) {
-        if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
-        if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
-        if (res[[1]][nn, 2] == "FA") FA[ii] <- as.numeric(res[[1]][nn, 3])
+  if ((model == 2) or (model == 1)) {
+    if (verbose) cat("reading PD files\n")
+    if (verbose) pb <- txtProgressBar(min = 0, max = length(pdFiles), style = 3)
+    for (i in 1:length(pdFiles)) {
+      ds <- readNIfTI(pdFiles[i], reorient = FALSE)
+      ddata[ii, ] <- ds
+      if(readParameterFlag) {
+        ## IMPORTANT: This is special to Siawoosh data
+        res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
+        for (nn in 1:dim(res[[1]])[1]) {
+          if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
+          if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
+          if (res[[1]][nn, 2] == "FA") FA[ii] <- as.numeric(res[[1]][nn, 3])
+        }
       }
+      ii <- ii + 1
+      if (verbose) setTxtProgressBar(pb, i)
     }
-    ii <- ii + 1
-    if (verbose) setTxtProgressBar(pb, i)
+    if (verbose) close(pb)
   }
-  if (verbose) close(pb)
   dim(ddata) <- c(nFiles, sdim)
   ## ... done!
 
@@ -443,7 +449,7 @@ estimateESTATICS <- function(mpmdata,
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
                                (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0)|
                                (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmsense$mask)
-  } else {
+  } else if (mpmdata$model == 1) {
     xmat <- matrix(0, mpmdata$nFiles, 3)
     xmat[1:length(mpmdata$t1Files), 1] <- 1
     xmat[(length(mpmdata$t1Files)+1):mpmdata$nFiles, 2] <- 1
@@ -456,7 +462,18 @@ estimateESTATICS <- function(mpmdata,
     #
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
                                (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmsense$mask)
+  } else {
+    xmat <- matrix(0, mpmdata$nFiles, 2)
+    xmat[1:length(mpmdata$t1Files), 1] <- 1
+    xmat[, 2] <- mpmdata$TE / TEScale
+    ## ... for our model in qflashpl3() ...
+    ## S_{T1} = par[1] * exp(- par[2] * TE)
+    #
+    #   check for voxel in mask with all zeros for a modality
+    #
+    zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0))*mpmsense$mask)
   }
+  
   if (verbose) {
     cat("Design of the model:\n")
     print(xmat)
@@ -473,9 +490,11 @@ estimateESTATICS <- function(mpmdata,
     indMT <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1])
     indPD <- order(mpmdata$TE[as.logical(xmat[, 3])])[1] + sum(xmat[, 1]) + sum(xmat[, 2])
     npar <- 4
-  } else {
+  } else if (mpmdata$model == 1) {
     indPD <- order(mpmdata$TE[as.logical(xmat[, 2])])[1] + sum(xmat[, 1])
     npar <- 3
+  } else {
+    npar <- 2
   }
   
   isConv <- array(FALSE, mpmdata$sdim)
@@ -506,7 +525,7 @@ estimateESTATICS <- function(mpmdata,
                          control = list(warnOnly = TRUE,
                                         printEval = TRUE),
                          lower = rep(0, 4))
-          } else {
+          } else (mpmdata$model == 1) {
             ## reduced ESTATICS model without MT
             th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), # par[1]
                     ivec[indPD] * exp(-xmat[indPD, 3] * R2star), # par[2]
@@ -517,6 +536,21 @@ estimateESTATICS <- function(mpmdata,
                                           warnOnly = TRUE)))
             if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
               res <- nls(ivec ~ qflashpl2(par, xmat),
+                         start = list(par = th),
+                         algorithm = "port",
+                         control = list(warnOnly = TRUE,
+                                        printEval = TRUE),
+                         lower = rep(0, 3))
+          } else {
+            ## reduced ESTATICS model without MT and PD
+            th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), # par[1]
+                    R2star)                                      # par[2]
+            res <- try(nls(ivec ~ qflashpl3(par, xmat),
+                           start = list(par = th),
+                           control = list(maxiter = 200,
+                                          warnOnly = TRUE)))
+            if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
+              res <- nls(ivec ~ qflashpl3(par, xmat),
                          start = list(par = th),
                          algorithm = "port",
                          control = list(warnOnly = TRUE,
@@ -833,7 +867,13 @@ smoothESTATICS <- function(mpmESTATICSModel,
                            verbose = TRUE) {
 
   ## length of the vector to smooth (# parameters of model)
-  nv <- if (mpmESTATICSModel$model == 2) 4 else 3
+  if (mpmESTATICSModel$model == 2) {
+    nv <- 4
+  } else if (mpmESTATICSModel$model == 2) { 
+    nv <- 3
+  } else {
+    nv <- 2
+  }
 
   ## determine a suitable adaptation bandwidth
   lambda <- nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)

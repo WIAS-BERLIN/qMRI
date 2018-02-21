@@ -1,4 +1,4 @@
-rimage <- function(x = seq(0, 1, length.out = nrow(z)), 
+rimage <- function(x = seq(0, 1, length.out = nrow(z)),
                    y = seq(0, 1, length.out = ncol(z)),
                    z, zlim=NULL, col=grey(0:255/255),
                    low="blue", up="gold", NAcolor="red",...){
@@ -10,7 +10,7 @@ rimage <- function(x = seq(0, 1, length.out = nrow(z)),
         x <- x$x
       }
       else {
-        if (is.null(dim(x))) 
+        if (is.null(dim(x)))
           stop("argument must be matrix-like")
         z <- x
         x <- seq.int(0, 1, length.out = nrow(z))
@@ -18,7 +18,7 @@ rimage <- function(x = seq(0, 1, length.out = nrow(z)),
       }
     }
   }
-   if(is.null(zlim)){ 
+   if(is.null(zlim)){
      zlim<-range(z)
    } else {
      z[z<zlim[1]] <- zlim[1]
@@ -32,8 +32,8 @@ rimage <- function(x = seq(0, 1, length.out = nrow(z)),
 hg1f1 <- function(a, b, z){
   ##
   ##  Confluent Hypergeometric 1F1 (a,b scalar, z vector)
-  ##  rel accuracy 1e-13 for z in -1400:700 for a=-.5, .5 
-  ##  rel accuracy 2e-4 for z < -1400 for a=-.5, .5 
+  ##  rel accuracy 1e-13 for z in -1400:700 for a=-.5, .5
+  ##  rel accuracy 2e-4 for z < -1400 for a=-.5, .5
   ##
   n <- length(z)
   z[is.na(z)] <- -1e20
@@ -47,26 +47,25 @@ hg1f1 <- function(a, b, z){
            PACKAGE = "qMRI")$fz
 }
 
-summary0.nls <- function (object) {
+getnlspars <- function (object) {
   r <- as.vector(object$m$resid())
   w <- object$weights
-  n <- if (!is.null(w)) 
+  n <- if (!is.null(w))
     sum(w > 0)
   else length(r)
   param <- coef(object)
   pnames <- names(param)
   p <- length(param)
   rdf <- n - p
-  resvar <- if (rdf <= 0) 
+  resvar <- if (rdf <= 0)
     NaN
   else deviance(object)/rdf
   Rmat <- object$m$Rmat()
   XtX <- t(Rmat)%*%Rmat
   dimnames(XtX) <- list(pnames, pnames)
-  ans <- list(formula = formula(object), residuals = r, sigma = sqrt(resvar), 
-              df = c(p, rdf), XtX = XtX, call = object$call, 
-              convInfo = object$convInfo, control = object$control, 
+  ans <- list(formula = formula(object), residuals = r, sigma = sqrt(resvar),
+              df = c(p, rdf), XtX = XtX, call = object$call,
+              convInfo = object$convInfo, control = object$control,
               na.action = object$na.action, coefficients = param)
-  class(ans) <- "summary0.nls"
   ans
 }

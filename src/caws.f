@@ -1,5 +1,5 @@
 C
-C    Copyright (C) 2015 Weierstrass-Institut fuer 
+C    Copyright (C) 2015 Weierstrass-Institut fuer
 C                       Angewandte Analysis und Stochastik (WIAS)
 C
 C    Author:  Joerg Polzehl
@@ -19,8 +19,8 @@ C  along with this program; if not, write to the Free Software
 C  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307,
 C  USA.
 C
-C  The following routines are part of the aws package and contain  
-C  FORTRAN 77 code needed in R functions aws, vaws, 
+C  The following routines are part of the aws package and contain
+C  FORTRAN 77 code needed in R functions aws, vaws,
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -29,49 +29,50 @@ C    location penalty for multivariate non-gridded aws
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       real*8 function lmkern(kern,dx,xi,xj,h2)
-      implicit logical (a-z)
+      implicit none
       external lkern
       integer kern,dx,i
       real*8 xi(dx),xj(dx),h2,z,zd,lkern
       z=0.d0
-      do 1 i=1,dx
+      do i=1,dx
          zd=xi(i)-xj(i)
          z=z+zd*zd
-         if(z.gt.h2) goto 2
-1     continue
+         if(z.gt.h2) THEN
+           lmkern=0.d0
+           RETURN
+         END IF
+      END DO
       lmkern=lkern(kern,z/h2)
-      goto 999
-2     lmkern=0.d0
-999   return
+      return
       end
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
 C
-C   Local constant aws on a grid      
+C   Local constant aws on a grid
 C
 C   this is a reimplementation of the original aws procedure
 C
 C   should be slightly slower for non-Gaussian models (see function kldist)
-C    
+C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
 C
 C          Compute the Kullback-Leibler Distance
 C
-C          Model=1    Gaussian   
-C          Model=2    Bernoulli   
-C          Model=3    Poisson   
-C          Model=4    Exponential   
+C          Model=1    Gaussian
+C          Model=2    Bernoulli
+C          Model=3    Poisson
+C          Model=4    Exponential
 C          Model=5    Variance
-C          Model=6    Noncentral Chi (Gaussian approximation, 
+C          Model=6    Noncentral Chi (Gaussian approximation,
 C                     variance mean dependence is introduces via factor bii)
 C
-C     computing dlog(theta) and dlog(1.d0-theta) outside the AWS-loops 
+C     computing dlog(theta) and dlog(1.d0-theta) outside the AWS-loops
 C     will reduces computational costs at the price of readability
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       real*8 function kldist(model,thi,thj)
-      implicit logical (a-z)
+      implicit none
       integer model
       real*8 thi,thj,z,tthi
       IF (model.eq.1) THEN
@@ -118,7 +119,7 @@ C          Kern=4     Triweight
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       real*8 function lkern(kern,xsq)
-      implicit logical (a-z)
+      implicit none
       integer kern
       real*8 xsq,z
       IF (xsq.ge.1) THEN
@@ -143,15 +144,15 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C        use Epanechnikov
          lkern=1.d0-xsq
       ENDIF
-      RETURN 
-      END   
+      RETURN
+      END
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
-C        Compute truncated Exponential Kernel 
+C        Compute truncated Exponential Kernel
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       real*8 function skern(x,xmin,xmax)
-      implicit logical (a-z)
+      implicit none
       real*8 x,xmin,xmax,spf
       spf=xmax/(xmax-xmin)
       IF (x.le.xmin) THEN
@@ -171,20 +172,20 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine vaws(y,mask,nv,n1,n2,n3,hakt,lambda,theta,si2,bi,
      1                thnew,ncores,lwght,wght,swjy)
 C
-C   y        observed values of regression function 
+C   y        observed values of regression function
 C   nv       number of vector components
 C   n1,n2,n3    design dimensions
 C   hakt     actual bandwidth
 C   lambda   kritical value
 C   theta    estimates from last step   (input)
-C   si2      inverse covariance matrices of vectors in y 
+C   si2      inverse covariance matrices of vectors in y
 C   bi       \sum  Wi   (output)
 C   thnew    \sum  Wi Y / bi     (output)
 C   ncores   number of cores
-C   
+C
 C   wght     scaling factor for second and third dimension (larger values shrink)
-C   
-      implicit logical (a-z)
+C
+      implicit none
 
       integer nv,n1,n2,n3,ncores
       logical aws, mask(*)
@@ -196,7 +197,7 @@ C
       real*8 bii,biinv,sij,swj,z,z1,z2,z3,wj,hakt2,hmax2,w1,w2,spmb,spf
       external lkern,KLdistsi
       real*8 lkern,KLdistsi
-!$      integer omp_get_thread_num 
+!$      integer omp_get_thread_num
 !$      external omp_get_thread_num
       thrednr = 1
 C just to prevent a compiler warning
@@ -257,7 +258,7 @@ C$OMP PARALLEL DEFAULT(NONE)
 C$OMP& SHARED(thnew,bi,nv,n1,n2,n3,hakt2,hmax2,theta,
 C$OMP& ih3,lwght,wght,y,swjy,mask,si2)
 C$OMP& FIRSTPRIVATE(ih1,ih2,lambda,aws,n12,
-C$OMP& model,spf,dlw1,clw1,dlw2,clw2,dlw3,clw3,dlw12,w1,w2)
+C$OMP& spf,dlw1,clw1,dlw2,clw2,dlw3,clw3,dlw12,w1,w2)
 C$OMP& PRIVATE(i1,i2,i3,iind,bii,biinv,swj,spmb,
 C$OMP& sij,wj,j3,jw3,jind3,z3,jwind3,j2,jw2,jind2,z2,jwind2,
 C$OMP& j1,jw1,jind,z1,z,thrednr)
@@ -270,8 +271,8 @@ C returns value in 0:(ncores-1)
          if(i1.eq.0) i1=n1
          i2=mod((iind-i1)/n1+1,n2)
          if(i2.eq.0) i2=n2
-         i3=(iind-i1-(i2-1)*n1)/n12+1         
-C    nothing to do, final estimate is already fixed by control 
+         i3=(iind-i1-(i2-1)*n1)/n12+1
+C    nothing to do, final estimate is already fixed by control
          bii=bi(iind)/lambda
          biinv=1.d0/bii
          spmb=0.25d0/bii
@@ -320,7 +321,7 @@ C  first stochastic term
             thnew(k,iind)=swjy(k,thrednr)/swj
          END DO
          bi(iind)=swj
-      END DO 
+      END DO
 C$OMP END DO NOWAIT
 C$OMP END PARALLEL
 C$OMP FLUSH(thnew,bi)
@@ -334,7 +335,7 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine vaws2(y,mask,nv,n1,n2,n3,hakt,lambda,theta,s2,bi,
      1                thnew,s2new,ncores,lwght,wght,swjy)
 C
-C   y        observed values of regression function 
+C   y        observed values of regression function
 C   nv       number of vector components
 C   n1,n2,n3    design dimensions
 C   hakt     actual bandwidth
@@ -344,10 +345,10 @@ C   si2      assumes same variance in components and independence
 C   bi       \sum  Wi   (output)
 C   thnew    \sum  Wi Y / bi     (output)
 C   ncores   number of cores
-C   
+C
 C   wght     scaling factor for second and third dimension (larger values shrink)
-C   
-      implicit logical (a-z)
+C
+      implicit none
 
       integer nv,n1,n2,n3,ncores
       logical aws, mask(*)
@@ -359,7 +360,7 @@ C
       real*8 bii,biinv,sij,swj,z,z1,z2,z3,wj,hakt2,hmax2,w1,w2,spmb,spf
       external lkern,KLdist2
       real*8 lkern,KLdist2
-!$      integer omp_get_thread_num 
+!$      integer omp_get_thread_num
 !$      external omp_get_thread_num
       thrednr = 1
 C just to prevent a compiler warning
@@ -420,7 +421,7 @@ C$OMP PARALLEL DEFAULT(NONE)
 C$OMP& SHARED(thnew,bi,nv,n1,n2,n3,hakt2,hmax2,theta,
 C$OMP& ih3,lwght,wght,y,swjy,mask,s2new,s2)
 C$OMP& FIRSTPRIVATE(ih1,ih2,lambda,aws,n12,
-C$OMP& model,spf,dlw1,clw1,dlw2,clw2,dlw3,clw3,dlw12,w1,w2)
+C$OMP& spf,dlw1,clw1,dlw2,clw2,dlw3,clw3,dlw12,w1,w2)
 C$OMP& PRIVATE(i1,i2,i3,iind,bii,biinv,swj,spmb,
 C$OMP& sij,wj,j3,jw3,jind3,z3,jwind3,j2,jw2,jind2,z2,jwind2,
 C$OMP& j1,jw1,jind,z1,z,thrednr,swj2)
@@ -433,8 +434,8 @@ C returns value in 0:(ncores-1)
          if(i1.eq.0) i1=n1
          i2=mod((iind-i1)/n1+1,n2)
          if(i2.eq.0) i2=n2
-         i3=(iind-i1-(i2-1)*n1)/n12+1         
-C    nothing to do, final estimate is already fixed by control 
+         i3=(iind-i1-(i2-1)*n1)/n12+1
+C    nothing to do, final estimate is already fixed by control
          bii=bi(iind)/lambda
          biinv=1.d0/bii
          spmb=0.25d0/bii
@@ -491,14 +492,14 @@ C  first stochastic term
          ELSE
             s2new(iind) = s2(iind)
          END IF
-      END DO 
+      END DO
 C$OMP END DO NOWAIT
 C$OMP END PARALLEL
 C$OMP FLUSH(thnew,bi)
       RETURN
       END
       real*8 function KLdistsi(thi,thj,si2,nv)
-      implicit logical (a-z)
+      implicit none
       integer nv
       real*8 thi(nv), thj(nv), si2(nv,nv)
       integer k,l
@@ -517,7 +518,7 @@ C$OMP FLUSH(thnew,bi)
       RETURN
       END
       real*8 function KLdist2(thi,thj,s2)
-      implicit logical (a-z)
+      implicit none
       integer nv
       real*8 thi(2), thj(2), s2, z1, z2
       integer k,l
@@ -535,20 +536,20 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       subroutine vawsext(y,mask,nv,n1,n2,n3,yext,nve,hakt,lambda,
      1    theta,si2,bi,thnew,thext,ncores,lwght,wght,swjy,swjye)
 C
-C   y        observed values of regression function 
+C   y        observed values of regression function
 C   nv       number of vector components
 C   n1,n2,n3    design dimensions
 C   hakt     actual bandwidth
 C   lambda   kritical value
 C   theta    estimates from last step   (input)
-C   si2      inverse covariance matrices of vectors in y 
+C   si2      inverse covariance matrices of vectors in y
 C   bi       \sum  Wi   (output)
 C   thnew    \sum  Wi Y / bi     (output)
 C   ncores   number of cores
-C   
+C
 C   wght     scaling factor for second and third dimension (larger values shrink)
-C   
-      implicit logical (a-z)
+C
+      implicit none
 
       integer nv,n1,n2,n3,ncores,nve
       logical aws, mask(*)
@@ -561,7 +562,7 @@ C
       real*8 bii,biinv,sij,swj,z,z1,z2,z3,wj,hakt2,hmax2,w1,w2,spmb,spf
       external lkern,KLdistsi
       real*8 lkern,KLdistsi
-!$      integer omp_get_thread_num 
+!$      integer omp_get_thread_num
 !$      external omp_get_thread_num
       thrednr = 1
 C just to prevent a compiler warning
@@ -622,7 +623,7 @@ C$OMP PARALLEL DEFAULT(NONE)
 C$OMP& SHARED(thnew,bi,nv,n1,n2,n3,hakt2,hmax2,theta,
 C$OMP& ih3,lwght,wght,y,swjy,mask,swjye,yext,thext,nve)
 C$OMP& FIRSTPRIVATE(ih1,ih2,lambda,aws,n12,
-C$OMP& model,spf,dlw1,clw1,dlw2,clw2,dlw3,clw3,dlw12,w1,w2)
+C$OMP& spf,dlw1,clw1,dlw2,clw2,dlw3,clw3,dlw12,w1,w2)
 C$OMP& PRIVATE(i1,i2,i3,iind,bii,biinv,swj,spmb,
 C$OMP& sij,wj,j3,jw3,jind3,z3,jwind3,j2,jw2,jind2,z2,jwind2,
 C$OMP& j1,jw1,jind,z1,z,thrednr)
@@ -635,8 +636,8 @@ C returns value in 0:(ncores-1)
          if(i1.eq.0) i1=n1
          i2=mod((iind-i1)/n1+1,n2)
          if(i2.eq.0) i2=n2
-         i3=(iind-i1-(i2-1)*n1)/n12+1         
-C    nothing to do, final estimate is already fixed by control 
+         i3=(iind-i1-(i2-1)*n1)/n12+1
+C    nothing to do, final estimate is already fixed by control
          bii=bi(iind)/lambda
          biinv=1.d0/bii
          spmb=0.25d0/bii
@@ -694,7 +695,7 @@ C  first stochastic term
             thext(k,iind)=swjye(k,thrednr)/swj
          END DO
          bi(iind)=swj
-      END DO 
+      END DO
 C$OMP END DO NOWAIT
 C$OMP END PARALLEL
 C$OMP FLUSH(thnew,bi,thext)
@@ -702,7 +703,7 @@ C$OMP FLUSH(thnew,bi,thext)
       END
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
-C   determine sum of location weights for a given geometry a(3) and given 
+C   determine sum of location weights for a given geometry a(3) and given
 C   bandwidth
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
@@ -744,7 +745,7 @@ C  Algorithmus zur Nullstellenbestimmung einer monotonen Funktion auf(0,\infty)
           bw=y-(fw2-value)/(fw2-fw1)*(y-x)
       ENDIF
       RETURN
-      END  
+      END
       real*8 function sofw(bw,kern,wght)
       implicit logical(a-z)
       integer kern
@@ -799,12 +800,12 @@ C
       RETURN
       END
       subroutine paramw3(h,vext,ind,w,n)
-C  compute a description of local weights 
+C  compute a description of local weights
 C  h    - bandwidth
 C  vext - vector (length 2) of relative voxel extensions
 C  ind  - integer array dim (3,n) containing relative indices in xyz
 C  w    - vector of corresponding weights
-C  n    - number of positive weights (initial value 
+C  n    - number of positive weights (initial value
 C         (2 int(h)+1)*(2 int(h/vext(1))+1)*(2 int(h/vext(2))+1)
       integer n,ind(3,n)
       double precision h,vext(2),w(n)
@@ -843,7 +844,7 @@ C   3D median smoother of y with neighborhood defined by ind
 C   results in yout
 C   size of work needs to be 2*nind
 C
-      implicit logical (a-z)
+      implicit none
       integer n1,n2,n3,nind,ind(3,nind),ncores
       logical mask(n1,n2,n3)
       double precision y(n1,n2,n3),yout(n1,n2,n3),work(nind,ncores)
@@ -880,8 +881,8 @@ C$OMP DO SCHEDULE(GUIDED)
                IF(k.gt.1) THEN
                   yout(i1,i2,i3) = fmedian(work(1,thrednr),k)
 C                  call qsort3(work(1,thrednr),1,k)
-C                  IF (mod(k,2) == 0) THEN    
-C                     yout(i1,i2,i3) = 
+C                  IF (mod(k,2) == 0) THEN
+C                     yout(i1,i2,i3) =
 C     1               (work(k/2,thrednr)+work(k/2+1,thrednr))/2.d0
 C                  ELSE
 C                     yout(i1,i2,i3) = work(k/2+1,thrednr)
@@ -901,8 +902,8 @@ C$OMP FLUSH(yout)
 C
 C  compute the median using a select algorithm instead of sorting
 C  used in mediansm
-C      
-      implicit logical (a-z)
+C
+      implicit none
       integer n
       double precision x(n)
       integer m
@@ -921,7 +922,7 @@ C
 C  partial sorting using a select algorithm
 C  output x(k) contains the kth element of sort(x)
 C
-      implicit logical (a-z)
+      implicit none
       integer k,n
       double precision x(n)
       integer lft,rght,cur,i
@@ -949,7 +950,7 @@ C
       RETURN
       END
       subroutine swap(x,k,l)
-      implicit logical (a-z)
+      implicit none
       integer k,l
       double precision x(*),t
       t = x(k)

@@ -2,7 +2,7 @@ readMPMData  <-  function(t1Files  = NULL,
                           pdFiles  = NULL,
                           mtFiles  = NULL,
                           maskFile = NULL,
-                          sdim     = NULL,
+                          # sdim     = NULL,
                           TR       = NULL,
                           TE       = NULL,
                           FA       = NULL,
@@ -13,8 +13,10 @@ readMPMData  <-  function(t1Files  = NULL,
   # if (is.null(pdFiles)) stop("vector of PD files required")
   ## TODO: test whether there are enough files for the model?
 
-  if (is.null(sdim)) stop("need spatial dimensionality of the data")
-  if (!is.numeric(sdim) | length(sdim) != 3) stop("need exactly three numbers for spatial dimensions")
+  sdim <- dim(readNIfTI(t1Files[1], read_data = FALSE))
+  
+  # if (is.null(sdim)) stop("need spatial dimensionality of the data")
+  # if (!is.numeric(sdim) | length(sdim) != 3) stop("need exactly three numbers for spatial dimensions")
 
   ## select the model according to the existence of MTw files
   model <- if (is.null(mtFiles)) {
@@ -330,7 +332,7 @@ estimateESTATICS <- function(mpmdata,
     #
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
                                (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0)|
-                               (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmsense$mask)
+                               (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0))*mpmdata$mask)
   } else if (mpmdata$model == 1) {
     xmat <- matrix(0, mpmdata$nFiles, 3)
     xmat[1:length(mpmdata$t1Files), 1] <- 1
@@ -343,7 +345,7 @@ estimateESTATICS <- function(mpmdata,
     #   check for voxel in mask with all zeros for a modality
     #
     zerovoxel <- as.logical(((apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
-                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmsense$mask)
+                               (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0))*mpmdata$mask)
   } else {
     xmat <- matrix(0, mpmdata$nFiles, 2)
     xmat[1:length(mpmdata$t1Files), 1] <- 1

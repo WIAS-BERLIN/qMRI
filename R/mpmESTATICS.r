@@ -446,7 +446,7 @@ estimateESTATICS <- function(mpmdata,
           if(class(res)!="try-error"&&coef(res)[npar]<maxR2star){
               sres <- getnlspars(res)
               isConv[x, y, z] <- res$convInfo$isConv
-              modelCoeff[, x, y, z] <- sres$coefficients[, 1]
+              modelCoeff[, x, y, z] <- sres$coefficients
               if (sres$sigma != 0) {
                 invCovtmp <- sres$XtX
                  invCov[, , x, y, z] <- invCovtmp/sres$sigma^2

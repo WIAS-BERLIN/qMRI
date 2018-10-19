@@ -40,7 +40,7 @@ qflashpl <- function(par,design){
   fval
 }
 
-qflashpl0 <- function(par,design,R2star){
+qflashpl0 <- function(par, R2star, design){
   #
   #  partial linear model
   #

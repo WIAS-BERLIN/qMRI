@@ -82,7 +82,7 @@ static const R_FortranMethodDef fmethods[] = {
             {NULL, NULL, 0,NULL}
 };
 
-void R_init_aws(DllInfo *dll)
+void R_init_qMRI(DllInfo *dll)
          {
              R_registerRoutines(dll, NULL, NULL, fmethods , NULL);
              R_useDynamicSymbols(dll,FALSE);

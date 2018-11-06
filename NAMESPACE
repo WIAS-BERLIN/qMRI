@@ -1,5 +1,5 @@
-useDynLib(qMRI)
+useDynLib(qMRI, .registration = TRUE, .fixes = "C_")
 exportPattern("^[[:alpha:]]+")
 #exportClasses("mpmData")
 
-import(oro.nifti, stringr)
+import(oro.nifti, stringr, aws)

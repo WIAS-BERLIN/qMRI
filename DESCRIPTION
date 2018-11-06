@@ -1,8 +1,8 @@
 Package: qMRI
 Type: Package
 Title: Methods for quantitave MR experiments
-Version: 0.3
-Date: 2017-02-21
+Version: 0.3.1
+Date: 2018-11-06
 Author@R: c(person("Joerg", "Polzehl", role = c("aut", "cre"),
                     email = "joerg.polzehl@wias-berlin.de"),
           person("Karsten", "Tabelow", role = c("aut"),

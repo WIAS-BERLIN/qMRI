@@ -25,89 +25,6 @@ C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 C
-C    location penalty for multivariate non-gridded aws
-C
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      real*8 function lmkern(kern,dx,xi,xj,h2)
-      implicit none
-      external lkern
-      integer kern,dx,i
-      real*8 xi(dx),xj(dx),h2,z,zd,lkern
-      z=0.d0
-      do i=1,dx
-         zd=xi(i)-xj(i)
-         z=z+zd*zd
-         if(z.gt.h2) THEN
-           lmkern=0.d0
-           RETURN
-         END IF
-      END DO
-      lmkern=lkern(kern,z/h2)
-      return
-      end
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-C
-C
-C   Local constant aws on a grid
-C
-C   this is a reimplementation of the original aws procedure
-C
-C   should be slightly slower for non-Gaussian models (see function kldist)
-C
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-C
-C
-C          Compute the Kullback-Leibler Distance
-C
-C          Model=1    Gaussian
-C          Model=2    Bernoulli
-C          Model=3    Poisson
-C          Model=4    Exponential
-C          Model=5    Variance
-C          Model=6    Noncentral Chi (Gaussian approximation,
-C                     variance mean dependence is introduces via factor bii)
-C
-C     computing dlog(theta) and dlog(1.d0-theta) outside the AWS-loops
-C     will reduces computational costs at the price of readability
-C
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      real*8 function kldist(model,thi,thj)
-      implicit none
-      integer model
-      real*8 thi,thj,z,tthi
-      IF (model.eq.1) THEN
-C        Gaussian
-         z=thi-thj
-         kldist=z*z
-      ELSE IF (model.eq.2) THEN
-C        Bernoulli
-         kldist=0.d0
-         tthi=(1.d0-thi)
-         IF (thi.gt.1.d-10) kldist=kldist+thi*log(thi/thj)
-         IF (tthi.gt.1.d-10) kldist=kldist+tthi*log(tthi/(1.d0-thj))
-      ELSE IF (model.eq.3) THEN
-C        Poisson
-         kldist=0.d0
-         IF (thi.gt.1.d-10) kldist=thi*log(thi/thj)-thi+thj
-      ELSE IF (model.eq.4) THEN
-C        Exponential
-         kldist=thi/thj-1.d0-log(thi/thj)
-      ELSE IF (model.eq.5) THEN
-C        Variance
-         kldist=thi/thj-1.d0-log(thi/thj)
-      ELSE IF (model.eq.6) THEN
-C        Noncentral Chi with Gaussian approximation
-         z=thi-thj
-         kldist=z*z
-      ELSE
-C        use Gaussian
-         z=thi-thj
-         kldist=z*z
-      ENDIF
-      RETURN
-      END
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-C
 C
 C          Compute Location Kernel (Compact support only, based on x^2
 C                                   ignores scaling)
@@ -143,24 +60,6 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
       ELSE
 C        use Epanechnikov
          lkern=1.d0-xsq
-      ENDIF
-      RETURN
-      END
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-C
-C        Compute truncated Exponential Kernel
-C
-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      real*8 function skern(x,xmin,xmax)
-      implicit none
-      real*8 x,xmin,xmax,spf
-      spf=xmax/(xmax-xmin)
-      IF (x.le.xmin) THEN
-         skern=1.d0
-      ELSE IF (x.gt.xmax) THEN
-         skern=0.d0
-      ELSE
-         skern=exp(-spf*(x-xmin))
       ENDIF
       RETURN
       END
@@ -517,6 +416,7 @@ C$OMP FLUSH(thnew,bi)
       KLdistsi=z
       RETURN
       END
+      
       real*8 function KLdist2(thi,thj,s2)
       implicit none
       integer nv

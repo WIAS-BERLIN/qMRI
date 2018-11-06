@@ -38,13 +38,12 @@ hg1f1 <- function(a, b, z){
   n <- length(z)
   z[is.na(z)] <- -1e20
   z[is.infinite(z)] <- 1e-20
-  .Fortran("hg1f1",
+  .Fortran(C_hg1f1,
            as.double(a),
            as.double(b),
            as.double(z),
            as.integer(n),
-           fz = double(n),
-           PACKAGE = "qMRI")$fz
+           fz = double(n))$fz
 }
 
 getnlspars <- function (object) {

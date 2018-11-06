@@ -14,7 +14,7 @@ readMPMData  <-  function(t1Files  = NULL,
   ## TODO: test whether there are enough files for the model?
 
   sdim <- dim(readNIfTI(t1Files[1], read_data = FALSE))
-  
+
   # if (is.null(sdim)) stop("need spatial dimensionality of the data")
   # if (!is.numeric(sdim) | length(sdim) != 3) stop("need exactly three numbers for spatial dimensions")
 
@@ -171,13 +171,12 @@ estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=8,hsig=5,lambda=12,
   hmax <- 1.25^(kstar/3)
   ## preparations for median smoothing
   nwmd <- (2*as.integer(hsig)+1)^3
-  parammd <- .Fortran("paramw3",
+  parammd <- .Fortran(C_paramw3,
                       as.double(hsig),
                       as.double(c(1,1)),
                       ind=integer(3*nwmd),
                       w=double(nwmd),
-                      n=as.integer(nwmd),
-                      PACKAGE = "qMRI")[c("ind","w","n")]
+                      n=as.integer(nwmd))[c("ind","w","n")]
   nwmd <- parammd$n
   parammd$ind <- parammd$ind[1:(3*nwmd)]
   dim(parammd$ind) <- c(3,nwmd)
@@ -197,7 +196,7 @@ estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=8,hsig=5,lambda=12,
     dlw <- (2*trunc(hakt/c(1, 1, 1))+1)[1:3]
 
     ## perform the actual adaptive smoothing
-    zobj <- .Fortran("vaws2",
+    zobj <- .Fortran(C_vaws2,
                      as.double(ComplImg),
                      as.logical(mask),
                      as.integer(2),
@@ -214,13 +213,12 @@ estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=8,hsig=5,lambda=12,
                      as.integer(mc.cores),
                      double(prod(dlw)),
                      as.double(c(1,1)),
-                     double(2 * mc.cores),
-                     PACKAGE = "qMRI")[c("bi", "theta", "hakt","sigma2")]
+                     double(2 * mc.cores))[c("bi", "theta", "hakt","sigma2")]
     ##
     ##  now get local median variance estimates
     ##
     dim(zobj$sigma2) <- sdim
-    sigma2 <- .Fortran("mediansm",
+    sigma2 <- .Fortran(C_mediansm,
                       as.double(zobj$sigma2),
                       as.logical(mask),
                       as.integer(sdim[1]),
@@ -230,8 +228,7 @@ estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=8,hsig=5,lambda=12,
                       as.integer(nwmd),
                       double(nwmd*mc.cores), # work(nw,nthreds)
                       as.integer(mc.cores),
-                      sigma2n = double(n),
-                      PACKAGE = "qMRI")$sigma2n/0.6931
+                      sigma2n = double(n))$sigma2n/0.6931
 # sigma2n containes sum of 2 independent squared residuals
 # 0.6931 approximates  median \chi_2 /2
 # needed to get correct results
@@ -277,18 +274,17 @@ medianFilterSigma <- function(obj,hsig=10,mask=NULL){
    if(is.null(mask)) mask <- array(TRUE,sdim)
    if(any(dim(mask)!=sdim)) stop("dimensions do not coinside")
    nwmd <- (2*as.integer(hsig)+1)^3
-   parammd <- .Fortran("paramw3",
+   parammd <- .Fortran(C_paramw3,
                        as.double(hsig),
                        as.double(c(1,1)),
                        ind=integer(3*nwmd),
                        w=double(nwmd),
-                       n=as.integer(nwmd),
-                       PACKAGE = "qMRI")[c("ind","w","n")]
+                       n=as.integer(nwmd))[c("ind","w","n")]
    nwmd <- parammd$n
    parammd$ind <- parammd$ind[1:(3*nwmd)]
    dim(parammd$ind) <- c(3,nwmd)
    mc.cores <- setCores(, reprt = FALSE)
-   sigma2 <- .Fortran("mediansm",
+   sigma2 <- .Fortran(C_mediansm,
                       as.double(sigma2),
                       as.logical(mask),
                       as.integer(sdim[1]),
@@ -298,8 +294,7 @@ medianFilterSigma <- function(obj,hsig=10,mask=NULL){
                       as.integer(nwmd),
                       double(nwmd*mc.cores), # work(nw,nthreds)
                       as.integer(mc.cores),
-                      sigma2n = double(n),
-                      PACKAGE = "qMRI")$sigma2n/0.6931
+                      sigma2n = double(n))$sigma2n/0.6931
    dim(sigma2) <- sdim
    if(class(obj)=="sigmaEstSENSE"){
       obj$sigma <- sqrt(sigma2)
@@ -376,8 +371,8 @@ estimateESTATICS <- function(mpmdata,
         if (mpmdata$mask[x, y, z]) {
           ivec  <- mpmdata$ddata[, x, y, z] / dataScale
           if (mpmdata$model == 2) {
-            if ((sum(ivec[xmat[, 1] == 1]) == 0) | 
-                (sum(ivec[xmat[, 2] == 1]) == 0) | 
+            if ((sum(ivec[xmat[, 1] == 1]) == 0) |
+                (sum(ivec[xmat[, 2] == 1]) == 0) |
                 (sum(ivec[xmat[, 3] == 1]) == 0))  {
               isConv[x, y, z] <- 255
             } else {
@@ -399,7 +394,7 @@ estimateESTATICS <- function(mpmdata,
                                lower = rep(0, 4)))
             }
           } else if(mpmdata$model == 1) {
-            if ((sum(ivec[xmat[, 1] == 1]) == 0) | 
+            if ((sum(ivec[xmat[, 1] == 1]) == 0) |
                 (sum(ivec[xmat[, 2] == 1]) == 0))  {
               isConv[x, y, z] <- 255
             } else {
@@ -451,14 +446,14 @@ estimateESTATICS <- function(mpmdata,
               }
             } else {
               if (mpmdata$model == 2) {
-                res <- try(nls(ivec ~ qflashpl0(par, maxR2star, xmat), 
+                res <- try(nls(ivec ~ qflashpl0(par, maxR2star, xmat),
                                start = list(par = th[-npar]),
-                               control = list(maxiter = 20, 
+                               control = list(maxiter = 20,
                                               warnOnly = TRUE)))
               } else {
-                res <- try(nls(ivec ~ qflashpl20(par, maxR2star, xmat), 
+                res <- try(nls(ivec ~ qflashpl20(par, maxR2star, xmat),
                                start = list(par = th[-npar]),
-                               control = list(maxiter = 20, 
+                               control = list(maxiter = 20,
                                               warnOnly = TRUE)))
               }
               isThresh[x, y, z] <- TRUE
@@ -720,7 +715,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
     dlw <- (2*trunc(hakt/c(1, wghts))+1)[1:3]
 
     ## perform the actual adaptive smoothing
-    zobj <- .Fortran("vaws",
+    zobj <- .Fortran(C_vaws,
                      as.double(mpmESTATICSModel$modelCoeff),
                      as.logical(mpmESTATICSModel$mask),
                      as.integer(nv),
@@ -736,8 +731,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
                      as.integer(mc.cores),
                      double(prod(dlw)),
                      as.double(wghts),
-                     double(nv * mc.cores),
-                     PACKAGE = "qMRI")[c("bi", "theta", "hakt")]
+                     double(nv * mc.cores))[c("bi", "theta", "hakt")]
 
     ## use maximum ni
     bi <- zobj$bi <- pmax(bi, zobj$bi)
@@ -769,7 +763,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
     dlw <- (2*trunc(hakt/c(1, wghts))+1)[1:3]
 
     ## perform the actual adaptive smoothing
-    zobj <- .Fortran("vawsext",
+    zobj <- .Fortran(C_vawsext,
                      as.double(mpmESTATICSModel$modelCoeff),
                      as.logical(mpmESTATICSModel$mask),
                      as.integer(nv),
@@ -789,8 +783,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
                      double(prod(dlw)),
                      as.double(wghts),
                      double(nv*mc.cores),
-                     double(nve*mc.cores),
-                     PACKAGE = "qMRI")[c("bi", "theta", "thext", "hakt")]
+                     double(nve*mc.cores))[c("bi", "theta", "thext", "hakt")]
 
     ## assign the smoothed data
     dim(zobj$thext) <- c(mpmESTATICSModel$nFiles, mpmESTATICSModel$sdim)

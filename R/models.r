@@ -1,12 +1,11 @@
 qflashmr1 <- function(par,design){
   n <- dim(design)[1]
-  z<-.Fortran("qflashm1",
+  z<-.Fortran(C_qflashm1,
               as.double(par),
               as.double(design),
               as.integer(n),
               fval=double(n),
-              grad=double(4*n),
-              PACKAGE="qMRI")[c("fval","grad")]
+              grad=double(4*n))[c("fval","grad")]
   fval <- z$fval
   attr(fval,"gradient") <- matrix(z$grad,n,4)
   fval
@@ -14,12 +13,11 @@ qflashmr1 <- function(par,design){
 
 qflashmr0 <- function(par,design){
   n <- dim(design)[1]
-  fval <- .Fortran("qflashm0",
+  fval <- .Fortran(C_qflashm0,
               as.double(par),
               as.double(t(design)),
               as.integer(n),
-              fval=double(n),
-              PACKAGE="qMRI")$fval
+              fval=double(n))$fval
   fval
 }
 
@@ -28,13 +26,12 @@ qflashpl <- function(par,design){
 #  partial linear model
 #
   n <- dim(design)[1]
-  z <- .Fortran("qflashpl",
+  z <- .Fortran(C_qflashpl,
                    as.double(par),
                    as.double(design),
                    as.integer(n),
                    fval=double(n),
-                   grad=double(4*n),
-                   PACKAGE="qMRI")[c("fval","grad")]
+                   grad=double(4*n))[c("fval","grad")]
   fval <- z$fval
   attr(fval,"gradient") <- matrix(z$grad,n,4)
   fval
@@ -45,14 +42,13 @@ qflashpl0 <- function(par, R2star, design){
   #  partial linear model
   #
   n <- dim(design)[1]
-  z <- .Fortran("qflashp0",
+  z <- .Fortran(C_qflashp0,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
                 as.integer(n),
                 fval=double(n),
-                grad=double(3*n),
-                PACKAGE="qMRI")[c("fval","grad")]
+                grad=double(3*n))[c("fval","grad")]
   fval <- z$fval
   attr(fval,"gradient") <- matrix(z$grad,n,3)
   fval
@@ -63,13 +59,12 @@ qflashplQL <- function(par, design, CL, sigma, L){
   #  ESTATICS model with QL
   #
   n <- dim(design)[1]
-  z <- .Fortran("qflashpl",
+  z <- .Fortran(C_qflashpl,
                 as.double(par),
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(4*n),
-                PACKAGE = "qMRI")[c("fval", "grad")]
+                grad = double(4*n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
   sfval <- pmin(z$fval/sigma,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
@@ -83,14 +78,13 @@ qflashpl0QL <- function(par, R2star, design, CL, sigma, L){
   #  ESTATICS model with QL
   #
   n <- dim(design)[1]
-  z <- .Fortran("qflashpl",
+  z <- .Fortran(C_qflashpl,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(3*n),
-                PACKAGE = "qMRI")[c("fval", "grad")]
+                grad = double(3*n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
   sfval <- pmin(z$fval/sigma,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
@@ -104,13 +98,12 @@ qflashpl2 <- function(par, design){
   #  partial linear model without MT
   #
   n <- dim(design)[1]
-  z <- .Fortran("qflashpl2",
+  z <- .Fortran(C_qflashpl2,
                 as.double(par),
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(3*n),
-                PACKAGE = "qMRI")[c("fval", "grad")]
+                grad = double(3*n))[c("fval", "grad")]
   fval <- z$fval
   attr(fval, "gradient") <- matrix(z$grad, n, 3)
   fval
@@ -121,14 +114,13 @@ qflashpl20 <- function(par, R2star, design){
   #  partial linear model without MT
   #
   n <- dim(design)[1]
-  z <- .Fortran("qflashp20",
+  z <- .Fortran(C_qflashp20,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(2*n),
-                PACKAGE = "qMRI")[c("fval", "grad")]
+                grad = double(2*n))[c("fval", "grad")]
   fval <- z$fval
   attr(fval, "gradient") <- matrix(z$grad, n, 2)
   fval
@@ -139,13 +131,12 @@ qflashpl2QL <- function(par, design, CL, sigma, L){
   #  partial linear model without MT
   #
   n <- dim(design)[1]
-  z <- .Fortran("qflashpl2",
+  z <- .Fortran(C_qflashpl2,
                 as.double(par),
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(3*n),
-                PACKAGE = "qMRI")[c("fval", "grad")]
+                grad = double(3*n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
   sfval <- pmin(z$fval/sigma,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
@@ -159,14 +150,13 @@ qflashpl20QL <- function(par, R2star, design, CL, sigma, L){
   #  partial linear model without MT
   #
   n <- dim(design)[1]
-  z <- .Fortran("qflashp20",
+  z <- .Fortran(C_qflashp20,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(2*n),
-                PACKAGE = "qMRI")[c("fval", "grad")]
+                grad = double(2*n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
   sfval <- pmin(z$fval/sigma,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
@@ -181,10 +171,10 @@ reparamtrizeconstTR <- function(th,a1,a2,TR){
 #   from    S_T1(TE,alpha) = th[1] exp(-R2 TE)
 #           S_MT(TE,alpha) = th[2] exp(-R2 TE)
 #           S_PD(TE,alpha) = th[3] exp(-R2 TE)
-#      parameters th 
-#   to      S_T1(TE,alpha) = p[1] exp(-R2 TE) sin(a1) (1-exp(-TR p[2]))/(1-cos(a1) exp(-TR p[2])) 
-#           S_MT(TE,alpha) = p[1] exp(-R2 TE) p[3] sin(a2) (1-exp(-TR p[2]))/(1-cos(a1) exp(-TR p[2])) 
-#           S_PD(TE,alpha) = p[1] exp(-R2 TE) sin(a2) (1-exp(-TR p[2]))/(1-cos(a2) exp(-TR p[2])) 
+#      parameters th
+#   to      S_T1(TE,alpha) = p[1] exp(-R2 TE) sin(a1) (1-exp(-TR p[2]))/(1-cos(a1) exp(-TR p[2]))
+#           S_MT(TE,alpha) = p[1] exp(-R2 TE) p[3] sin(a2) (1-exp(-TR p[2]))/(1-cos(a1) exp(-TR p[2]))
+#           S_PD(TE,alpha) = p[1] exp(-R2 TE) sin(a2) (1-exp(-TR p[2]))/(1-cos(a2) exp(-TR p[2]))
 #      parameters  p
 #
    sa1th3 <- sin(a1)*th[3]
@@ -200,10 +190,10 @@ reparamtrizeconstTR <- function(th,a1,a2,TR){
 #   R1conf <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
 ESTATICS.confidence.old <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     ##
-    ##   construct confidence region for parameter E1 
-    ##   parameters are expected to be named as "ST1", "SPD" and "R2star", 
+    ##   construct confidence region for parameter E1
+    ##   parameters are expected to be named as "ST1", "SPD" and "R2star",
     ##          parameter "SMT" is not used
-    ##  si2 - inverse covariance matrix of parameters 
+    ##  si2 - inverse covariance matrix of parameters
     ##
     fc1 <- sin(aT1)/sin(aPD)
     fc2 <- cos(aT1)
@@ -219,7 +209,7 @@ ESTATICS.confidence.old <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     th <- theta[c("ST1","SPD")]
     Amat <- si2[c("ST1","SPD"),c("ST1","SPD")][c(1,2,4)]
 #    qnsq <- qnorm(1-alpha/2)^2
-    qnsq <- if(is.null(df)) qchisq(1-alpha,2) else 2*qf(1-alpha,2,df)    
+    qnsq <- if(is.null(df)) qchisq(1-alpha,2) else 2*qf(1-alpha,2,df)
     th2ofth1 <- function(th1,th,Amat,qnsq){
         th1diff <- (th1-th[1])
         p <- th[2]- th1diff*Amat[2]/Amat[3]
@@ -228,7 +218,7 @@ ESTATICS.confidence.old <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
         th2 <- if(D>=0) c(p-sqrt(D),p+sqrt(D)) else c(NA,NA)
         th2
     }
-    
+
     ## now search for min/max of (1-fc1*th2(th1)/th1)/(fc2-fc3*th2(th1)/th1)
     e1 <- th[2]+th[1]*Amat[2]/Amat[3]
     e2 <- qnsq/Amat[3]
@@ -246,13 +236,13 @@ ESTATICS.confidence.old <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     CIR2star <- R2star + c(-qqn,qqn)/sqrt(si2["R2star","R2star"])
     list(E1=E1,CIE1=sort(CIE1),R1=R1,CIR1=sort(CIR1),R2star=R2star,CIR2star=CIR2star)
    }
-   
+
    ESTATICS.confidence <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     ##
-    ##   construct confidence region for parameter E1 
-    ##   parameters are expected to be named as "ST1", "SPD" and "R2star", 
+    ##   construct confidence region for parameter E1
+    ##   parameters are expected to be named as "ST1", "SPD" and "R2star",
     ##          parameter "SMT" is not used
-    ##  si2 - inverse covariance matrix of parameters 
+    ##  si2 - inverse covariance matrix of parameters
     ##
     fc1 <- sin(aT1)/sin(aPD)
     fc2 <- cos(aT1)
@@ -268,7 +258,7 @@ ESTATICS.confidence.old <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     th <- theta[c("ST1","SPD")]
     Amat <- si2[c("ST1","SPD"),c("ST1","SPD")][c(1,2,4)]
 #    qnsq <- qnorm(1-alpha/2)^2
-    qnsq <- if(is.null(df)) qchisq(1-alpha,2) else 2*qf(1-alpha,2,df)    
+    qnsq <- if(is.null(df)) qchisq(1-alpha,2) else 2*qf(1-alpha,2,df)
     th2ofth1 <- function(th1,th,Amat,qnsq){
         th1diff <- (th1-th[1])
         p <- th[2]- th1diff*Amat[2]/Amat[3]
@@ -277,7 +267,7 @@ ESTATICS.confidence.old <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
         th2 <- if(D>=0) c(p-sqrt(D),p+sqrt(D)) else c(NA,NA)
         th2
     }
-    
+
     ## now search for min/max of (1-fc1*th2(th1)/th1)/(fc2-fc3*th2(th1)/th1)
     e1 <- th[2]+th[1]*Amat[2]/Amat[3]
     e2 <- qnsq/Amat[3]

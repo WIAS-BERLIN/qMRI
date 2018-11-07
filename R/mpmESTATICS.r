@@ -647,6 +647,56 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
                  FA = mpmdata$FA, TEScale = TEScale, dataScale = dataScale))
 }
 
+psmoothESTATICS <- function(mpmESTATICSModel,
+                           mpmData = NULL,
+                           kstar = 16,
+                           alpha = 0.05,
+                           patchsize = 0,
+                           wghts = NULL,
+                           verbose = TRUE) {
+##
+##  consistency checks
+##
+nv <- dim(mpmESTATICSModel$modelCoeff)[1]
+dimcoef <- dim(mpmESTATICSModel$modelCoeff)[-1]
+if(any(dim(mpmESTATICSModel$invCov)[-(1:2)]!=dimcoef)) stop("inconsistent invCov")
+if(any(dim(mpmESTATICSModel$mask)!=dimcoef)) stop("inconsistent mask")
+if(switch(mpmESTATICSModel$model+1,2,3,4,0)!=nv) stop("inconsistent parameter length")
+if(!is.null(mpmData)&any(dim(mpmData)[-1]!=dimcoef)) stop("inconsistent mpmData")
+## determine a suitable adaptation bandwidth
+lambda <- nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)
+
+zobj <- vawscov(mpmESTATICSModel$modelCoeff,
+             mpmESTATICSModel$invCov,
+             mpmESTATICSModel$mask,
+             lambda=lambda,
+             wghts=wghts,
+             patchsize=patchsize,
+             data=mpmData)
+
+  ## assign values
+  invisible(list(modelCoeff = zobj$theta,
+                 invCov = mpmESTATICSModel$invCov,
+                 isConv = mpmESTATICSModel$isConv,
+                 bi = zobj$bi,
+                 smoothPar = c(zobj$lambda, zobj$hakt, alpha),
+                 smoothedData = zobj$data,
+                 sdim = mpmESTATICSModel$sdim,
+                 nFiles = mpmESTATICSModel$nFiles,
+                 t1Files = mpmESTATICSModel$t1Files,
+                 pdFiles = mpmESTATICSModel$pdFiles,
+                 mtFiles = mpmESTATICSModel$mtFiles,
+                 model = mpmESTATICSModel$model,
+                 maskFile = mpmESTATICSModel$maskFile,
+                 mask = mpmESTATICSModel$mask,
+                 TR = mpmESTATICSModel$TR,
+                 TE = mpmESTATICSModel$TE,
+                 FA = mpmESTATICSModel$FA,
+                 TEScale = mpmESTATICSModel$TEScale,
+                 dataScale = mpmESTATICSModel$dataScale))
+  ## END function smoothESTATICS()
+}
+
 smoothESTATICS <- function(mpmESTATICSModel,
                            mpmData = NULL,
                            kstar = 16,
@@ -657,7 +707,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
   ## length of the vector to smooth (# parameters of model)
   if (mpmESTATICSModel$model == 2) {
     nv <- 4
-  } else if (mpmESTATICSModel$model == 2) {
+  } else if (mpmESTATICSModel$model == 1) {
     nv <- 3
   } else {
     nv <- 2

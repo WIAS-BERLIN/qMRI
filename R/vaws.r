@@ -165,7 +165,7 @@ vpawscov <- function(y,
   if(!is.null(data)) nsample <- dim(data)[1]
   dy <- dy[-1]
   d <- length(dy)
-  if (length(dy) != 3)
+  if (d != 3)
     stop("need 3 dimensional grids")
   if(is.null(lambda)){
   lambda <- 2 * ladjust * qchisq(pchisq(8.82, 1), nvec)
@@ -189,7 +189,7 @@ vpawscov <- function(y,
         h0,
         "\n")
   }
-  dim(invcov) <- c(nv*nv,n)
+  dim(invcov) <- c(nvec*nvec,n)
   hseq <- 1
   zobj <- list(bi = rep(1, n), theta = y)
   bi <- zobj$bi
@@ -201,7 +201,7 @@ vpawscov <- function(y,
   np3 <- if (n3 > 1) 2 * patchsize + 1 else 1
   k <- 1
   hmax <- 1.25 ^ (kstar / d)
-  lambda0 <- lambda
+  lambda0 <- 1e32
   mae <- NULL
   while (k <= kstar) {
     hakt0 <- gethani(1, 1.25 * hmax, 2, 1.25 ^ (k - 1), wghts, 1e-4)
@@ -316,7 +316,7 @@ vpawscovm <- function(y,
   if(!is.null(data)) nsample <- dim(data)[1]
   dy <- dy[-1]
   d <- length(dy)
-  if (length(dy) != 3)
+  if (d != 3)
     stop("need 3 dimensional grids")
   if(is.null(lambda)){
   lambda <- 2 * ladjust * qchisq(pchisq(8.82, 1), nvec)
@@ -358,7 +358,7 @@ vpawscovm <- function(y,
   np3 <- if (n3 > 1) 2 * patchsize + 1 else 1
   k <- 1
   hmax <- 1.25 ^ (kstar / d)
-  lambda0 <- lambda
+  lambda0 <- 1e32
   mae <- NULL
   while (k <= kstar) {
     hakt0 <- gethani(1, 1.25 * hmax, 2, 1.25 ^ (k - 1), wghts, 1e-4)
@@ -424,7 +424,6 @@ vpawscovm <- function(y,
     }
     if (maxni)
       bi <- zobj$bi <- pmax(bi, zobj$bi)
-    dim(zobj$bi) <- dy
     x <- 1.25 ^ k
     scorrfactor <- x / (3 ^ d * prod(scorr) * prod(h0) + x)
     lambda0 <- lambda * scorrfactor
@@ -434,7 +433,7 @@ vpawscovm <- function(y,
     k <- k + 1
     gc()
   }
-  theta <- matrix(0,nv,n)
+  theta <- matrix(0,nvec,n)
   theta[,mask] <- zobj$theta
   dim(theta) <- c(nvec, dy)
   bi <- numeric(n)

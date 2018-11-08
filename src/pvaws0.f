@@ -1,4 +1,4 @@
-      subroutine pvawsm2(y,pos,nv,nvd,n1,n2,n3,hakt,lambda,theta,bi,
+      subroutine pvaws2(y,mask,nv,nvd,n1,n2,n3,hakt,lambda,theta,bi,
      1                bin,thnew,invcov,ncores,spmin,lwght,wght,swjy,
      2                np1,np2,np3)
 C
@@ -13,14 +13,14 @@ C   wght     scaling factor for second and third dimension (larger values shrink
 C
       implicit none
 
-      integer nv,n1,n2,n3,ncores,nvd,pos(*)
-      logical aws
+      integer nv,n1,n2,n3,ncores,nvd
+      logical aws,mask(*)
       double precision y(nv,*),theta(nv,*),bi(*),thnew(nv,*),lambda,
      1  wght(2),hakt,lwght(*),spmin,spf,swjy(nv,ncores),invcov(nvd,*),
      2  bin(*)
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,jwind3,jwind2,
      1        iind,jind,jind3,jind2,clw1,clw2,clw3,dlw1,dlw2,dlw3,
-     2        dlw12,n12,k,iindp,jindp,ipindp,jpindp,thrednr
+     2        dlw12,n12,k,thrednr
       double precision biinv,sij,swj,z,z1,z2,z3,wj,hakt2,hmax2,
      1        w1,w2,spmb,sijp
       integer np1,np2,np3,l,m
@@ -89,17 +89,16 @@ C  first stochastic term
       call rchkusr()
 C$OMP PARALLEL DEFAULT(NONE)
 C$OMP& SHARED(thnew,bi,nv,nvd,n1,n2,n3,hakt2,hmax2,theta,invcov,
-C$OMP& ih3,lwght,wght,y,swjy,pos,nph1,nph2,nph3,bin)
+C$OMP& ih3,lwght,wght,y,swjy,mask,nph1,nph2,nph3,bin)
 C$OMP& FIRSTPRIVATE(ih1,ih2,lambda,aws,n12,
 C$OMP& spmin,spf,dlw1,clw1,dlw2,clw2,dlw3,clw3,dlw12,w1,w2)
 C$OMP& PRIVATE(i1,i2,i3,iind,biinv,swj,spmb,
 C$OMP& sij,wj,j3,jw3,jind3,z3,jwind3,j2,jw2,jind2,z2,jwind2,
 C$OMP& j1,jw1,jind,z1,z,thrednr,ip1,ip2,ip3,ipind,
-C$OMP& jp1,jp2,jp3,jpind,sijp,l,m,iindp,jindp,ipindp,jpindp)
+C$OMP& jp1,jp2,jp3,jpind,sijp,l,m)
 C$OMP DO SCHEDULE(GUIDED)
       DO iind=1,n1*n2*n3
-        iindp = pos(iind)
-        if(iindp.eq.0) CYCLE
+        if(.not.mask(iind)) CYCLE
 !$         thrednr = omp_get_thread_num()+1
 C returns value in 0:(ncores-1)
         i1=mod(iind,n1)
@@ -133,8 +132,7 @@ C  first stochastic term
               j1=jw1+i1
               if(j1.lt.1.or.j1.gt.n1) CYCLE
               jind=j1+jind2
-              jindp=pos(jind)
-              if(jindp.eq.0) CYCLE
+              if(.not.mask(jind)) CYCLE
               wj=lwght(jw1+clw1+1+jwind2)
               IF (aws) THEN
                 sij=0.d0
@@ -148,20 +146,18 @@ C  first stochastic term
                         if(sij.gt.1.d0) CYCLE
                         if(ip3.le.0.or.ip3.gt.n3) CYCLE
                         ipind=ip1+(ip2-1)*n1+(ip3-1)*n1*n2
-                        ipindp=pos(ipind)
-                        if(ipindp.eq.0) CYCLE
+                        if(.not.mask(ipind)) CYCLE
                         jp3=ip3+jw3
                         if(jp1.le.0.or.jp1.gt.n1) CYCLE
                         if(jp2.le.0.or.jp2.gt.n2) CYCLE
                         if(jp3.le.0.or.jp3.gt.n3) CYCLE
                         jpind=jp1+(jp2-1)*n1+(jp3-1)*n12
-                        jpindp=pos(jpind)
-                        if(jpindp.eq.0) CYCLE
+                        if(.not.mask(jpind)) CYCLE
 C   need both ipind and jpind in mask,
-                        sijp=KLdistsr(theta(1,jpindp),
-     1                                theta(1,ipindp),
-     2                                invcov(1,ipindp),nv)
-                        sij=max(sij,bi(ipindp)/lambda*sijp)
+                        sijp=KLdistsr(theta(1,jpind),
+     1                                theta(1,ipind),
+     2                                invcov(1,ipind),nv)
+                        sij=max(sij,bi(ipind)/lambda*sijp)
                      END DO
                   END DO
                 END DO
@@ -170,23 +166,22 @@ C   need both ipind and jpind in mask,
               END IF
               swj=swj+wj
               DO k=1,nv
-                swjy(k,thrednr)=swjy(k,thrednr)+wj*y(k,jindp)
+                swjy(k,thrednr)=swjy(k,thrednr)+wj*y(k,jind)
               END DO
             END DO
           END DO
         END DO
         DO k=1,nv
-          thnew(k,iindp)=swjy(k,thrednr)/swj
+          thnew(k,iind)=swjy(k,thrednr)/swj
         END DO
-        bin(iindp)=swj
+        bin(iind)=swj
       END DO
 C$OMP END DO NOWAIT
 C$OMP END PARALLEL
 C$OMP FLUSH(thnew,bin)
       RETURN
       END
-
-      subroutine pvawsme(y,yd,pos,nv,nvd,nd,n1,n2,n3,hakt,lambda,
+      subroutine pvawse(y,yd,mask,nv,nvd,nd,n1,n2,n3,hakt,lambda,
      1                theta,bi,bin,thnew,ydnew,invcov,ncores,spmin,
      2                lwght,wght,swjy,swjd,np1,np2,np3)
 C
@@ -201,14 +196,14 @@ C   wght     scaling factor for second and third dimension (larger values shrink
 C
       implicit none
 
-      integer nv,n1,n2,n3,ncores,nvd,nd,pos(*)
-      logical aws
+      integer nv,n1,n2,n3,ncores,nvd,nd
+      logical aws,mask(*)
       double precision y(nv,*),theta(nv,*),bi(*),thnew(nv,*),lambda,
      1  wght(2),hakt,lwght(*),spmin,spf,swjy(nv,ncores),invcov(nvd,*),
      2  bin(*),yd(nd,*),swjd(nd,ncores),ydnew(nd,*)
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,jwind3,jwind2,
      1        iind,jind,jind3,jind2,clw1,clw2,clw3,dlw1,dlw2,dlw3,
-     2        dlw12,n12,k,iindp,jindp,ipindp,jpindp,thrednr
+     2        dlw12,n12,k,thrednr
       double precision biinv,sij,swj,z,z1,z2,z3,wj,hakt2,hmax2,
      1        w1,w2,spmb,sijp
       integer np1,np2,np3,l,m
@@ -277,17 +272,16 @@ C  first stochastic term
       call rchkusr()
 C$OMP PARALLEL DEFAULT(NONE)
 C$OMP& SHARED(thnew,bi,nv,nvd,nd,n1,n2,n3,hakt2,hmax2,theta,invcov,
-C$OMP& ih3,lwght,wght,y,yd,swjy,swjd,pos,nph1,nph2,nph3,bin,ydnew)
+C$OMP& ih3,lwght,wght,y,yd,swjy,swjd,mask,nph1,nph2,nph3,bin,ydnew)
 C$OMP& FIRSTPRIVATE(ih1,ih2,lambda,aws,n12,
 C$OMP& spmin,spf,dlw1,clw1,dlw2,clw2,dlw3,clw3,dlw12,w1,w2)
 C$OMP& PRIVATE(i1,i2,i3,iind,biinv,swj,spmb,
 C$OMP& sij,wj,j3,jw3,jind3,z3,jwind3,j2,jw2,jind2,z2,jwind2,
 C$OMP& j1,jw1,jind,z1,z,thrednr,ip1,ip2,ip3,ipind,
-C$OMP& jp1,jp2,jp3,jpind,sijp,l,m,iindp,jindp,ipindp,jpindp)
+C$OMP& jp1,jp2,jp3,jpind,sijp,l,m)
 C$OMP DO SCHEDULE(GUIDED)
       DO iind=1,n1*n2*n3
-        iindp = pos(iind)
-        if(iindp.eq.0) CYCLE
+        if(.not.mask(iind)) CYCLE
 !$         thrednr = omp_get_thread_num()+1
 C returns value in 0:(ncores-1)
         i1=mod(iind,n1)
@@ -324,8 +318,7 @@ C  first stochastic term
               j1=jw1+i1
               if(j1.lt.1.or.j1.gt.n1) CYCLE
               jind=j1+jind2
-              jindp=pos(jind)
-              if(jindp.eq.0) CYCLE
+              if(.not.mask(jind)) CYCLE
               wj=lwght(jw1+clw1+1+jwind2)
               IF (aws) THEN
                 sij=0.d0
@@ -339,20 +332,18 @@ C  first stochastic term
                         if(sij.gt.1.d0) CYCLE
                         if(ip3.le.0.or.ip3.gt.n3) CYCLE
                         ipind=ip1+(ip2-1)*n1+(ip3-1)*n1*n2
-                        ipindp=pos(ipind)
-                        if(ipindp.eq.0) CYCLE
+                        if(.not.mask(ipind)) CYCLE
                         jp3=ip3+jw3
                         if(jp1.le.0.or.jp1.gt.n1) CYCLE
                         if(jp2.le.0.or.jp2.gt.n2) CYCLE
                         if(jp3.le.0.or.jp3.gt.n3) CYCLE
                         jpind=jp1+(jp2-1)*n1+(jp3-1)*n12
-                        jpindp=pos(jpind)
-                        if(jpindp.eq.0) CYCLE
+                        if(.not.mask(jpind)) CYCLE
 C   need both ipind and jpind in mask,
-                        sijp=KLdistsr(theta(1,jpindp),
-     1                                theta(1,ipindp),
-     2                                invcov(1,ipindp),nv)
-                        sij=max(sij,bi(ipindp)/lambda*sijp)
+                        sijp=KLdistsr(theta(1,jpind),
+     1                                theta(1,ipind),
+     2                                invcov(1,ipind),nv)
+                        sij=max(sij,bi(ipind)/lambda*sijp)
                      END DO
                   END DO
                 END DO
@@ -361,47 +352,24 @@ C   need both ipind and jpind in mask,
               END IF
               swj=swj+wj
               DO k=1,nv
-                swjy(k,thrednr)=swjy(k,thrednr)+wj*y(k,jindp)
+                swjy(k,thrednr)=swjy(k,thrednr)+wj*y(k,jind)
               END DO
               DO k=1,nd
-                swjd(k,thrednr)=swjd(k,thrednr)+wj*yd(k,jindp)
+                swjd(k,thrednr)=swjd(k,thrednr)+wj*yd(k,jind)
               END DO
             END DO
           END DO
         END DO
         DO k=1,nv
-          thnew(k,iindp)=swjy(k,thrednr)/swj
+          thnew(k,iind)=swjy(k,thrednr)/swj
         END DO
         DO k=1,nd
-          ydnew(k,iindp)=swjd(k,thrednr)/swj
+          ydnew(k,iind)=swjd(k,thrednr)/swj
         END DO
-        bin(iindp)=swj
+        bin(iind)=swj
       END DO
 C$OMP END DO NOWAIT
 C$OMP END PARALLEL
 C$OMP FLUSH(thnew,bin)
-      RETURN
-      END
-
-      double precision function KLdistsr(thi,thj,si2,nv)
-      implicit logical (a-z)
-      integer nv
-      double precision thi(nv), thj(nv), si2(*)
-      integer k,l,m
-      double precision z,zdk
-      z=0.d0
-      m=1
-      DO k=1,nv
-        zdk=thi(k)-thj(k)
-        if(k.gt.1) THEN
-          DO l=1,k-1
-            z=z+2.d0*(thi(l)-thj(l))*zdk*si2(m)
-            m=m+1
-          END DO
-        ENDIF
-        z=z+zdk*zdk*si2(m)
-        m=m+1
-      END DO
-      KLdistsr=z
       RETURN
       END

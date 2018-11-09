@@ -2,4 +2,9 @@ useDynLib(qMRI, .registration = TRUE, .fixes = "C_")
 exportPattern("^[[:alpha:]]+")
 #exportClasses("mpmData")
 
-import(oro.nifti, stringr, aws)
+import(oro.nifti, stringr)
+
+exportMethods("extract")
+S3method(extract,MPMData)
+S3method(extract,ESTATICSModel)
+S3method(extract,qMaps)

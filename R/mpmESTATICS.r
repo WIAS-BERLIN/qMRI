@@ -123,8 +123,7 @@ readMPMData  <-  function(t1Files  = NULL,
     dim(mask) <- sdim
     if (verbose) cat("done\n")
   }
-
-  invisible(list(ddata = ddata,
+  obj <- list(ddata = ddata,
                  sdim = sdim,
                  nFiles = nFiles,
                  t1Files = t1Files,
@@ -135,7 +134,9 @@ readMPMData  <-  function(t1Files  = NULL,
                  mask = mask,
                  TR = TR,
                  TE = TE,
-                 FA = FA))
+                 FA = FA)
+  class(obj) <- "MPMData"
+  invisible()
 }
 
 estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=8,hsig=5,lambda=12,verbose=TRUE){
@@ -475,7 +476,7 @@ estimateESTATICS <- function(mpmdata,
   }
   if (verbose) Sys.time()
 
-  invisible(list(modelCoeff = modelCoeff,
+  obj <- list(modelCoeff = modelCoeff,
                  invCov = invCov,
                  rsigma = rsigma,
                  isConv = isConv,
@@ -492,7 +493,9 @@ estimateESTATICS <- function(mpmdata,
                  TE = mpmdata$TE,
                  FA = mpmdata$FA,
                  TEScale = TEScale,
-                 dataScale = dataScale))
+                 dataScale = dataScale)
+  class(obj) <- "ESTATICSModel"
+  invisible(obj)
 
   ## END function estimateESTATICS()
 }
@@ -639,18 +642,20 @@ estimateESTATICSQL <- function (mpmdata, TEScale = 100, dataScale = 1000, sigma 
   }
   if (verbose)
     Sys.time()
-  invisible(list(modelCoeff = modelCoeff, invCov = invCov, rsigma = rsigma, isThresh = isThresh,
+  obj <- list(modelCoeff = modelCoeff, invCov = invCov, rsigma = rsigma, isThresh = isThresh,
                  isConv = isConv, sdim = mpmdata$sdim, nFiles = mpmdata$nFiles,
                  t1Files = mpmdata$t1Files, pdFiles = mpmdata$pdFiles,
                  mtFiles = mpmdata$mtFiles, model = mpmdata$model, maskFile = mpmdata$maskFile,
                  mask = mpmdata$mask, sigma = sigma, L = L, TR = mpmdata$TR, TE = mpmdata$TE,
-                 FA = mpmdata$FA, TEScale = TEScale, dataScale = dataScale))
+                 FA = mpmdata$FA, TEScale = TEScale, dataScale = dataScale)
+  class(obj) <- "ESTATICSModel"
+  invisible(obj)
 }
 
-psmoothESTATICS <- function(mpmESTATICSModel,
+smoothESTATICS <- function(mpmESTATICSModel,
                            mpmData = NULL,
                            kstar = 16,
-                           alpha = 0.05,
+                           alpha = 0.0025,
                            patchsize = 0,
                            wghts = NULL,
                            verbose = TRUE) {
@@ -664,8 +669,8 @@ if(any(dim(mpmESTATICSModel$mask)!=dimcoef)) stop("inconsistent mask")
 if(switch(mpmESTATICSModel$model+1,2,3,4,0)!=nv) stop("inconsistent parameter length")
 if(!is.null(mpmData)&any(dim(mpmData)[-1]!=dimcoef)) stop("inconsistent mpmData")
 ## determine a suitable adaptation bandwidth
-lambda <- nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)
-
+lambda <- nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)*switch(patchsize+1,1,1.6,2.1)
+cat("using lambda=",lambda," patchsize=",patchsize,"\n")
 zobj <- vpawscov(mpmESTATICSModel$modelCoeff,
              kstar,
              mpmESTATICSModel$invCov,
@@ -682,244 +687,6 @@ zobj <- vpawscov(mpmESTATICSModel$modelCoeff,
                  bi = zobj$bi,
                  smoothPar = c(zobj$lambda, zobj$hakt, alpha),
                  smoothedData = zobj$data,
-                 sdim = mpmESTATICSModel$sdim,
-                 nFiles = mpmESTATICSModel$nFiles,
-                 t1Files = mpmESTATICSModel$t1Files,
-                 pdFiles = mpmESTATICSModel$pdFiles,
-                 mtFiles = mpmESTATICSModel$mtFiles,
-                 model = mpmESTATICSModel$model,
-                 maskFile = mpmESTATICSModel$maskFile,
-                 mask = mpmESTATICSModel$mask,
-                 TR = mpmESTATICSModel$TR,
-                 TE = mpmESTATICSModel$TE,
-                 FA = mpmESTATICSModel$FA,
-                 TEScale = mpmESTATICSModel$TEScale,
-                 dataScale = mpmESTATICSModel$dataScale))
-  ## END function smoothESTATICS()
-}
-pmsmoothESTATICS <- function(mpmESTATICSModel,
-                           mpmData = NULL,
-                           kstar = 16,
-                           alpha = 0.05,
-                           patchsize = 0,
-                           wghts = NULL,
-                           verbose = TRUE) {
-##
-##  consistency checks
-##
-nv <- dim(mpmESTATICSModel$modelCoeff)[1]
-dimcoef <- dim(mpmESTATICSModel$modelCoeff)[-1]
-if(any(dim(mpmESTATICSModel$invCov)[-(1:2)]!=dimcoef)) stop("inconsistent invCov")
-if(any(dim(mpmESTATICSModel$mask)!=dimcoef)) stop("inconsistent mask")
-if(switch(mpmESTATICSModel$model+1,2,3,4,0)!=nv) stop("inconsistent parameter length")
-if(!is.null(mpmData)&any(dim(mpmData)[-1]!=dimcoef)) stop("inconsistent mpmData")
-## determine a suitable adaptation bandwidth
-lambda <- nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)
-
-zobj <- vpawscovm(mpmESTATICSModel$modelCoeff,
-             kstar,
-             mpmESTATICSModel$invCov,
-             mpmESTATICSModel$mask,
-             lambda=lambda,
-             wghts=wghts,
-             patchsize=patchsize,
-             data=mpmData)
-
-  ## assign values
-  invisible(list(modelCoeff = zobj$theta,
-                 invCov = mpmESTATICSModel$invCov,
-                 isConv = mpmESTATICSModel$isConv,
-                 bi = zobj$bi,
-                 smoothPar = c(zobj$lambda, zobj$hakt, alpha),
-                 smoothedData = zobj$data,
-                 sdim = mpmESTATICSModel$sdim,
-                 nFiles = mpmESTATICSModel$nFiles,
-                 t1Files = mpmESTATICSModel$t1Files,
-                 pdFiles = mpmESTATICSModel$pdFiles,
-                 mtFiles = mpmESTATICSModel$mtFiles,
-                 model = mpmESTATICSModel$model,
-                 maskFile = mpmESTATICSModel$maskFile,
-                 mask = mpmESTATICSModel$mask,
-                 TR = mpmESTATICSModel$TR,
-                 TE = mpmESTATICSModel$TE,
-                 FA = mpmESTATICSModel$FA,
-                 TEScale = mpmESTATICSModel$TEScale,
-                 dataScale = mpmESTATICSModel$dataScale))
-  ## END function smoothESTATICS()
-}
-smoothESTATICS <- function(mpmESTATICSModel,
-                           mpmData = NULL,
-                           kstar = 16,
-                           alpha = 0.05,
-                           wghts = NULL,
-                           verbose = TRUE) {
-
-  ## length of the vector to smooth (# parameters of model)
-  if (mpmESTATICSModel$model == 2) {
-    nv <- 4
-  } else if (mpmESTATICSModel$model == 1) {
-    nv <- 3
-  } else {
-    nv <- 2
-  }
-
-  ## determine a suitable adaptation bandwidth
-  lambda <- nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)
-
-  ## adjust for non-isotropic voxel if necessary
-  if (is.null(wghts)) wghts <- c(1, 1, 1)
-  ## make first spatial dimension unit, and use second and third for reference
-  wghts <- wghts[1] / wghts[2:3]
-
-  ## spatial dimension and number of voxel
-  n1 <- mpmESTATICSModel$sdim[1]
-  n2 <- mpmESTATICSModel$sdim[2]
-  n3 <- mpmESTATICSModel$sdim[3]
-  n <- n1 * n2 * n3
-
-  ## initialization for first step
-  zobj <- list(bi = rep(1, n), theta = mpmESTATICSModel$modelCoeff)
-  bi <- zobj$bi
-
-  ## find the number of usable cores
-  mc.cores <- setCores(, reprt = FALSE)
-
-  ## define the maximum bandwith from the number of iterations
-  hmax <- 1.25^(kstar/3)
-
-  ## for the verbose mode we compute MAD from original data
-  if (verbose) {
-    mae <- NULL
-    protocol <- matrix("", kstar, 1, dimnames = list(paste("step", 1:kstar), "protocol"))
-  }
-
-  ## perform the iteration
-  k <- 1
-  if (verbose) pb <- txtProgressBar(min = 0, max = kstar, style = 3)
-
-  ## if we plan to smooth the original data too, we take special care in the last step
-  if (!is.null(mpmData)) {
-    if(length(dim(mpmData$ddata)) != 4 | any(mpmESTATICSModel$sdim != dim(mpmData$ddata)[-1]))
-      stop("incompatible dimensions of model parameters and original data")
-    kstar <- kstar - 1
-    smoothData <- TRUE
-  } else {
-    smoothData <- FALSE
-  }
-
-  while (k <= kstar) {
-    ## determine the actual bandwidth for this step
-    hakt <- gethani(1, 1.25*hmax, 2, 1.25^k, wghts, 1e-4)
-
-    ## we need the (approx.) size of the weigthing scheme array
-    dlw <- (2*trunc(hakt/c(1, wghts))+1)[1:3]
-
-    ## perform the actual adaptive smoothing
-    zobj <- .Fortran(C_vaws,
-                     as.double(mpmESTATICSModel$modelCoeff),
-                     as.logical(mpmESTATICSModel$mask),
-                     as.integer(nv),
-                     as.integer(n1),
-                     as.integer(n2),
-                     as.integer(n3),
-                     hakt = as.double(hakt),
-                     as.double(lambda),
-                     as.double(zobj$theta),
-                     as.double(mpmESTATICSModel$invCov),
-                     bi = as.double(zobj$bi),
-                     theta = double(nv*n),
-                     as.integer(mc.cores),
-                     double(prod(dlw)),
-                     as.double(wghts),
-                     double(nv * mc.cores))[c("bi", "theta", "hakt")]
-
-    ## use maximum ni
-    bi <- zobj$bi <- pmax(bi, zobj$bi)
-
-    ## some verbose stuff
-    if (verbose) {
-      protocol[k] <- paste("bandwidth: ", signif(hakt, 3),
-                           "MSE: ", signif(mean((zobj$theta - mpmESTATICSModel$modelCoeff)^2),3),
-                           "MAE: ", m1 <- signif(mean(abs(zobj$theta - mpmESTATICSModel$modelCoeff)),3),
-                           "mean(bi):", signif(mean(zobj$bi),3))
-      mae <- c(mae, m1)
-      setTxtProgressBar(pb, k)
-    }
-
-    ## go for next iteration
-    k <- k+1
-    gc()
-
-  }
-  if (smoothData) { ##  modified last step; smoothing data, too
-
-    ## we need the number of files for some array dimensions
-    nve <- mpmESTATICSModel$nFiles
-
-    ## determine the actual bandwidth for this step
-    hakt <- gethani(1, 1.25*hmax, 2, 1.25^k, wghts, 1e-4)
-
-    ## we need the (approx.) size of the weigthing scheme array
-    dlw <- (2*trunc(hakt/c(1, wghts))+1)[1:3]
-
-    ## perform the actual adaptive smoothing
-    zobj <- .Fortran(C_vawsext,
-                     as.double(mpmESTATICSModel$modelCoeff),
-                     as.logical(mpmESTATICSModel$mask),
-                     as.integer(nv),
-                     as.integer(n1),
-                     as.integer(n2),
-                     as.integer(n3),
-                     as.double(mpmData$ddata),
-                     as.integer(nve),
-                     hakt = as.double(hakt),
-                     as.double(lambda),
-                     as.double(zobj$theta),
-                     as.double(mpmESTATICSModel$invCov),
-                     bi = as.double(zobj$bi),
-                     theta = double(nv*n),
-                     thext = double(nve*n),
-                     as.integer(mc.cores),
-                     double(prod(dlw)),
-                     as.double(wghts),
-                     double(nv*mc.cores),
-                     double(nve*mc.cores))[c("bi", "theta", "thext", "hakt")]
-
-    ## assign the smoothed data
-    dim(zobj$thext) <- c(mpmESTATICSModel$nFiles, mpmESTATICSModel$sdim)
-
-    mpmDataSmoothed <- zobj$thext
-
-    ## use maximum ni
-    zobj$bi <- pmax(bi, zobj$bi)
-
-    ## some verbose stuff
-    if (verbose) {
-      protocol[k] <- paste("bandwidth: ", signif(hakt, 3),
-                           "MSE: ", signif(mean((zobj$theta - mpmESTATICSModel$modelCoeff)^2),3),
-                           "MAE: ", m1 <- signif(mean(abs(zobj$theta - mpmESTATICSModel$modelCoeff)),3),
-                           "mean(bi):", signif(mean(zobj$bi),3))
-      mae <- c(mae, m1)
-      setTxtProgressBar(pb, kstar)
-    }
-
-  } else {
-    mpmDataSmoothed <- NULL
-  }
-  if (verbose) close(pb)
-  if (verbose) print(protocol)
-
-  ## set correct dimensions
-  dim(zobj$theta) <- c(nv, n1, n2, n3)
-  dim(zobj$bi) <- c(n1, n2, n3)
-
-  ## assign values
-  invisible(list(modelCoeff = zobj$theta,
-                 invCov = mpmESTATICSModel$invCov,
-                 isConv = mpmESTATICSModel$isConv,
-                 bi = zobj$bi,
-                 smoothPar = c(lambda, hakt, alpha),
-                 smoothedData = mpmDataSmoothed,
                  sdim = mpmESTATICSModel$sdim,
                  nFiles = mpmESTATICSModel$nFiles,
                  t1Files = mpmESTATICSModel$t1Files,
@@ -1018,7 +785,7 @@ calculateQI <- function(mpmESTATICSModel,
     delta <- NULL
   }
 
-  invisible(list(b1Map = b1Map,
+  obj <- list(b1Map = b1Map,
                  R1 = R1 * 1000,
                  R2star = if (mpmESTATICSModel$model == 2) 1000 * mpmESTATICSModel$modelCoeff[4, , , ]/mpmESTATICSModel$TEScale else 1000 * mpmESTATICSModel$modelCoeff[3, , , ]/mpmESTATICSModel$TEScale,
                  PD = PD,
@@ -1027,7 +794,10 @@ calculateQI <- function(mpmESTATICSModel,
                  t1Files = mpmESTATICSModel$t1Files,
                  mtFiles = mpmESTATICSModel$mtFiles,
                  pdFiles = mpmESTATICSModel$pdFiles,
-                 mask = mpmESTATICSModel$mask))
+                 mask = mpmESTATICSModel$mask)
+  class(obj) <- "qMaps"
+  invisible(obj)
+
 }
 
 imageQI <- function(qi,

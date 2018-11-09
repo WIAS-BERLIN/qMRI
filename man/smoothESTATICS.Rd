@@ -8,7 +8,8 @@ Structural adaptive moothing of parameter maps in the ESTATICS model
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
 }
 \usage{
-smoothESTATICS(mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.05, wghts = NULL, verbose = TRUE)
+smoothESTATICS(mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.0025,
+  patchsize=0, wghts = NULL, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -23,6 +24,9 @@ smoothESTATICS(mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.05, wghts
 }
   \item{alpha}{
 %%     ~~Describe \code{alpha} here~~
+}
+  \item{patchsize}{
+%%     ~~Describe \code{patchsize} here~~
 }
   \item{wghts}{
 %%     ~~Describe \code{wghts} here~~
@@ -62,15 +66,15 @@ smoothESTATICS(mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.05, wghts
 ##--	or do  help(data=index)  for the standard data sets.
 
 ## The function is currently defined as
-function (mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.05, 
-    wghts = NULL, verbose = TRUE) 
+function (mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.05,
+    wghts = NULL, verbose = TRUE)
 {
-    nv <- if (mpmESTATICSModel$model == 2) 
+    nv <- if (mpmESTATICSModel$model == 2)
         4
     else 3
-    lambda <- nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - 
+    lambda <- nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles -
         nv)
-    if (is.null(wghts)) 
+    if (is.null(wghts))
         wghts <- c(1, 1, 1)
     wghts <- wghts[1]/wghts[2:3]
     n1 <- mpmESTATICSModel$sdim[1]
@@ -83,15 +87,15 @@ function (mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.05,
     hmax <- 1.25^(kstar/3)
     if (verbose) {
         mae <- NULL
-        protocol <- matrix("", kstar, 1, dimnames = list(paste("step", 
+        protocol <- matrix("", kstar, 1, dimnames = list(paste("step",
             1:kstar), "protocol"))
     }
     k <- 1
-    if (verbose) 
+    if (verbose)
         pb <- txtProgressBar(min = 0, max = kstar, style = 3)
     if (!is.null(mpmData)) {
-        if (length(dim(mpmData$ddata)) != 4 | any(mpmESTATICSModel$sdim != 
-            dim(mpmData$ddata)[-1])) 
+        if (length(dim(mpmData$ddata)) != 4 | any(mpmESTATICSModel$sdim !=
+            dim(mpmData$ddata)[-1]))
             stop("incompatible dimensions of model parameters and original data")
         kstar <- kstar - 1
         smoothData <- TRUE
@@ -102,20 +106,20 @@ function (mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.05,
     while (k <= kstar) {
         hakt <- gethani(1, 1.25 * hmax, 2, 1.25^k, wghts, 1e-04)
         dlw <- (2 * trunc(hakt/c(1, wghts)) + 1)[1:3]
-        zobj <- .Fortran("vaws", as.double(mpmESTATICSModel$modelCoeff), 
-            as.logical(mpmESTATICSModel$mask), as.integer(nv), 
-            as.integer(n1), as.integer(n2), as.integer(n3), hakt = as.double(hakt), 
-            as.double(lambda), as.double(zobj$theta), as.double(mpmESTATICSModel$invCov), 
-            bi = as.double(zobj$bi), theta = double(nv * n), 
-            as.integer(mc.cores), double(prod(dlw)), as.double(wghts), 
-            double(nv * mc.cores), PACKAGE = "qMRI")[c("bi", 
+        zobj <- .Fortran("vaws", as.double(mpmESTATICSModel$modelCoeff),
+            as.logical(mpmESTATICSModel$mask), as.integer(nv),
+            as.integer(n1), as.integer(n2), as.integer(n3), hakt = as.double(hakt),
+            as.double(lambda), as.double(zobj$theta), as.double(mpmESTATICSModel$invCov),
+            bi = as.double(zobj$bi), theta = double(nv * n),
+            as.integer(mc.cores), double(prod(dlw)), as.double(wghts),
+            double(nv * mc.cores), PACKAGE = "qMRI")[c("bi",
             "theta", "hakt")]
         bi <- zobj$bi <- pmax(bi, zobj$bi)
         if (verbose) {
-            protocol[k] <- paste("bandwidth: ", signif(hakt, 
-                3), "MSE: ", signif(mean((zobj$theta - mpmESTATICSModel$modelCoeff)^2), 
-                3), "MAE: ", m1 <- signif(mean(abs(zobj$theta - 
-                mpmESTATICSModel$modelCoeff)), 3), "mean(bi):", 
+            protocol[k] <- paste("bandwidth: ", signif(hakt,
+                3), "MSE: ", signif(mean((zobj$theta - mpmESTATICSModel$modelCoeff)^2),
+                3), "MAE: ", m1 <- signif(mean(abs(zobj$theta -
+                mpmESTATICSModel$modelCoeff)), 3), "mean(bi):",
                 signif(mean(zobj$bi), 3))
             mae <- c(mae, m1)
             setTxtProgressBar(pb, k)
@@ -127,24 +131,24 @@ function (mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.05,
         nve <- mpmESTATICSModel$nFiles
         hakt <- gethani(1, 1.25 * hmax, 2, 1.25^k, wghts, 1e-04)
         dlw <- (2 * trunc(hakt/c(1, wghts)) + 1)[1:3]
-        zobj <- .Fortran("vawsext", as.double(mpmESTATICSModel$modelCoeff), 
-            as.logical(mpmESTATICSModel$mask), as.integer(nv), 
-            as.integer(n1), as.integer(n2), as.integer(n3), as.double(mpmData$ddata), 
-            as.integer(nve), hakt = as.double(hakt), as.double(lambda), 
-            as.double(zobj$theta), as.double(mpmESTATICSModel$invCov), 
-            bi = as.double(zobj$bi), theta = double(nv * n), 
-            thext = double(nve * n), as.integer(mc.cores), double(prod(dlw)), 
-            as.double(wghts), double(nv * mc.cores), double(nve * 
-                mc.cores), PACKAGE = "qMRI")[c("bi", "theta", 
+        zobj <- .Fortran("vawsext", as.double(mpmESTATICSModel$modelCoeff),
+            as.logical(mpmESTATICSModel$mask), as.integer(nv),
+            as.integer(n1), as.integer(n2), as.integer(n3), as.double(mpmData$ddata),
+            as.integer(nve), hakt = as.double(hakt), as.double(lambda),
+            as.double(zobj$theta), as.double(mpmESTATICSModel$invCov),
+            bi = as.double(zobj$bi), theta = double(nv * n),
+            thext = double(nve * n), as.integer(mc.cores), double(prod(dlw)),
+            as.double(wghts), double(nv * mc.cores), double(nve *
+                mc.cores), PACKAGE = "qMRI")[c("bi", "theta",
             "thext", "hakt")]
         dim(zobj$thext) <- c(mpmESTATICSModel$nFiles, mpmESTATICSModel$sdim)
         mpmDataSmoothed <- zobj$thext
         zobj$bi <- pmax(bi, zobj$bi)
         if (verbose) {
-            protocol[k] <- paste("bandwidth: ", signif(hakt, 
-                3), "MSE: ", signif(mean((zobj$theta - mpmESTATICSModel$modelCoeff)^2), 
-                3), "MAE: ", m1 <- signif(mean(abs(zobj$theta - 
-                mpmESTATICSModel$modelCoeff)), 3), "mean(bi):", 
+            protocol[k] <- paste("bandwidth: ", signif(hakt,
+                3), "MSE: ", signif(mean((zobj$theta - mpmESTATICSModel$modelCoeff)^2),
+                3), "MAE: ", m1 <- signif(mean(abs(zobj$theta -
+                mpmESTATICSModel$modelCoeff)), 3), "mean(bi):",
                 signif(mean(zobj$bi), 3))
             mae <- c(mae, m1)
             setTxtProgressBar(pb, kstar)
@@ -153,20 +157,20 @@ function (mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.05,
     else {
         mpmDataSmoothed <- NULL
     }
-    if (verbose) 
+    if (verbose)
         close(pb)
-    if (verbose) 
+    if (verbose)
         print(protocol)
     dim(zobj$theta) <- c(nv, n1, n2, n3)
     dim(zobj$bi) <- c(n1, n2, n3)
-    invisible(list(modelCoeff = zobj$theta, invCov = mpmESTATICSModel$invCov, 
-        isConv = mpmESTATICSModel$isConv, bi = zobj$bi, smoothPar = c(lambda, 
-            hakt, alpha), smoothedData = mpmDataSmoothed, sdim = mpmESTATICSModel$sdim, 
-        nFiles = mpmESTATICSModel$nFiles, t1Files = mpmESTATICSModel$t1Files, 
-        pdFiles = mpmESTATICSModel$pdFiles, mtFiles = mpmESTATICSModel$mtFiles, 
-        model = mpmESTATICSModel$model, maskFile = mpmESTATICSModel$maskFile, 
-        mask = mpmESTATICSModel$mask, TR = mpmESTATICSModel$TR, 
-        TE = mpmESTATICSModel$TE, FA = mpmESTATICSModel$FA, TEScale = mpmESTATICSModel$TEScale, 
+    invisible(list(modelCoeff = zobj$theta, invCov = mpmESTATICSModel$invCov,
+        isConv = mpmESTATICSModel$isConv, bi = zobj$bi, smoothPar = c(lambda,
+            hakt, alpha), smoothedData = mpmDataSmoothed, sdim = mpmESTATICSModel$sdim,
+        nFiles = mpmESTATICSModel$nFiles, t1Files = mpmESTATICSModel$t1Files,
+        pdFiles = mpmESTATICSModel$pdFiles, mtFiles = mpmESTATICSModel$mtFiles,
+        model = mpmESTATICSModel$model, maskFile = mpmESTATICSModel$maskFile,
+        mask = mpmESTATICSModel$mask, TR = mpmESTATICSModel$TR,
+        TE = mpmESTATICSModel$TE, FA = mpmESTATICSModel$FA, TEScale = mpmESTATICSModel$TEScale,
         dataScale = mpmESTATICSModel$dataScale))
   }
 }

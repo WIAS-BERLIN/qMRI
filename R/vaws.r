@@ -10,17 +10,17 @@ gethani <- function(x,y,lkern,value,wght,eps=1e-2){
 }
 
 vpawscov <- function(y,
-                      kstar = 16,
-                      invcov = NULL,
-                      mask = NULL,
-                      scorr = 0,
-                      spmin = 0.25,
-                      lambda = NULL,
-                      ladjust = 1,
-                      wghts = NULL,
-                      maxni = FALSE,
-                      patchsize = 1,
-                      data=NULL) {
+                     kstar = 16,
+                     invcov = NULL,
+                     mask = NULL,
+                     scorr = 0,
+                     spmin = 0.25,
+                     lambda = NULL,
+                     ladjust = 1,
+                     wghts = NULL,
+                     maxni = FALSE,
+                     patchsize = 1,
+                     data=NULL) {
   ##
   ##  this is the version with full size invcov (triangular storage)
   ##  needed for MPM
@@ -29,17 +29,17 @@ vpawscov <- function(y,
   nvec <- dy[1]
   if(nvec>5) stop("limited to 5 parameters")
   indcov <- switch(nvec,1,
-                        c(1,2,4),
-                        c(1,2,5,3,6,9),
-                        c(1,2,6,3,7,11,4,8,12,16),
-                        c(1,2,7,3,8,13,4,9,14,19,5,10,15,20,25))
+                   c(1,2,4),
+                   c(1,2,5,3,6,9),
+                   c(1,2,6,3,7,11,4,8,12,16),
+                   c(1,2,7,3,8,13,4,9,14,19,5,10,15,20,25))
   if(!is.null(data)) nsample <- dim(data)[1]
   dy <- dy[-1]
   d <- length(dy)
   if (d != 3)
     stop("need 3 dimensional grids")
   if(is.null(lambda)){
-  lambda <- 2 * ladjust * qchisq(pchisq(8.82, 1), nvec)
+    lambda <- 2 * ladjust * qchisq(pchisq(8.82, 1), nvec)
   }
   if (is.null(wghts)) wghts <- c(1, 1, 1)
   wghts <- wghts[1] / wghts[2:3]
@@ -60,7 +60,7 @@ vpawscov <- function(y,
         h0,
         "\n")
   }
-## create index information for voxel in mask
+  ## create index information for voxel in mask
   nvoxel <- sum(mask)
   position <- array(0,dy)
   position[mask] <- 1:nvoxel
@@ -89,58 +89,58 @@ vpawscov <- function(y,
     if(k==kstar & !is.null(data)){
       dim(data) <- c(nsample,n)
       zobj <- .Fortran(C_pvawsme,
-        as.double(y[,mask]),
-        as.double(data[,mask]), ## data to smooth additionally
-        as.integer(position),
-        as.integer(nvec),
-        as.integer(nvec * (nvec + 1) / 2),
-        as.integer(nsample), ## leading dimension of data
-        as.integer(n1),
-        as.integer(n2),
-        as.integer(n3),
-        hakt = as.double(hakt),
-        as.double(lambda0),
-        as.double(zobj$theta),
-        as.double(zobj$bi),
-        bi = double(nvoxel), #binn
-        theta = double(nvec * nvoxel),
-        data = double(nsample*nvoxel),
-        as.double(invcov[indcov,mask]),#
-        as.integer(mc.cores),
-        as.double(spmin),
-        double(prod(dlw)),
-        as.double(wghts),
-        double(nvec * mc.cores),
-        double(nsample * mc.cores),
-        as.integer(np1),
-        as.integer(np2),
-        as.integer(np3))[c("bi", "theta", "hakt","data")]
-        data[,mask] <- zobj@data
-        dim(data) <- c(nsample, dy)
+                       as.double(y[,mask]),
+                       as.double(data[,mask]), ## data to smooth additionally
+                       as.integer(position),
+                       as.integer(nvec),
+                       as.integer(nvec * (nvec + 1) / 2),
+                       as.integer(nsample), ## leading dimension of data
+                       as.integer(n1),
+                       as.integer(n2),
+                       as.integer(n3),
+                       hakt = as.double(hakt),
+                       as.double(lambda0),
+                       as.double(zobj$theta),
+                       as.double(zobj$bi),
+                       bi = double(nvoxel), #binn
+                       theta = double(nvec * nvoxel),
+                       data = double(nsample*nvoxel),
+                       as.double(invcov[indcov,mask]),#
+                       as.integer(mc.cores),
+                       as.double(spmin),
+                       double(prod(dlw)),
+                       as.double(wghts),
+                       double(nvec * mc.cores),
+                       double(nsample * mc.cores),
+                       as.integer(np1),
+                       as.integer(np2),
+                       as.integer(np3))[c("bi", "theta", "hakt","data")]
+      data[,mask] <- zobj@data
+      dim(data) <- c(nsample, dy)
     } else {
-    zobj <- .Fortran(C_pvawsm2,
-      as.double(y[,mask]),
-      as.integer(position),
-      as.integer(nvec),
-      as.integer(nvec * (nvec + 1) / 2),
-      as.integer(n1),
-      as.integer(n2),
-      as.integer(n3),
-      hakt = as.double(hakt),
-      as.double(lambda0),
-      as.double(zobj$theta),
-      as.double(zobj$bi),
-      bi = double(nvoxel), #binn
-      theta = double(nvec * nvoxel),
-      as.double(invcov[indcov,mask]),# compact storage
-      as.integer(mc.cores),
-      as.double(spmin),
-      double(prod(dlw)),
-      as.double(wghts),
-      double(nvec * mc.cores),
-      as.integer(np1),
-      as.integer(np2),
-      as.integer(np3))[c("bi", "theta", "hakt")]
+      zobj <- .Fortran(C_pvawsm2,
+                       as.double(y[,mask]),
+                       as.integer(position),
+                       as.integer(nvec),
+                       as.integer(nvec * (nvec + 1) / 2),
+                       as.integer(n1),
+                       as.integer(n2),
+                       as.integer(n3),
+                       hakt = as.double(hakt),
+                       as.double(lambda0),
+                       as.double(zobj$theta),
+                       as.double(zobj$bi),
+                       bi = double(nvoxel), #binn
+                       theta = double(nvec * nvoxel),
+                       as.double(invcov[indcov,mask]),# compact storage
+                       as.integer(mc.cores),
+                       as.double(spmin),
+                       double(prod(dlw)),
+                       as.double(wghts),
+                       double(nvec * mc.cores),
+                       as.integer(np1),
+                       as.integer(np2),
+                       as.integer(np3))[c("bi", "theta", "hakt")]
     }
     if (maxni)
       bi <- zobj$bi <- pmax(bi, zobj$bi)

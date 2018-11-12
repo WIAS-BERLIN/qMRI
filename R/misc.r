@@ -1,20 +1,20 @@
 extract.MPMData <- function(x,what){
-   onames <- names(x)
-   select <- what[what %in% onames]
-   # return single component or list with selected components
-   invisible(if(length(select)==1) x[[select]] else x[select])
+  onames <- names(x)
+  select <- what[what %in% onames]
+  # return single component or list with selected components
+  invisible(if(length(select)==1) x[[select]] else x[select])
 }
 
 extract.ESTATICSModel <- function(x,what){
-   onames <- names(x)
-   select <- what[what %in% onames]
-   invisible(if(length(select)==1) x[[select]] else x[select])
+  onames <- names(x)
+  select <- what[what %in% onames]
+  invisible(if(length(select)==1) x[[select]] else x[select])
 }
 
 extract.qMaps <- function(x,what){
-   onames <- names(x)
-   select <- what[what %in% onames]
-   invisible(if(length(select)==1) x[[select]] else x[select])
+  onames <- names(x)
+  select <- what[what %in% onames]
+  invisible(if(length(select)==1) x[[select]] else x[select])
 }
 
 rimage <- function(x = seq(0, 1, length.out = nrow(z)),
@@ -37,15 +37,15 @@ rimage <- function(x = seq(0, 1, length.out = nrow(z)),
       }
     }
   }
-   if(is.null(zlim)){
-     zlim<-range(z)
-   } else {
-     z[z<zlim[1]] <- zlim[1]
-     z[z>zlim[2]] <- zlim[2]
-     col <- c(low,col,up)
-   }
-   image(x, y, z, zlim=zlim, col=col, ...)
-   if(any(is.na(z))) image(x,y,is.na(z),col=c(NA,NAcolor),add=TRUE)
+  if(is.null(zlim)){
+    zlim<-range(z)
+  } else {
+    z[z<zlim[1]] <- zlim[1]
+    z[z>zlim[2]] <- zlim[2]
+    col <- c(low,col,up)
+  }
+  image(x, y, z, zlim=zlim, col=col, ...)
+  if(any(is.na(z))) image(x,y,is.na(z),col=c(NA,NAcolor),add=TRUE)
 }
 
 hg1f1 <- function(a, b, z){

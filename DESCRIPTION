@@ -1,19 +1,23 @@
 Package: qMRI
 Type: Package
-Title: Methods for quantitave MR experiments
-Version: 0.3.1
-Date: 2018-11-06
-Author@R: c(person("Joerg", "Polzehl", role = c("aut", "cre"),
+Title: Methods for quantitave MRI
+Version: 0.3.2
+Date: 2018-11-12
+Author@R: c(person("Joerg", "Polzehl", role = c("aut"),
                     email = "joerg.polzehl@wias-berlin.de"),
-          person("Karsten", "Tabelow", role = c("aut"),
+          person("Karsten", "Tabelow", role = c("aut", "cre"),
                     email = "karsten.tabelow@wias-berlin.de"))
-Depends: R (>= 3.2.0), awsMethods (>= 1.0-1), adimpro, rgl
-Imports: methods, parallel, oro.nifti (>= 0.3.9), oro.dicom, gsl, stringr
+Author: Karsten Tabelow [aut, cre],
+  Joerg Polzehl [aut]
+Maintainer: Karsten Tabelow <karsten.tabelow@wias-berlin.de>
+Depends: R (>= 3.2.0), awsMethods (>= 1.0-1)
+Imports: oro.nifti (>= 0.3.9), stringr
 LazyData: TRUE
-Description: This package contains a selection of tools for quantitave
-        analysis of MR images or (multimodal) collections of such images
-License: ?GPL (>= 2)
+Description: Implementation of methods for estimation of quantitative maps
+    from multi-parameter mapping (MPM) acquisitions including adaptive
+    smoothing methods in the framework of the ESTATICS model.
+License: GPL (>= 2)
 Copyright: This package is
-           Copyright (C) 2015-2018 Weierstrass Institute for
-                                   Applied Analysis and Stochastics.
+    Copyright (C) 2015-2018 Weierstrass Institute for
+    Applied Analysis and Stochastics.
 URL: http://www.wias-berlin.de/research/ats/imaging/

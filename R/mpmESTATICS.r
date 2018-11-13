@@ -136,7 +136,7 @@ readMPMData  <-  function(t1Files  = NULL,
               TE = TE,
               FA = FA)
   class(obj) <- c("list", "MPMData")
-  invisible()
+  invisible(obj)
 }
 
 estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=8,hsig=5,lambda=12,verbose=TRUE){

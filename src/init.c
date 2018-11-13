@@ -23,6 +23,8 @@ void F77_NAME(qflashpl)(double* th, double* des, int* n, double* fval, double* g
 void F77_NAME(qflashp0)(double* th, double* r2star, double* des, int* n,
   double* fval, double* grad);
 void F77_NAME(qflashpl2)(double* th, double* des, int* n, double* fval, double* grad);
+void F77_NAME(qflashp20)(double* th, double* r2star, double* des, int* n,
+  double* fval, double* grad);
 void F77_NAME(qflashpl3)(double* th, double* des, int* n, double* fval, double* grad);
 void F77_NAME(vaws2)(double* y, int* mask, int* nv, int* n1, int* n2, int* n3,
   double* hakt, double* lambda, double* theta, double* s2, double* bi,
@@ -53,6 +55,8 @@ static R_NativePrimitiveArgType qflashp0_t[]={REALSXP, REALSXP, REALSXP, INTSXP,
   REALSXP, REALSXP};
 static R_NativePrimitiveArgType qflashpl2_t[]={REALSXP, REALSXP, INTSXP, REALSXP,
   REALSXP};
+  static R_NativePrimitiveArgType qflashp20_t[]={REALSXP, REALSXP, REALSXP, INTSXP,
+    REALSXP, REALSXP};
 static R_NativePrimitiveArgType qflashpl3_t[]={REALSXP, REALSXP, INTSXP, REALSXP,
   REALSXP};
 static R_NativePrimitiveArgType vaws2_t[]={REALSXP, LGLSXP, INTSXP, INTSXP,
@@ -70,6 +74,7 @@ static const R_FortranMethodDef fmethods[] = {
             {"qflashm1", (DL_FUNC) &qflashm1_ , 5, qflashm1_t},
             {"qflashpl", (DL_FUNC) &qflashpl_ , 5, qflashpl_t},
             {"qflashp0", (DL_FUNC) &qflashp0_ , 6, qflashp0_t},
+            {"qflashp20", (DL_FUNC) &qflashp20_ , 6, qflashp20_t},
             {"qflashpl2", (DL_FUNC) &qflashpl2_ , 5, qflashpl2_t},
             {"qflashpl3", (DL_FUNC) &qflashpl3_ , 5, qflashpl3_t},
             {"vaws2", (DL_FUNC) &vaws2_ ,17, vaws2_t},

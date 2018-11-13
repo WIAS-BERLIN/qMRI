@@ -135,7 +135,7 @@ readMPMData  <-  function(t1Files  = NULL,
               TR = TR,
               TE = TE,
               FA = FA)
-  class(obj) <- "MPMData"
+  class(obj) <- c("list", "MPMData")
   invisible()
 }
 

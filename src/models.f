@@ -126,7 +126,7 @@ C
       END
 
 
-      subroutine qflashpl3(th,des,n,fval,grad)
+      subroutine estatics1(th,des,n,fval,grad)
 C
 C  function values and gradients (2parameters)
 C

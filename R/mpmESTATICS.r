@@ -422,12 +422,12 @@ estimateESTATICS <- function(mpmdata,
               ## reduced ESTATICS model without MT and PD
               th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), # par[1]
                       R2star)                                      # par[2]
-              res <- try(nls(ivec ~ qflashpl3(par, xmat),
+              res <- try(nls(ivec ~ estatics1(par, xmat),
                              start = list(par = th),
                              control = list(maxiter = 200,
                                             warnOnly = TRUE)))
               if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
-                res <- try(nls(ivec ~ qflashpl3(par, xmat),
+                res <- try(nls(ivec ~ estatics1(par, xmat),
                                start = list(par = th),
                                algorithm = "port",
                                control = list(warnOnly = TRUE,

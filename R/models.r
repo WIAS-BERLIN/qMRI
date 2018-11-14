@@ -75,12 +75,17 @@ qflashpl0QL <- function(par, R2star, design, CL, sigma, L){
   fval
 }
 
-qflashpl2 <- function(par, design){
-  #
-  #  partial linear model without MT
-  #
+estatics2 <- function(par, design){
+  ##
+  ## former: qflashpl2
+  ##
+  ## ESTATICS model with 2+1 parameters
+  ##
+  ## S_{T1} = par[1] * exp(- par[4] * TE)
+  ## S_{PD} = par[3] * exp(- par[4] * TE)
+  ##
   n <- dim(design)[1]
-  z <- .Fortran(C_qflashpl2,
+  z <- .Fortran(C_estatics2,
                 as.double(par),
                 as.double(design),
                 as.integer(n),
@@ -113,7 +118,7 @@ qflashpl2QL <- function(par, design, CL, sigma, L){
   #  partial linear model without MT
   #
   n <- dim(design)[1]
-  z <- .Fortran(C_qflashpl2,
+  z <- .Fortran(C_estatics2,
                 as.double(par),
                 as.double(design),
                 as.integer(n),

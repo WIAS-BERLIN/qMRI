@@ -72,7 +72,7 @@ C
       RETURN
       END
 
-      subroutine qflashpl2(th,des,n,fval,grad)
+      subroutine estatics2(th,des,n,fval,grad)
 C
 C  function values and gradients (3parameters)
 C

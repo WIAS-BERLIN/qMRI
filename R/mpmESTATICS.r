@@ -328,7 +328,7 @@ estimateESTATICS <- function(mpmdata,
     xmat[1:length(mpmdata$t1Files), 1] <- 1
     xmat[(length(mpmdata$t1Files)+1):mpmdata$nFiles, 2] <- 1
     xmat[, 3] <- mpmdata$TE / TEScale
-    ## ... for our model in qflashpl2() ...
+    ## ... for our model in estatics2() ...
     ## S_{T1} = par[1] * exp(- par[3] * TE)
     ## S_{PD} = par[2] * exp(- par[3] * TE)
   } else {
@@ -403,12 +403,12 @@ estimateESTATICS <- function(mpmdata,
               th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), # par[1]
                       ivec[indPD] * exp(-xmat[indPD, 3] * R2star), # par[2]
                       R2star)                                      # par[3]
-              res <- try(nls(ivec ~ qflashpl2(par, xmat),
+              res <- try(nls(ivec ~ estatics2(par, xmat),
                              start = list(par = th),
                              control = list(maxiter = 200,
                                             warnOnly = TRUE)))
               if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
-                res <- try(nls(ivec ~ qflashpl2(par, xmat),
+                res <- try(nls(ivec ~ estatics2(par, xmat),
                                start = list(par = th),
                                algorithm = "port",
                                control = list(warnOnly = TRUE,
@@ -538,7 +538,7 @@ estimateESTATICSQL <- function(mpmdata,
     xmat[1:length(mpmdata$t1Files), 1] <- 1
     xmat[(length(mpmdata$t1Files) + 1):mpmdata$nFiles, 2] <- 1
     xmat[, 3] <- mpmdata$TE/TEScale
-    ## ... for our model in qflashpl2() ...
+    ## ... for our model in estatics2() ...
     ## S_{T1} = par[1] * exp(- par[3] * TE)
     ## S_{PD} = par[2] * exp(- par[3] * TE)
   }

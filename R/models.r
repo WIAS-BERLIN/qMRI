@@ -78,7 +78,7 @@ qflashpl0QL <- function(par, R2star, design, CL, sigma, L){
   #  ESTATICS model with QL
   #
   n <- dim(design)[1]
-  z <- .Fortran(C_qflashpl,
+  z <- .Fortran(C_qflashp0,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
@@ -218,7 +218,7 @@ ESTATICS.confidence.old <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     th2 <- if(D>=0) c(p-sqrt(D),p+sqrt(D)) else c(NA,NA)
     th2
   }
-  
+
   ## now search for min/max of (1-fc1*th2(th1)/th1)/(fc2-fc3*th2(th1)/th1)
   e1 <- th[2]+th[1]*Amat[2]/Amat[3]
   e2 <- qnsq/Amat[3]
@@ -267,7 +267,7 @@ ESTATICS.confidence <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
     th2 <- if(D>=0) c(p-sqrt(D),p+sqrt(D)) else c(NA,NA)
     th2
   }
-  
+
   ## now search for min/max of (1-fc1*th2(th1)/th1)/(fc2-fc3*th2(th1)/th1)
   e1 <- th[2]+th[1]*Amat[2]/Amat[3]
   e2 <- qnsq/Amat[3]

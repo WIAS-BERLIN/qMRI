@@ -4,7 +4,8 @@ exportPattern("^[[:alpha:]]+")
 
 import(oro.nifti, stringr)
 
-exportMethods("extract")
+importFrom(awsMethods,extract)
+#exportMethods("extract")
 S3method(extract,MPMData)
 S3method(extract,ESTATICSModel)
 S3method(extract,qMaps)

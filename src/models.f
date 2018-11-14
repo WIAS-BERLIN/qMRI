@@ -1,4 +1,4 @@
-      subroutine qflashpl(th,des,n,fval,grad)
+      subroutine estatics3(th,des,n,fval,grad)
 C
 C  function values and gradients (4 parameters)
 C
@@ -32,6 +32,11 @@ C
       END DO
       RETURN
       END
+
+
+
+
+
 
       subroutine qflashp0(th,r2star,des,n,fval,grad)
 C

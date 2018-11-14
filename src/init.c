@@ -17,8 +17,6 @@ void F77_NAME(pvawsm2)(double* y, int* pos, int* nv, int* nvd, int* n1, int* n2,
   int* n3, double* hakt, double* lambda, double* theta, double* bi, double* bin,
   double* thnew, double* invcov, int* ncores, double* spmin, double* lwght,
   double* wght, double* swjy, int* np1, int* np2, int* np3);
-void F77_NAME(qflashm0)(double* th, double* des, int* n, double* fval);
-void F77_NAME(qflashm1)(double* th, double* des, int* n, double* fval, double* grad);
 void F77_NAME(estatics3)(double* th, double* des, int* n, double* fval, double* grad);
 void F77_NAME(qflashp0)(double* th, double* r2star, double* des, int* n,
   double* fval, double* grad);
@@ -46,9 +44,6 @@ static R_NativePrimitiveArgType pvawsme_t[]={REALSXP, REALSXP, INTSXP, INTSXP,
 static R_NativePrimitiveArgType pvawsm2_t[]={REALSXP, INTSXP, INTSXP, INTSXP,
   INTSXP, INTSXP, INTSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP,
   REALSXP, INTSXP, REALSXP, REALSXP, REALSXP, REALSXP, INTSXP, INTSXP, INTSXP};
-static R_NativePrimitiveArgType qflashm0_t[]={REALSXP, REALSXP, INTSXP, REALSXP};
-static R_NativePrimitiveArgType qflashm1_t[]={REALSXP, REALSXP, INTSXP, REALSXP,
-  REALSXP};
 static R_NativePrimitiveArgType estatics3_t[]={REALSXP, REALSXP, INTSXP, REALSXP,
   REALSXP};
 static R_NativePrimitiveArgType qflashp0_t[]={REALSXP, REALSXP, REALSXP, INTSXP,
@@ -70,8 +65,6 @@ static const R_FortranMethodDef fmethods[] = {
             {"paramw3", (DL_FUNC) &paramw3_ , 5, paramw3_t},
             {"pvawsme", (DL_FUNC) &pvawsme_ , 26, pvawsme_t},
             {"pvawsm2", (DL_FUNC) &pvawsm2_ , 22, pvawsm2_t},
-            {"qflashm0", (DL_FUNC) &qflashm0_ , 4, qflashm0_t},
-            {"qflashm1", (DL_FUNC) &qflashm1_ , 5, qflashm1_t},
             {"estatics3", (DL_FUNC) &estatics3_ , 5, estatics3_t},
             {"qflashp0", (DL_FUNC) &qflashp0_ , 6, qflashp0_t},
             {"qflashp20", (DL_FUNC) &qflashp20_ , 6, qflashp20_t},

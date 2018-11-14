@@ -1,26 +1,3 @@
-qflashmr1 <- function(par,design){
-  n <- dim(design)[1]
-  z<-.Fortran(C_qflashm1,
-              as.double(par),
-              as.double(design),
-              as.integer(n),
-              fval=double(n),
-              grad=double(4*n))[c("fval","grad")]
-  fval <- z$fval
-  attr(fval,"gradient") <- matrix(z$grad,n,4)
-  fval
-}
-
-qflashmr0 <- function(par,design){
-  n <- dim(design)[1]
-  fval <- .Fortran(C_qflashm0,
-                   as.double(par),
-                   as.double(t(design)),
-                   as.integer(n),
-                   fval=double(n))$fval
-  fval
-}
-
 qflashpl <- function(par,design){
   #
   #  partial linear model

@@ -72,7 +72,7 @@ estatics3fixedR2 <- function(par, R2star, design){
   ## S_{PD} = par[3] * exp(- R2star * TE)
   ##
   n <- dim(design)[1]
-  z <- .Fortran(C_estatics3fixedR2,
+  z <- .Fortran(C_estatics3fixedr2,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
@@ -94,7 +94,7 @@ estatics2fixedR2 <- function(par, R2star, design){
   ## S_{PD} = par[2] * exp(- R2star * TE)
   ##
   n <- dim(design)[1]
-  z <- .Fortran(C_estatics2fixedR2,
+  z <- .Fortran(C_estatics2fixedr2,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
@@ -113,7 +113,7 @@ estatics1fixedR2 <- function(par, R2star, design){
   ## S_{T1} = par[1] * exp(- R2star * TE)
   ##
   n <- dim(design)[1]
-  z <- .Fortran(C_estatics1fixedR2,
+  z <- .Fortran(C_estatics1fixedr2,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
@@ -205,7 +205,7 @@ estatics3QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
   ## S_{PD} = par[3] * exp(- R2star * TE)
   ##
   n <- dim(design)[1]
-  z <- .Fortran(C_estatics3fixedR2,
+  z <- .Fortran(C_estatics3fixedr2,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
@@ -231,7 +231,7 @@ estatics2QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
   ## S_{PD} = par[3] * exp(- R2star * TE)
   ##
   n <- dim(design)[1]
-  z <- .Fortran(C_estatics2fixedR2,
+  z <- .Fortran(C_estatics2fixedr2,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),
@@ -253,7 +253,7 @@ estatics1QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
   ## S_{T1} = par[1] * exp(- R2star * TE)
   ##
   n <- dim(design)[1]
-  z <- .Fortran(C_estatics1fixedR2,
+  z <- .Fortran(C_estatics1fixedr2,
                 as.double(par),
                 as.double(R2star),
                 as.double(design),

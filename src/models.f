@@ -104,9 +104,13 @@ C
 
 
 
-      subroutine qflashp0(th,r2star,des,n,fval,grad)
+      subroutine estatics3fixedR2(th, r2star, des, n, fval, grad)
 C
 C  function values and gradients (3 parameters)
+C
+C  fval = th(1) * exp(- r2star * des(i,4)) * des(i,1)
+C       + th(2) * exp(- r2star * des(i,4)) * des(i,2)
+C       + th(3) * exp(- r2star * des(i,4)) * des(i,3)
 C
       implicit logical (a-z)
       integer n

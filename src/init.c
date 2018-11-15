@@ -18,7 +18,7 @@ void F77_NAME(pvawsm2)(double* y, int* pos, int* nv, int* nvd, int* n1, int* n2,
   double* thnew, double* invcov, int* ncores, double* spmin, double* lwght,
   double* wght, double* swjy, int* np1, int* np2, int* np3);
 void F77_NAME(estatics3)(double* th, double* des, int* n, double* fval, double* grad);
-void F77_NAME(qflashp0)(double* th, double* r2star, double* des, int* n,
+void F77_NAME(estatics3fixedR2)(double* th, double* r2star, double* des, int* n,
   double* fval, double* grad);
 void F77_NAME(estatics2)(double* th, double* des, int* n, double* fval, double* grad);
 void F77_NAME(qflashp20)(double* th, double* r2star, double* des, int* n,
@@ -46,7 +46,7 @@ static R_NativePrimitiveArgType pvawsm2_t[]={REALSXP, INTSXP, INTSXP, INTSXP,
   REALSXP, INTSXP, REALSXP, REALSXP, REALSXP, REALSXP, INTSXP, INTSXP, INTSXP};
 static R_NativePrimitiveArgType estatics3_t[]={REALSXP, REALSXP, INTSXP, REALSXP,
   REALSXP};
-static R_NativePrimitiveArgType qflashp0_t[]={REALSXP, REALSXP, REALSXP, INTSXP,
+static R_NativePrimitiveArgType estatics3fixedR2_t[]={REALSXP, REALSXP, REALSXP, INTSXP,
   REALSXP, REALSXP};
 static R_NativePrimitiveArgType estatics2_t[]={REALSXP, REALSXP, INTSXP, REALSXP,
   REALSXP};
@@ -66,7 +66,7 @@ static const R_FortranMethodDef fmethods[] = {
             {"pvawsme", (DL_FUNC) &pvawsme_ , 26, pvawsme_t},
             {"pvawsm2", (DL_FUNC) &pvawsm2_ , 22, pvawsm2_t},
             {"estatics3", (DL_FUNC) &estatics3_ , 5, estatics3_t},
-            {"qflashp0", (DL_FUNC) &qflashp0_ , 6, qflashp0_t},
+            {"estatics3fixedR2", (DL_FUNC) &estatics3fixedR2_ , 6, estatics3fixedR2_t},
             {"qflashp20", (DL_FUNC) &qflashp20_ , 6, qflashp20_t},
             {"estatics2", (DL_FUNC) &estatics2_ , 5, estatics2_t},
             {"estatics1", (DL_FUNC) &estatics1_ , 5, estatics1_t},

@@ -447,7 +447,7 @@ estimateESTATICS <- function(mpmdata,
               }
             } else {
               if (mpmdata$model == 2) {
-                res <- try(nls(ivec ~ qflashpl0(par, maxR2star, xmat),
+                res <- try(nls(ivec ~ estatics3fixedR2(par, maxR2star, xmat),
                                start = list(par = th[-npar]),
                                control = list(maxiter = 20,
                                               warnOnly = TRUE)))

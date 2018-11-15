@@ -20,6 +20,47 @@ estatics3 <- function(par, design){
   fval
 }
 
+estatics2 <- function(par, design){
+  ##
+  ## former: qflashpl2
+  ##
+  ## ESTATICS model with 2+1 parameters
+  ##
+  ## S_{T1} = par[1] * exp(- par[4] * TE)
+  ## S_{PD} = par[3] * exp(- par[4] * TE)
+  ##
+  n <- dim(design)[1]
+  z <- .Fortran(C_estatics2,
+                as.double(par),
+                as.double(design),
+                as.integer(n),
+                fval = double(n),
+                grad = double(3*n))[c("fval", "grad")]
+  fval <- z$fval
+  attr(fval, "gradient") <- matrix(z$grad, n, 3)
+  fval
+}
+
+estatics1 <- function(par, design){
+  ##
+  ## former: qflashpl3
+  ##
+  ## "ESTATICS" model with 1+1 parameters
+  ##
+  ## S_{T1} = par[1] * exp(- par[4] * TE)
+  ##
+  n <- dim(design)[1]
+  z <- .Fortran(C_estatics1,
+                as.double(par),
+                as.double(design),
+                as.integer(n),
+                fval = double(n),
+                grad = double(3*n))[c("fval", "grad")]
+  fval <- z$fval
+  attr(fval, "gradient") <- matrix(z$grad, n, 3)
+  fval
+}
+
 qflashpl0 <- function(par, R2star, design){
   #
   #  partial linear model
@@ -72,27 +113,6 @@ qflashpl0QL <- function(par, R2star, design, CL, sigma, L){
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
   attr(fval, "gradient") <- matrix(CC*z$grad, n, 3)
-  fval
-}
-
-estatics2 <- function(par, design){
-  ##
-  ## former: qflashpl2
-  ##
-  ## ESTATICS model with 2+1 parameters
-  ##
-  ## S_{T1} = par[1] * exp(- par[4] * TE)
-  ## S_{PD} = par[3] * exp(- par[4] * TE)
-  ##
-  n <- dim(design)[1]
-  z <- .Fortran(C_estatics2,
-                as.double(par),
-                as.double(design),
-                as.integer(n),
-                fval = double(n),
-                grad = double(3*n))[c("fval", "grad")]
-  fval <- z$fval
-  attr(fval, "gradient") <- matrix(z$grad, n, 3)
   fval
 }
 

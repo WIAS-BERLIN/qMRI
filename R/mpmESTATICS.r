@@ -420,7 +420,7 @@ estimateESTATICS <- function(mpmdata,
               isConv[x, y, z] <- 255
             } else {
               ## reduced ESTATICS model without MT and PD
-              th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), # par[1]
+              th <- c(ivec[indT1] * exp(-xmat[indT1, 2] * R2star), # par[1]
                       R2star)                                      # par[2]
               res <- try(nls(ivec ~ estatics1(par, xmat),
                              start = list(par = th),
@@ -597,19 +597,19 @@ estimateESTATICSQL <- function(mpmdata,
                       ivec[indMT] * exp(-xmat[indMT, 4] * R2star), # par[2]
                       ivec[indPD] * exp(-xmat[indPD, 4] * R2star), # par[3]
                       R2star)                                      # par[4]
-              res <- try(nls(ivec ~ qflashplQL(par, xmat, CL, sig, L),
+              res <- try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
                              start = list(par = th),
                              control = list(maxiter = 200,
                                             warnOnly = TRUE)))
               if (class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
-                res <- try(nls(ivec ~ qflashplQL(par, xmat, CL, sig, L),
+                res <- try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
                                start = list(par = th),
                                algorithm = "port",
                                control = list(warnOnly = TRUE,
                                               printEval = TRUE),
                                lower = rep(0, 4)))
             }
-          } else { # (mpmdata$model == 1)
+          } else if (mpmdata$model == 1) {
             if ((sum(ivec[xmat[, 1] == 1]) == 0) |
                 (sum(ivec[xmat[, 2] == 1]) == 0))  {
               isConv[x, y, z] <- 255
@@ -617,18 +617,36 @@ estimateESTATICSQL <- function(mpmdata,
               th <- c(ivec[indT1] * exp(-xmat[indT1, 3] * R2star), # par[1]
                       ivec[indPD] * exp(-xmat[indPD, 3] * R2star), # par[2]
                       R2star)                                      # par[3]
-              res <- try(nls(ivec ~ qflashpl2QL(par, xmat, CL, sig, L),
+              res <- try(nls(ivec ~ estatics2QL(par, xmat, CL, sig, L),
                              start = list(par = th),
                              control = list(maxiter = 200,
                                             warnOnly = TRUE)))
               if (class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0)){
-                res <- try(nls(ivec ~ qflashpl2QL(par, xmat, CL, sig, L),
+                res <- try(nls(ivec ~ estatics2QL(par, xmat, CL, sig, L),
                                start = list(par = th),
                                algorithm = "port",
                                control = list(warnOnly = TRUE,
                                               printEval = TRUE),
                                lower = rep(0, 3)))
               }
+            }
+          } else {
+            if ((sum(ivec[xmat[, 1] == 1]) == 0))  {
+              isConv[x, y, z] <- 255
+            } else {
+              th <- c(ivec[indT1] * exp(-xmat[indT1, 2] * R2star), # par[1]
+                      R2star)                                      # par[2]
+              res <- try(nls(ivec ~ estatics1QL(par, xmat),
+                             start = list(par = th),
+                             control = list(maxiter = 200,
+                                            warnOnly = TRUE)))
+              if(class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
+                res <- try(nls(ivec ~ estatics1QL(par, xmat),
+                               start = list(par = th),
+                               algorithm = "port",
+                               control = list(warnOnly = TRUE,
+                                              printEval = TRUE),
+                               lower = rep(0, 3)))
             }
           }
           if (isConv[x, y, z] != 255) {
@@ -642,13 +660,18 @@ estimateESTATICSQL <- function(mpmdata,
                 rsigma[x, y, z] <- sres$sigma
               }
             } else {
-              if(mpmdata$model == 2){
-                res <- try(nls(ivec ~ qflashpl0QL(par, maxR2star, xmat, CL, sig, L),
+              if (mpmdata$model == 2) {
+                res <- try(nls(ivec ~ estatics3QLfixedR2(par, maxR2star, xmat, CL, sig, L),
+                               start = list(par = th[-npar]),
+                               control = list(maxiter = 20,
+                                              warnOnly = TRUE)))
+              } else if (mpmdata$model == 1) {
+                res <- try(nls(ivec ~ estatics2QLfixedR2(par, maxR2star, xmat, CL, sig, L),
                                start = list(par = th[-npar]),
                                control = list(maxiter = 20,
                                               warnOnly = TRUE)))
               } else {
-                res <- try(nls(ivec ~ qflashpl20QL(par, maxR2star, xmat, CL, sig, L),
+                res <- try(nls(ivec ~ estatics1QLfixedR2(par, maxR2star, xmat, CL, sig, L),
                                start = list(par = th[-npar]),
                                control = list(maxiter = 20,
                                               warnOnly = TRUE)))

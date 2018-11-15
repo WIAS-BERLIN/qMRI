@@ -146,12 +146,44 @@ C
 
 
 
-      subroutine estatics2fixedR2(th,r2star,des,n,fval,grad)
+      subroutine estatics2fixedR2(th, r2star, des, n, fval, grad)
 C
 C  function values and gradients (2 parameters)
 C
 C  fval = th(1) * exp(- r2star * des(i,3)) * des(i,1)
 C       + th(2) * exp(- r2star * des(i,3)) * des(i,2)
+C
+      implicit logical (a-z)
+      integer n
+      real*8 th(2),r2star,des(n,3),fval(n),grad(n,2)
+      integer i
+      real*8 z3,fv
+      DO i=1,n
+         z3=exp(-r2star*des(i,3))
+         if(des(i,1).gt.0) THEN
+            fv=z3*th(1)
+            grad(i,1)=z3
+            grad(i,2)=0.d0
+         END IF
+         if(des(i,2).gt.0) THEN
+            fv=z3*th(2)
+            grad(i,1)=0.d0
+            grad(i,2)=z3
+         END IF
+         fval(i)=fv
+      END DO
+      RETURN
+      END
+
+
+
+
+
+      subroutine estatics1fixedR2(th, r2star, des, n, fval, grad)
+C
+C  function values and gradients (1 parameter)
+C
+C  fval = th(1) * exp(- r2star * des(i,2)) * des(i,1)
 C
       implicit logical (a-z)
       integer n

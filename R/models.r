@@ -106,6 +106,25 @@ estatics2fixedR2 <- function(par, R2star, design){
   fval
 }
 
+estatics1fixedR2 <- function(par, R2star, design){
+  ##
+  ## ESTATICS model with 1 parameter
+  ##
+  ## S_{T1} = par[1] * exp(- R2star * TE)
+  ##
+  n <- dim(design)[1]
+  z <- .Fortran(C_estatics1fixedR2,
+                as.double(par),
+                as.double(R2star),
+                as.double(design),
+                as.integer(n),
+                fval = double(n),
+                grad = double(2*n))[c("fval", "grad")]
+  fval <- z$fval
+  attr(fval, "gradient") <- matrix(z$grad, n, 2)
+  fval
+}
+
 qflashplQL <- function(par, design, CL, sigma, L){
   #
   #  ESTATICS model with QL

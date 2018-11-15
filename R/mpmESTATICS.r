@@ -451,8 +451,13 @@ estimateESTATICS <- function(mpmdata,
                                start = list(par = th[-npar]),
                                control = list(maxiter = 20,
                                               warnOnly = TRUE)))
+              } else if (mpmdata$model == 1) {
+                res <- try(nls(ivec ~ estatics2fixedR2(par, maxR2star, xmat),
+                               start = list(par = th[-npar]),
+                               control = list(maxiter = 20,
+                                              warnOnly = TRUE)))
               } else {
-                res <- try(nls(ivec ~ qflashpl20(par, maxR2star, xmat),
+                res <- try(nls(ivec ~ estatics1fixedR2(par, maxR2star, xmat),
                                start = list(par = th[-npar]),
                                control = list(maxiter = 20,
                                               warnOnly = TRUE)))

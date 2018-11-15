@@ -45,8 +45,8 @@ C
 C
 C  function values and gradients (3 parameters)
 C
-C  fval = th(1) * exp(- th(4) * des(i,4)) * des(i,1)
-C       + th(2) * exp(- th(4) * des(i,4)) * des(i,2)
+C  fval = th(1) * exp(- th(4) * des(i,3)) * des(i,1)
+C       + th(2) * exp(- th(4) * des(i,3)) * des(i,2)
 C
       implicit logical (a-z)
       integer n
@@ -79,7 +79,7 @@ C
 C
 C  function values and gradients (2 parameter)
 C
-C  fval = th(1) * exp(- th(4) * des(i,4)) * des(i,1)
+C  fval = th(1) * exp(- th(4) * des(i,2)) * des(i,1)
 C
       implicit logical (a-z)
       integer n
@@ -142,9 +142,16 @@ C
       RETURN
       END
 
-      subroutine qflashp20(th,r2star,des,n,fval,grad)
+
+
+
+
+      subroutine estatics2fixedR2(th,r2star,des,n,fval,grad)
 C
 C  function values and gradients (2 parameters)
+C
+C  fval = th(1) * exp(- r2star * des(i,3)) * des(i,1)
+C       + th(2) * exp(- r2star * des(i,3)) * des(i,2)
 C
       implicit logical (a-z)
       integer n

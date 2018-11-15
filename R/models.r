@@ -142,10 +142,17 @@ estatics3QL <- function(par, design, CL, sigma, L){
                 as.integer(n),
                 fval = double(n),
                 grad = double(4*n))[c("fval", "grad")]
-  sfval <- pmin(z$fval/sigma,1e10)
+  sfval <- z$fval/sigma
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
-  attr(fval, "gradient") <- matrix(CC*z$grad, n, 4)
+  grad <- matrix(CC*z$grad, n, 4)
+  ind <- sfval>100
+  if(any(ind)){
+# use LS if there is no real difference, factor to keep monotonicity
+     fval[ind] <- z$fval*1.0001
+     grad[ind,] <- z$grad*1.0001
+  }
+  attr(fval, "gradient") <- grad
   fval
 }
 
@@ -166,10 +173,17 @@ estatics2QL <- function(par, design, CL, sigma, L){
                 fval = double(n),
                 grad = double(3*n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- pmin(z$fval/sigma,1e10)
+  sfval <- z$fval/sigma
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
-  attr(fval, "gradient") <- matrix(CC*z$grad, n, 3)
+  grad <- matrix(CC*z$grad, n, 3)
+  ind <- sfval>100
+  if(any(ind)){
+# use LS if there is no real difference, factor to keep monotonicity
+     fval[ind] <- z$fval*1.0001
+     grad[ind,] <- z$grad*1.0001
+  }
+  attr(fval, "gradient") <- grad
   fval
 }
 
@@ -185,12 +199,19 @@ estatics1QL <- function(par, design, CL, sigma, L){
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(3*n))[c("fval", "grad")]
+                grad = double(2*n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- pmin(z$fval/sigma,1e10)
+  sfval <- z$fval/sigma
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
-  attr(fval, "gradient") <- matrix(CC*z$grad, n, 3)
+  grad <- matrix(CC*z$grad, n, 2)
+  ind <- sfval>100
+  if(any(ind)){
+# use LS if there is no real difference, factor to keep monotonicity
+     fval[ind] <- z$fval*1.0001
+     grad[ind,] <- z$grad*1.0001
+  }
+  attr(fval, "gradient") <- grad
   fval
 }
 
@@ -213,10 +234,17 @@ estatics3QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
                 fval = double(n),
                 grad = double(3*n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- pmin(z$fval/sigma,1e10)
+  sfval <- z$fval/sigma
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
-  attr(fval, "gradient") <- matrix(CC*z$grad, n, 3)
+  grad <- matrix(CC*z$grad, n, 3)
+  ind <- sfval>100
+  if(any(ind)){
+# use LS if there is no real difference, factor to keep monotonicity
+     fval[ind] <- z$fval*1.0001
+     grad[ind,] <- z$grad*1.0001
+  }
+  attr(fval, "gradient") <- grad
   fval
 }
 
@@ -242,7 +270,14 @@ estatics2QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
   sfval <- pmin(z$fval/sigma,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
-  attr(fval, "gradient") <- matrix(CC*z$grad, n, 2)
+  grad <- matrix(CC*z$grad, n, 2)
+  ind <- sfval>100
+  if(any(ind)){
+# use LS if there is no real difference, factor to keep monotonicity
+     fval[ind] <- z$fval*1.0001
+     grad[ind,] <- z$grad*1.0001
+  }
+  attr(fval, "gradient") <- grad
   fval
 }
 
@@ -259,12 +294,19 @@ estatics1QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(2*n))[c("fval", "grad")]
+                grad = double(n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
   sfval <- pmin(z$fval/sigma,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
-  attr(fval, "gradient") <- matrix(CC*z$grad, n, 2)
+  grad <- matrix(CC*z$grad, n, 1)
+  ind <- sfval>100
+  if(any(ind)){
+# use LS if there is no real difference, factor to keep monotonicity
+     fval[ind] <- z$fval*1.0001
+     grad[ind,] <- z$grad*1.0001
+  }
+  attr(fval, "gradient") <- grad
   fval
 }
 

@@ -92,8 +92,9 @@ C
      1  wght(2),hakt,lwght(*),swjy(nv,ncores),s2new(*)
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,jwind3,jwind2,
      1        iind,jind,jind3,jind2,clw1,clw2,clw3,dlw1,dlw2,dlw3,
-     2        dlw12,n12,k,thrednr,swj2
-      real*8 bii,biinv,sij,swj,z,z1,z2,z3,wj,hakt2,hmax2,w1,w2,spmb,spf
+     2        dlw12,n12,k,thrednr
+      real*8 bii,biinv,sij,swj,swj2,z,z1,z2,z3,wj,hakt2,hmax2,w1,w2,
+     1       spmb,spf
       external lkern,KLdist2
       real*8 lkern,KLdist2
 !$      integer omp_get_thread_num
@@ -256,10 +257,7 @@ C$OMP FLUSH(thnew,bi)
 
       real*8 function KLdist2(thi,thj,s2)
       implicit none
-      integer nv
       real*8 thi(2), thj(2), s2, z1, z2
-      integer k,l
-      real*8 z,zd,thik,zdk
       z1 = thi(1)-thj(1)
       z2 = thi(2)-thj(2)
       KLdist2 = (z1*z1+z2*z2)/s2

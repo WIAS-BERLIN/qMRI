@@ -586,7 +586,7 @@ estimateESTATICSQL <- function(mpmdata,
         if (mpmdata$mask[x, y, z]) {
           # look-up the local sigma value
           if(!homsigma) sig <- sigma[x, y, z]
-          ivec <- mpmdata$ddata[, x, y, z]/dataScale
+          ivec <- mpmdata$ddata[, x, y, z] / dataScale
           if (mpmdata$model == 2) {
             if ((sum(ivec[xmat[, 1] == 1]) == 0) |
                 (sum(ivec[xmat[, 2] == 1]) == 0) |
@@ -603,7 +603,7 @@ estimateESTATICSQL <- function(mpmdata,
                                             warnOnly = TRUE)))
               if (class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
                 res <- try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
-                               start = list(par = th),
+                             start = list(par = th),
                                algorithm = "port",
                                control = list(warnOnly = TRUE,
                                               printEval = TRUE),
@@ -621,14 +621,13 @@ estimateESTATICSQL <- function(mpmdata,
                              start = list(par = th),
                              control = list(maxiter = 200,
                                             warnOnly = TRUE)))
-              if (class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0)){
+              if (class(res) == "try-error" || !res$convInfo$isConv || any(coefficients(res) < 0))
                 res <- try(nls(ivec ~ estatics2QL(par, xmat, CL, sig, L),
                                start = list(par = th),
                                algorithm = "port",
                                control = list(warnOnly = TRUE,
                                               printEval = TRUE),
                                lower = rep(0, 3)))
-              }
             }
           } else {
             if ((sum(ivec[xmat[, 1] == 1]) == 0))  {
@@ -661,6 +660,7 @@ estimateESTATICSQL <- function(mpmdata,
               }
             } else {
               if (mpmdata$model == 2) {
+                cat("third try fallback", x, y, z, "\n")
                 res <- try(nls(ivec ~ estatics3QLfixedR2(par, maxR2star, xmat, CL, sig, L),
                                start = list(par = th[-npar]),
                                control = list(maxiter = 20,
@@ -680,6 +680,7 @@ estimateESTATICSQL <- function(mpmdata,
               isConv[x, y, z] <- res$convInfo$isConv
               sres <- getnlspars(res)
               modelCoeff[-npar, x, y, z] <- sres$coefficients
+              cat("coef", sres$coefficients, "\n")
               modelCoeff[npar, x, y, z] <- maxR2star
               if (sres$sigma != 0) {
                 invCovtmp <- sres$XtX

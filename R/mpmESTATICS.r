@@ -518,7 +518,7 @@ estimateESTATICSQL <- function(mpmdata,
   if (length(sigma) == 1) {
     # this is a global (homogeneous) sigma, setting the flag
     homsigma <- TRUE
-    sig <- sigma
+    sig <- sigma/dataScale
   } else if (all(dim(sigma) == mpmdata$sdim)) {
     # there is an array of sigma with matching dimensions
     homsigma <- FALSE

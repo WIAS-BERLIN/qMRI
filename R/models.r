@@ -430,3 +430,56 @@ ESTATICS.confidence <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
   CIR2star <- R2star + c(-qqn,qqn)/sqrt(si2["R2star","R2star"])
   list(E1=E1,CIE1=sort(CIE1),R1=R1,CIR1=sort(CIR1),R2star=R2star,CIR2star=CIR2star)
 }
+
+initth <- function(mpmdata){
+  ## get initial estimates for ESTATICS parameters
+  mask <- mpmdata$mask
+  nvox <- prod(mpmdata$sdim)
+  TE <- mpmdata$TE
+  if(mpmdata$model==2){
+     nT1 <- length(mpmdata$t1Files)
+     indT1 <- c(1,nT1)
+     nMT <- length(mpmdata$mtFiles)
+     indMT <- nT1+c(1,nMT)
+     nPD <- length(mpmdata$pdFiles)
+     indPD <- nT1+nMT+c(1,nPD)
+     th <- matrix(0,4,nvox)
+     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]
+     MT <- matrix(mpmdata$ddata[indMT,,,],2,nvox)[,mask]
+     PD <- matrix(mpmdata$ddata[indPD,,,],2,nvox)[,mask]
+     R2star <- pmax(0,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
+             (log(MT[1,])-log(MT[2,]))/diff(TE[indMT])+
+             (log(PD[1,])-log(PD[2,]))/diff(TE[indPD]))/3)
+     th[1,mask] <- T1[1,]*exp(R2star*TE[1])
+     th[2,mask] <- MT[1,]*exp(R2star*TE[nT1+1])
+     th[3,mask] <- PD[1,]*exp(R2star*TE[nT1+nMT+1])
+     th[4,mask] <- R2star
+     dim(th) <- c(4,mpmdata$sdim)
+  }
+  if(mpmdata$model==1){
+     nT1 <- length(mpmdata$t1Files)
+     indT1 <- c(1,nT1)
+     n2 <- length(mpmdata$pdFiles)
+     ind2 <- c(nT1+1,mpmdata$nFiles)
+     th <- matrix(0,3,nvox)
+     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]
+     S <- matrix(mpmdata$ddata[ind2,,,],2,nvox)[,mask]
+     R2star <- pmax(0,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
+             (log(S[1,])-log(S[2,]))/diff(TE[ind2]))/2)
+     th[1,mask] <- T1[1,]*exp(R2star*TE[1])
+     th[2,mask] <- S[1,]*exp(R2star*TE[nT1+1])
+     th[3,mask] <- R2star
+     dim(th) <- c(3,mpmdata$sdim)
+  }
+  if(mpmdata$model==0){
+     nT1 <- mpmdata$nFiles
+     indT1 <- c(1,nT1)
+     th <- matrix(0,2,nvox)
+     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]
+     R2star <- pmax(0,(log(T1[1,])-log(T1[2,]))/diff(TE[indT1]))
+     th[1,mask] <- T1[1,]*exp(R2star*TE[1])
+     th[2,mask] <- R2star
+     dim(th) <- c(2,mpmdata$sdim)
+  }
+  th
+}

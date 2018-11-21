@@ -431,11 +431,11 @@ ESTATICS.confidence <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
   list(E1=E1,CIE1=sort(CIE1),R1=R1,CIR1=sort(CIR1),R2star=R2star,CIR2star=CIR2star)
 }
 
-initth <- function(mpmdata){
+initth <- function(mpmdata, TEScale=100, dataScale=100){
   ## get initial estimates for ESTATICS parameters
   mask <- mpmdata$mask
   nvox <- prod(mpmdata$sdim)
-  TE <- mpmdata$TE
+  TE <- mpmdata$TE/TEScale
   if(mpmdata$model==2){
      nT1 <- length(mpmdata$t1Files)
      indT1 <- c(1,nT1)
@@ -444,9 +444,9 @@ initth <- function(mpmdata){
      nPD <- length(mpmdata$pdFiles)
      indPD <- nT1+nMT+c(1,nPD)
      th <- matrix(0,4,nvox)
-     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]
-     MT <- matrix(mpmdata$ddata[indMT,,,],2,nvox)[,mask]
-     PD <- matrix(mpmdata$ddata[indPD,,,],2,nvox)[,mask]
+     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]/dataScale
+     MT <- matrix(mpmdata$ddata[indMT,,,],2,nvox)[,mask]/dataScale
+     PD <- matrix(mpmdata$ddata[indPD,,,],2,nvox)[,mask]/dataScale
      R2star <- pmax(0,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
              (log(MT[1,])-log(MT[2,]))/diff(TE[indMT])+
              (log(PD[1,])-log(PD[2,]))/diff(TE[indPD]))/3)
@@ -462,8 +462,8 @@ initth <- function(mpmdata){
      n2 <- length(mpmdata$pdFiles)
      ind2 <- c(nT1+1,mpmdata$nFiles)
      th <- matrix(0,3,nvox)
-     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]
-     S <- matrix(mpmdata$ddata[ind2,,,],2,nvox)[,mask]
+     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]/dataScale
+     S <- matrix(mpmdata$ddata[ind2,,,],2,nvox)[,mask]/dataScale
      R2star <- pmax(0,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
              (log(S[1,])-log(S[2,]))/diff(TE[ind2]))/2)
      th[1,mask] <- T1[1,]*exp(R2star*TE[1])
@@ -475,7 +475,7 @@ initth <- function(mpmdata){
      nT1 <- mpmdata$nFiles
      indT1 <- c(1,nT1)
      th <- matrix(0,2,nvox)
-     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]
+     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]/dataScale
      R2star <- pmax(0,(log(T1[1,])-log(T1[2,]))/diff(TE[indT1]))
      th[1,mask] <- T1[1,]*exp(R2star*TE[1])
      th[2,mask] <- R2star

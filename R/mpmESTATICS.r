@@ -430,7 +430,7 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
             th <- th[1:3]
             res <- if (method=="NLR") try(nls(ivec ~ estatics3fixedR2(par,R2star, xmat), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
-                   else try(nls(ivec ~ estatics3fixedR2QL(par, R2star,xmat,
+                   else try(nls(ivec ~ estatics3QLfixedR2(par, R2star,xmat,
                            CL, sig, L), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
           } else if (mpmdata$model == 1) {
@@ -438,7 +438,7 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
             th <- th[1:2]
              res <- if (method=="NLR") try(nls(ivec ~ estatics2fixedR2(par,R2star, xmat), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
-                   else try(nls(ivec ~ estatics2fixedR2QL(par,R2star,xmat,
+                   else try(nls(ivec ~ estatics2QLfixedR2(par,R2star,xmat,
                            CL, sig, L), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
           } else if (mpmdata$model == 0) {
@@ -446,7 +446,7 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
             th <- th[1]
            res <- if (method=="NLR") try(nls(ivec ~ estatics1fixedR2(par, R2star, xmat), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
-                   else try(nls(ivec ~ estatics1fixedR2QL(par,R2star,xmat,
+                   else try(nls(ivec ~ estatics1QLfixedR2(par,R2star,xmat,
                            CL, sig, L), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
           }

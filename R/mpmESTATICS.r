@@ -311,6 +311,7 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
                                 method = c("NLR", "QL"), sigma = NULL,
                                 L = NULL, maxR2star=50, verbose = TRUE)
 {
+  zerovoxel <- apply(mpmdata$ddata<=0,2:4,any)&mpmdata$mask
   if (mpmdata$model == 2) {
     xmat <- matrix(0, mpmdata$nFiles, 4)
     xmat[1:length(mpmdata$t1Files), 1] <- 1
@@ -323,10 +324,7 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
     ## S_{T1} = par[1] * exp(- par[4] * TE)
     ## S_{MT} = par[2] * exp(- par[4] * TE)
     ## S_{PD} = par[3] * exp(- par[4] * TE)
-    zerovoxel <- (apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
-                 (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0)|
-                 (apply(mpmdata$ddata[xmat[,3]==1,,,],2:4,sum)==0)&mpmdata$mask
-  } else if (mpmdata$model == 1) {
+    } else if (mpmdata$model == 1) {
     xmat <- matrix(0, mpmdata$nFiles, 3)
     xmat[1:length(mpmdata$t1Files), 1] <- 1
     xmat[(length(mpmdata$t1Files)+1):mpmdata$nFiles, 2] <- 1
@@ -334,15 +332,12 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
     ## ... for our model in qflashpl2() ...
     ## S_{T1} = par[1] * exp(- par[3] * TE)
     ## S_{PD} = par[2] * exp(- par[3] * TE)
-    zerovoxel <- (apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)|
-                 (apply(mpmdata$ddata[xmat[,2]==1,,,],2:4,sum)==0)&mpmdata$mask
-  } else {
+      } else {
     xmat <- matrix(0, mpmdata$nFiles, 2)
     xmat[1:length(mpmdata$t1Files), 1] <- 1
     xmat[, 2] <- mpmdata$TE / TEScale
     ## ... for our model in qflashpl3() ...
     ## S_{T1} = par[1] * exp(- par[2] * TE)
-    zerovoxel <- (apply(mpmdata$ddata[xmat[,1]==1,,,],2:4,sum)==0)&mpmdata$mask
   }
   if (verbose) {
     cat("Design of the model:\n")
@@ -385,7 +380,7 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
   invCov <- array(0, c(npar, npar, mpmdata$sdim))
   rsigma <- array(0, mpmdata$sdim)
   if (verbose)
-    Sys.time()
+    cat("Starte estimation",format(Sys.time()),"\n")
   for (z in 1:mpmdata$sdim[3]) {
     for (y in 1:mpmdata$sdim[2]) {
       for (x in 1:mpmdata$sdim[1]) {
@@ -412,6 +407,7 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
                            CL, sig, L), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
           }
+          if(class(res)!="try-error"){
           sres <- getnlspars(res)
           isConv[x, y, z] <- as.integer(res$convInfo$isConv)
           modelCoeff[, x, y, z] <- sres$coefficients
@@ -420,54 +416,60 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
             invCov[, , x, y, z] <- invCovtmp/sres$sigma^2
             rsigma[x, y, z] <- sres$sigma
           }
-
+          }
           if(class(res)=="try-error"||coef(res)[npar]>maxR2star||coef(res)[npar]<0){
 #
 #     fallback for not converged or R2star out of range
 #
-            if (mpmdata$model == 2) {
-            R2star <- th[4]
-            th <- th[1:3]
-            res <- if (method=="NLR") try(nls(ivec ~ estatics3fixedR2(par,R2star, xmat), start = list(par = th),
-                           control = list(maxiter = 200, warnOnly = TRUE)))
-                   else try(nls(ivec ~ estatics3QLfixedR2(par, R2star,xmat,
+            sres <- linearizedESTATICS(ivec, xmat, maxR2star)
+#   thats already the solution for NLR if R2star is fixed
+            isThresh[x, y, z] <- sres$invCov[npar,npar]==0
+            isConv[x, y, z] <- 255 ## partially linearized NLR model
+            xmat0 <- sres$xmat
+            th <- sres$theta
+            modelCoeff[-npar, x, y, z] <- sres$theta
+            modelCoeff[npar, x, y, z] <- sres$R2star
+            if (sres$sigma2 != 0) {
+                invCov[, , x, y, z] <- sres$invCov
+                rsigma[x,y,z] <- sres$sigma2
+            }
+            if(method=="QL"){
+              xmat0 <- sres$xmat
+              # xmat0 containes design matrix for linear problem with fixed R2star
+              # ony have nonlinearity from QL
+              if (mpmdata$model == 2)
+                res <- try(nls(ivec ~ estatics3QLfixedR2(par, xmat0,
                            CL, sig, L), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
-          } else if (mpmdata$model == 1) {
-            R2star <- th[3]
-            th <- th[1:2]
-             res <- if (method=="NLR") try(nls(ivec ~ estatics2fixedR2(par,R2star, xmat), start = list(par = th),
-                           control = list(maxiter = 200, warnOnly = TRUE)))
-                   else try(nls(ivec ~ estatics2QLfixedR2(par,R2star,xmat,
+              else if (mpmdata$model == 1)
+                res <- try(nls(ivec ~ estatics2QLfixedR2(par, xmat0,
                            CL, sig, L), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
-          } else if (mpmdata$model == 0) {
-            R2star <- th[2]
-            th <- th[1]
-           res <- if (method=="NLR") try(nls(ivec ~ estatics1fixedR2(par, R2star, xmat), start = list(par = th),
-                           control = list(maxiter = 200, warnOnly = TRUE)))
-                   else try(nls(ivec ~ estatics1QLfixedR2(par,R2star,xmat,
+              else if (mpmdata$model == 0)
+                res <- try(nls(ivec ~ estatics1QLfixedR2(par, xmat0,
                            CL, sig, L), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
-          }
-            isThresh[x, y, z] <- TRUE
-            isConv[x, y, z] <- as.integer(res$convInfo$isConv)
-            sres <- getnlspars(res)
-            modelCoeff[-npar, x, y, z] <- sres$coefficients
-            modelCoeff[npar, x, y, z] <- R2star
-              if (sres$sigma != 0) {
-                invCovtmp <- sres$XtX
-                invCov[-npar, -npar, x, y, z] <- invCovtmp/sres$sigma^2
-                rsigma[x,y,z] <- sres$sigma
+              if(class(res)!="try-error"){
+                 isConv[x, y, z] <- as.integer(res$convInfo$isConv)
+                 sres <- getnlspars(res)
+                 modelCoeff[-npar, x, y, z] <- sres$coefficients
+                 if (sres$sigma != 0) {
+                   invCovtmp <- sres$XtX
+                   invCov[-npar, -npar, x, y, z] <- invCovtmp/sres$sigma^2
+                   rsigma[x,y,z] <- sres$sigma
+                 }
+              } else {
+                mpmdata$mask[x,y,z] <- FALSE
               }
-            }#fallback
-          }#mask
-        }#x
-      }#y
-      if(verbose) cat("z",z,"time",Sys.time(),"\n")
-    }#z
+            }
+          }#fallback
+        }#mask
+      }#x
+    }#y
+    if(verbose) cat("z",z,"time",format(Sys.time()),"\n")
+  }#z
   if (verbose)
-    Sys.time()
+    cat("Finished estimation",format(Sys.time()),"\n")
   obj <- list(modelCoeff = modelCoeff, invCov = invCov, rsigma = rsigma, isThresh = isThresh,
               isConv = isConv, sdim = mpmdata$sdim, nFiles = mpmdata$nFiles,
               t1Files = mpmdata$t1Files, pdFiles = mpmdata$pdFiles,

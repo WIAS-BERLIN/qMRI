@@ -147,10 +147,19 @@ estatics3QL <- function(par, design, CL, sigma, L){
   CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
   grad <- matrix(CC*z$grad, n, 4)
   ind <- sfval>100
+  if(any(is.na(ind))){
+     cat("estatics3QL\n","par",par,"sigma",sigma,
+   "\n fv",z$fval,"\n CC",CC,"ind",ind,"\n")
+  }
   if(any(ind)){
 # use LS if there is no real difference, factor to keep monotonicity
      fval[ind] <- z$fval[ind]*1.0001
      grad[ind,] <- matrix(z$grad, n, 4)[ind, ]*1.0001
+  }
+  if(any(is.na(grad))){
+    cat("estatics3QL/grad\n","par",par,"sigma",sigma,
+  "\n fv",z$fval,"\n CC",CC,"ind",ind,"\n grad")
+  print(grad)
   }
   attr(fval, "gradient") <- grad
   fval
@@ -215,7 +224,7 @@ estatics1QL <- function(par, design, CL, sigma, L){
   fval
 }
 
-estatics3QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
+estatics3QLfixedR2 <- function(par, design, CL, sigma, L){
   ##
   ## former: qflashpl0QL
   ##
@@ -226,29 +235,14 @@ estatics3QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
   ## S_{PD} = par[3] * exp(- R2star * TE)
   ##
   n <- dim(design)[1]
-  z <- .Fortran(C_estatics3fixedr2,
-                as.double(par),
-                as.double(R2star),
-                as.double(design),
-                as.integer(n),
-                fval = double(n),
-                grad = double(3*n))[c("fval", "grad")]
+  fval <- design%*%par
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- z$fval/sigma
+  sfval <- fval/sigma
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
-  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
-  grad <- matrix(CC*z$grad, n, 3)
-  ind <- sfval>100
-  if(any(ind)){
-# use LS if there is no real difference, factor to keep monotonicity
-    fval[ind] <- z$fval[ind]*1.0001
-    grad[ind,] <- matrix(z$grad, n, 3)[ind, ]*1.0001
-  }
-  attr(fval, "gradient") <- grad
   fval
 }
 
-estatics2QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
+estatics2QLfixedR2 <- function(par, design, CL, sigma, L){
   ##
   ##  former: qflashpl20QL
   ##
@@ -259,54 +253,24 @@ estatics2QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
   ## S_{PD} = par[3] * exp(- R2star * TE)
   ##
   n <- dim(design)[1]
-  z <- .Fortran(C_estatics2fixedr2,
-                as.double(par),
-                as.double(R2star),
-                as.double(design),
-                as.integer(n),
-                fval = double(n),
-                grad = double(2*n))[c("fval", "grad")]
+  fval <- design%*%par
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- pmin(z$fval/sigma,1e10)
+  sfval <- pmin(fval/sigma,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
-  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
-  grad <- matrix(CC*z$grad, n, 2)
-  ind <- sfval>100
-  if(any(ind)){
-# use LS if there is no real difference, factor to keep monotonicity
-    fval[ind] <- z$fval[ind]*1.0001
-    grad[ind,] <- matrix(z$grad, n, 2)[ind, ]*1.0001
-  }
-  attr(fval, "gradient") <- grad
   fval
 }
 
-estatics1QLfixedR2 <- function(par, R2star, design, CL, sigma, L){
+estatics1QLfixedR2 <- function(par, design, CL, sigma, L){
   ##
   ## ESTATICS model with 1 parameters
   ##
   ## S_{T1} = par[1] * exp(- R2star * TE)
   ##
   n <- dim(design)[1]
-  z <- .Fortran(C_estatics1fixedr2,
-                as.double(par),
-                as.double(R2star),
-                as.double(design),
-                as.integer(n),
-                fval = double(n),
-                grad = double(n))[c("fval", "grad")]
+  fval <- design%*%par
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- pmin(z$fval/sigma,1e10)
+  sfval <- pmin(fval/sigma,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
-  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
-  grad <- matrix(CC*z$grad, n, 1)
-  ind <- sfval>100
-  if(any(ind)){
-# use LS if there is no real difference, factor to keep monotonicity
-    fval[ind] <- z$fval[ind]*1.0001
-    grad[ind,] <- matrix(z$grad, n, 1)[ind, ]*1.0001
-  }
-  attr(fval, "gradient") <- grad
   fval
 }
 
@@ -447,7 +411,7 @@ initth <- function(mpmdata, TEScale=100, dataScale=100){
      T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]/dataScale
      MT <- matrix(mpmdata$ddata[indMT,,,],2,nvox)[,mask]/dataScale
      PD <- matrix(mpmdata$ddata[indPD,,,],2,nvox)[,mask]/dataScale
-     R2star <- pmax(0,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
+     R2star <- pmax(1e-6,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
              (log(MT[1,])-log(MT[2,]))/diff(TE[indMT])+
              (log(PD[1,])-log(PD[2,]))/diff(TE[indPD]))/3)
      th[1,mask] <- T1[1,]*exp(R2star*TE[1])
@@ -482,4 +446,30 @@ initth <- function(mpmdata, TEScale=100, dataScale=100){
      dim(th) <- c(2,mpmdata$sdim)
   }
   th
+}
+
+linearizedESTATICS <- function(ivec, xmat, maxR2star){
+    dimx <- dim(xmat)
+    npar <- dimx[2]
+    invcov <- matrix(0,npar,npar)
+    z <- lm.fit(xmat,log(ivec))
+    R2star <- -z$coefficients[npar]
+    sigma2R2s <- sum(z$residuals^2)/(-diff(dimx))
+    invcov[npar,npar] <- sum(xmat[,npar]^2)/sigma2R2s
+    if (R2star < 0){
+      R2star <- 0
+      invcov[npar,npar] <- 0
+#  boundary of parameter space no reliable confidence information
+    }
+    if (R2star > maxR2star){
+      R2star <- 0
+      invcov[npar,npar] <- 0
+#  boundary of parameter space no reliable confidence information
+    }
+    xmat0 <- xmat[,-npar]*exp(-R2star*xmat[,npar])
+    z <- lm.fit(xmat0,ivec)
+    theta <- z$coefficients
+    sigma2 <- sum(z$residuals^2)/(-diff(dimx)+1)
+    invcov[-npar,-npar] <- t(xmat0)%*%xmat0/sigma2
+    list(theta=theta, R2star=R2star, invCov=invcov, sigma2 = sigma2, xmat=xmat0)
 }

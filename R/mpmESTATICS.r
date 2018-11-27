@@ -353,10 +353,11 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
   thetas <- initth(mpmdata, TEScale, dataScale)
   if(method=="QL"){
     sigma <- sigma/dataScale
-    CL <- sigma * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
+    CLarray <- sigma * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
     if(length(sigma)==1){
       homsigma <- TRUE
       sig <- sigma
+      CL <- CLarray
     } else if(all(dim(sigma)==mpmdata$sdim)) {
       homsigma <- FALSE
     } else {
@@ -385,26 +386,36 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
     for (y in 1:mpmdata$sdim[2]) {
       for (x in 1:mpmdata$sdim[1]) {
         if (mpmdata$mask[x, y, z]) {
-          if(method=="QL") if(!homsigma) sig <- sigma[x, y, z]
+          if(method=="QL") if(!homsigma) {
+              sig <- sigma[x, y, z]
+              CL <- CLarray[x, y, z]
+            }
           ivec <- mpmdata$ddata[, x, y, z]/dataScale
           th <- thetas[,x,y,z]
           if (mpmdata$model == 2) {
-            res <- if (method=="NLR") try(nls(ivec ~ estatics3(par, xmat), start = list(par = th),
+            res <- if (method=="NLR") try(nls(ivec ~ estatics3(par, xmat),
+                           data = list(xmat=xmat),
+                           start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
                    else try(nls(ivec ~ estatics3QL(par, xmat,
-                           CL, sig, L), start = list(par = th),
+                           CL, sig, L), data = list(xmat=xmat, CL=CL, sig=sig, L=L),
+                           start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
           } else if (mpmdata$model == 1) {
-             res <- if (method=="NLR") try(nls(ivec ~ estatics2(par, xmat), start = list(par = th),
+             res <- if (method=="NLR") try(nls(ivec ~ estatics2(par, xmat),
+                            data = list(xmat=xmat), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
                    else try(nls(ivec ~ estatics2QL(par, xmat,
-                           CL, sig, L), start = list(par = th),
+                           CL, sig, L), data = list(xmat=xmat, CL=CL, sig=sig, L=L),
+                           start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
           } else if (mpmdata$model == 0) {
-            res <- if (method=="NLR") try(nls(ivec ~ estatics1(par, xmat), start = list(par = th),
+            res <- if (method=="NLR") try(nls(ivec ~ estatics1(par, xmat),
+                           data = list(xmat=xmat), start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
                    else try(nls(ivec ~ estatics1QL(par, xmat,
-                           CL, sig, L), start = list(par = th),
+                           CL, sig, L), data = list(xmat=xmat, CL=CL, sig=sig, L=L),
+                           start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
           }
           if(class(res)!="try-error"){
@@ -438,16 +449,19 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
               # xmat0 containes design matrix for linear problem with fixed R2star
               # ony have nonlinearity from QL
               if (mpmdata$model == 2)
-                res <- try(nls(ivec ~ estatics3QLfixedR2(par, xmat0,
-                           CL, sig, L), start = list(par = th),
+                res <- try(nls(ivec ~ estatics3QLfixedR2(par, xmat,
+                           CL, sig, L), data = list(xmat=xmat0, CL=CL, sig=sig, L=L),
+                           start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
               else if (mpmdata$model == 1)
-                res <- try(nls(ivec ~ estatics2QLfixedR2(par, xmat0,
-                           CL, sig, L), start = list(par = th),
+                res <- try(nls(ivec ~ estatics2QLfixedR2(par, xmat,
+                           CL, sig, L), data = list(xmat0=xmat, CL=CL, sig=sig, L=L),
+                           start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
               else if (mpmdata$model == 0)
-                res <- try(nls(ivec ~ estatics1QLfixedR2(par, xmat0,
-                           CL, sig, L), start = list(par = th),
+                res <- try(nls(ivec ~ estatics1QLfixedR2(par, xmat,
+                           CL, sig, L), data = list(xmat0=xmat, CL=CL, sig=sig, L=L),
+                           start = list(par = th),
                            control = list(maxiter = 200, warnOnly = TRUE)))
               if(class(res)!="try-error"){
                  isConv[x, y, z] <- as.integer(res$convInfo$isConv)

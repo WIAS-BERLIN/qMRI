@@ -125,7 +125,7 @@ estatics1fixedR2 <- function(par, R2star, design){
   fval
 }
 
-estatics3QL <- function(par, design, CL, sigma, L){
+estatics3QL <- function(par, design, CL, sig, L){
   ##
   ## former: qflashplQL
   ##
@@ -136,19 +136,21 @@ estatics3QL <- function(par, design, CL, sigma, L){
   ## S_{PD} = par[3] * exp(- par[4] * TE)
   ##
   n <- dim(design)[1]
+  if(par[4] > 20) par[4] <- 20
   z <- .Fortran(C_estatics3,
                 as.double(par),
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
                 grad = double(4*n))[c("fval", "grad")]
-  sfval <- z$fval/sigma
+  sfval <- z$fval/sig
+#  cat("estatics3QL\n","par",par,"sigma",sig,"\n fv",z$fval,"\n CL",CL,L,"\n")
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
-  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
+  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval/2/L/sig
   grad <- matrix(CC*z$grad, n, 4)
   ind <- sfval>100
   if(any(is.na(ind))){
-     cat("estatics3QL\n","par",par,"sigma",sigma,
+     cat("estatics3QL\n","par",par,"sigma",sig,
    "\n fv",z$fval,"\n CC",CC,"ind",ind,"\n")
   }
   if(any(ind)){
@@ -157,7 +159,7 @@ estatics3QL <- function(par, design, CL, sigma, L){
      grad[ind,] <- matrix(z$grad, n, 4)[ind, ]*1.0001
   }
   if(any(is.na(grad))){
-    cat("estatics3QL/grad\n","par",par,"sigma",sigma,
+    cat("estatics3QL/grad\n","par",par,"sigma",sig,
   "\n fv",z$fval,"\n CC",CC,"ind",ind,"\n grad")
   print(grad)
   }
@@ -165,7 +167,7 @@ estatics3QL <- function(par, design, CL, sigma, L){
   fval
 }
 
-estatics2QL <- function(par, design, CL, sigma, L){
+estatics2QL <- function(par, design, CL, sig, L){
   ##
   ## former: qflashpl2QL
   ##
@@ -182,9 +184,9 @@ estatics2QL <- function(par, design, CL, sigma, L){
                 fval = double(n),
                 grad = double(3*n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- z$fval/sigma
+  sfval <- z$fval/sig
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
-  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
+  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sig
   grad <- matrix(CC*z$grad, n, 3)
   ind <- sfval>100
   if(any(ind)){
@@ -196,7 +198,7 @@ estatics2QL <- function(par, design, CL, sigma, L){
   fval
 }
 
-estatics1QL <- function(par, design, CL, sigma, L){
+estatics1QL <- function(par, design, CL, sig, L){
   ##
   ## "ESTATICS" model with 1+1 parameters with QL
   ##
@@ -210,9 +212,9 @@ estatics1QL <- function(par, design, CL, sigma, L){
                 fval = double(n),
                 grad = double(2*n))[c("fval", "grad")]
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- z$fval/sigma
+  sfval <- z$fval/sig
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
-  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sigma
+  CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval /2/L/sig
   grad <- matrix(CC*z$grad, n, 2)
   ind <- sfval>100
   if(any(ind)){
@@ -224,7 +226,7 @@ estatics1QL <- function(par, design, CL, sigma, L){
   fval
 }
 
-estatics3QLfixedR2 <- function(par, design, CL, sigma, L){
+estatics3QLfixedR2 <- function(par, design, CL, sig, L){
   ##
   ## former: qflashpl0QL
   ##
@@ -237,12 +239,12 @@ estatics3QLfixedR2 <- function(par, design, CL, sigma, L){
   n <- dim(design)[1]
   fval <- design%*%par
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- fval/sigma
+  sfval <- fval/sig
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   fval
 }
 
-estatics2QLfixedR2 <- function(par, design, CL, sigma, L){
+estatics2QLfixedR2 <- function(par, design, CL, sig, L){
   ##
   ##  former: qflashpl20QL
   ##
@@ -255,12 +257,12 @@ estatics2QLfixedR2 <- function(par, design, CL, sigma, L){
   n <- dim(design)[1]
   fval <- design%*%par
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- pmin(fval/sigma,1e10)
+  sfval <- pmin(fval/sig,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   fval
 }
 
-estatics1QLfixedR2 <- function(par, design, CL, sigma, L){
+estatics1QLfixedR2 <- function(par, design, CL, sig, L){
   ##
   ## ESTATICS model with 1 parameters
   ##
@@ -269,7 +271,7 @@ estatics1QLfixedR2 <- function(par, design, CL, sigma, L){
   n <- dim(design)[1]
   fval <- design%*%par
   # CL <- sigma * sqrt(pi/2) * gamma(L+0.5) / gamma(L) / gamma(1.5)
-  sfval <- pmin(fval/sigma,1e10)
+  sfval <- pmin(fval/sig,1e10)
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   fval
 }

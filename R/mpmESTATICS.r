@@ -442,7 +442,7 @@ estimateESTATICS <- function (mpmdata, TEScale = 100, dataScale = 1000,
             modelCoeff[npar, x, y, z] <- sres$R2star
             if (sres$sigma2 != 0) {
                 invCov[, , x, y, z] <- sres$invCov
-                rsigma[x,y,z] <- sres$sigma2
+                rsigma[x,y,z] <- sqrt(sres$sigma2)
             }
             if(method=="QL"){
               xmat0 <- sres$xmat
@@ -511,7 +511,8 @@ smoothESTATICS <- function(mpmESTATICSModel,
   if(switch(mpmESTATICSModel$model+1,2,3,4,0)!=nv) stop("inconsistent parameter length")
   if(!is.null(mpmData)&any(dim(mpmData)[-1]!=dimcoef)) stop("inconsistent mpmData")
   ## determine a suitable adaptation bandwidth
-  lambda <- nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)*switch(patchsize+1,1,1.6,2.1)
+  lambda <- 2 * nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)*switch(patchsize+1,1,1.6,2.1)
+#  factor 2 (analog to 2 sigma in KL) to have more common values for alpha
   cat("using lambda=",lambda," patchsize=",patchsize,"\n")
   zobj <- vpawscov(mpmESTATICSModel$modelCoeff,
                    kstar,

@@ -9,6 +9,72 @@ gethani <- function(x,y,lkern,value,wght,eps=1e-2){
            bw=double(1))$bw
 }
 
+smoothInvCov <- function(mpmESTATICSobj, mask=NULL, hcov=2, verbose=TRUE,
+   method=c("rss","logInvCov","InvCov")){
+    require(aws)
+    sdim <- mpmESTATICSobj$sdim
+    mask <- mpmESTATICSobj$mask
+    if(method=="rss"){
+       rss <- mpmESTATICSobj$rsigma^2
+       rsssm <- kernsm(rss, hcov)@yhat
+       qrss <- rss/rsssm
+       qrss[mask] <- 1
+       mpmESTATICSobj$invCov <- sweep(mpmESTATICSobj$invCov,3:5,qrss,"*")
+    }
+    if(method=="logInvCov"){
+      logInvCov <- mpmESTATICSobj$invCov
+      d <- dim(logInvCov)[1]
+      for (z in 1:sdim[3]){
+        for (y in 1:sdim[2]) {
+          for (x in 1:sdim[1]) {
+            if (mask[x, y, z]) {
+               zsvd <- svd(logInvCov[,,x,y,z])
+               zd <- zsvd$d
+               zd <- pmax(zd,1e-8*zd[1])
+               logInvCov[,,x,y,z] <- zsvd$u%*%diag(log(zd))%*%t(zsvd$u)
+            }
+          }
+        }
+      if(verbose) cat(".")
+      }
+      if(verbose) cat("\n start smoothing \n")
+      for(i in 1:d){
+        for(j in 1:i){
+           zsm <- kernsm(logInvCov[i,j,,,], hcov)@yhat
+           logInvCov[i,j,,,] <- zsm
+           if(i>j) logInvCov[j,i,,,] <- zsm
+        }
+      }
+      for (z in 1:sdim[3]){
+        for (y in 1:sdim[2]) {
+          for (x in 1:sdim[1]) {
+            if (mask[x, y, z]) {
+               zsvd <- svd(logInvCov[,,x,y,z])
+               logInvCov[,,x,y,z] <- zsvd$u%*%diag(exp(zsvd$d))%*%t(zsvd$u)
+            }
+          }
+        }
+        if(verbose) cat(".")
+      }
+      mpmESTATICSobj$invCov <- logInvCov
+    }
+  if(method=="InvCov"){
+     InvCov <- mpmESTATICSobj$invCov
+     d <- dim(logInvCov)[1]
+     if(verbose) cat("\n start smoothing \n")
+     for(i in 1:d){
+       for(j in 1:i){
+          zsm <- kernsm(InvCov[i,j,,,], hcov)@yhat
+          InvCov[i,j,,,] <- zsm
+          if(i>j) InvCov[j,i,,,] <- zsm
+       }
+     }
+     mpmESTATICSobj$invCov <- InvCov
+  }
+    mpmESTATICSobj
+}
+
+
 vpawscov <- function(y,
                      kstar = 16,
                      invcov = NULL,

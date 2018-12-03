@@ -9,17 +9,22 @@ gethani <- function(x,y,lkern,value,wght,eps=1e-2){
            bw=double(1))$bw
 }
 
-smoothInvCov <- function(mpmESTATICSobj, mask=NULL, hcov=2, verbose=TRUE,
+smoothInvCov <- function(mpmESTATICSobj, hcov=3, verbose=TRUE,
    method=c("rss","logInvCov","InvCov")){
     require(aws)
     sdim <- mpmESTATICSobj$sdim
     mask <- mpmESTATICSobj$mask
     if(method=="rss"){
        rss <- mpmESTATICSobj$rsigma^2
+       rss[!mask] <- mean(rss[mask])
+## avoid effects from 0 values outside mask
        rsssm <- kernsm(rss, hcov)@yhat
+       rsssm[rsssm<=0] <- rss[rsssm<=0]
        qrss <- rss/rsssm
-       qrss[mask] <- 1
+       rsssm[!mask] <- 0
+       qrss[!mask] <- 1
        mpmESTATICSobj$invCov <- sweep(mpmESTATICSobj$invCov,3:5,qrss,"*")
+       mpmESTATICSobj$rsigma <- sqrt(rsssm)
     }
     if(method=="logInvCov"){
       logInvCov <- mpmESTATICSobj$invCov
@@ -40,7 +45,11 @@ smoothInvCov <- function(mpmESTATICSobj, mask=NULL, hcov=2, verbose=TRUE,
       if(verbose) cat("\n start smoothing \n")
       for(i in 1:d){
         for(j in 1:i){
-           zsm <- kernsm(logInvCov[i,j,,,], hcov)@yhat
+           covij <- logInvCov[i,j,,,]
+           covij[!mask] <- mean(covij[mask])
+           ## avoid effects from 0 values outside mask
+           zsm <- kernsm(covij, hcov)@yhat
+           zsm[!mask] <- 0
            logInvCov[i,j,,,] <- zsm
            if(i>j) logInvCov[j,i,,,] <- zsm
         }
@@ -60,11 +69,15 @@ smoothInvCov <- function(mpmESTATICSobj, mask=NULL, hcov=2, verbose=TRUE,
     }
   if(method=="InvCov"){
      InvCov <- mpmESTATICSobj$invCov
-     d <- dim(logInvCov)[1]
+     d <- dim(InvCov)[1]
      if(verbose) cat("\n start smoothing \n")
      for(i in 1:d){
        for(j in 1:i){
-          zsm <- kernsm(InvCov[i,j,,,], hcov)@yhat
+         covij <- InvCov[i,j,,,]
+         covij[!mask] <- mean(covij[mask])
+         ## avoid effects from 0 values outside mask
+          zsm <- kernsm(covij, hcov)@yhat
+          zsm[!mask] <- 0
           InvCov[i,j,,,] <- zsm
           if(i>j) InvCov[j,i,,,] <- zsm
        }
@@ -214,7 +227,8 @@ vpawscov <- function(y,
     scorrfactor <- x / (3 ^ d * prod(scorr) * prod(h0) + x)
     lambda0 <- lambda * scorrfactor
     if (max(total) > 0) {
-      cat(signif(total[k], 2) * 100, "% . ", sep = "")
+      cat(signif(total[k], 2) * 100, "%  ", sep = "")
+      cat("mean(bi)", signif(mean(zobj$bi),3)," ")
     }
     k <- k + 1
     gc()

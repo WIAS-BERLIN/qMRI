@@ -1,17 +1,18 @@
-extract.MPMData <- function(x,what){
+extract.default <- function(x, ...) awsMethods::extract(x)
+extract.MPMData <- function(x,what, ...){
   onames <- names(x)
   select <- what[what %in% onames]
   # return single component or list with selected components
   invisible(if(length(select)==1) x[[select]] else x[select])
 }
 
-extract.ESTATICSModel <- function(x,what){
+extract.ESTATICSModel <- function(x,what, ...){
   onames <- names(x)
   select <- what[what %in% onames]
   invisible(if(length(select)==1) x[[select]] else x[select])
 }
 
-extract.qMaps <- function(x,what){
+extract.qMaps <- function(x,what, ...){
   onames <- names(x)
   select <- what[what %in% onames]
   invisible(if(length(select)==1) x[[select]] else x[select])

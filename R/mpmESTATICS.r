@@ -694,7 +694,7 @@ calculateQI <- function(mpmESTATICSModel,
   }
   R2star <- if (mpmESTATICSModel$model == 2) 1000 * mpmESTATICSModel$modelCoeff[4, , , ]/mpmESTATICSModel$TEScale else 1000 * mpmESTATICSModel$modelCoeff[3, , , ]/mpmESTATICSModel$TEScale
   R2star[!mpmESTATICSModel$mask] <- NA
-# set values outside the mask to NA as we have with the other qMaps due to denom=0  
+# set values outside the mask to NA as we have with the other qMaps due to denom=0
   obj <- list(b1Map = b1Map,
               R1 = R1 * 1000,
               R2star = R2star,
@@ -861,6 +861,7 @@ writeESTATICS <- function(mpmESTATICSModel,
 
   if (!is.null(mpmESTATICSModel$smoothedData)) {
     ii <- 1
+    t1Files <- mpmESTATICSModel$t1Files
     for (i in 1:length(t1Files)) {
       ds <- readNIfTI(t1Files[i], reorient = FALSE)
       ds@datatype <- 16
@@ -877,6 +878,7 @@ writeESTATICS <- function(mpmESTATICSModel,
       ii <- ii + 1
     }
     if (mpmESTATICSModel$model == 2) {
+      mtFiles <- mpmESTATICSModel$mtFiles
       for (i in 1:length(mtFiles)) {
         ds <- readNIfTI(mtFiles[i], reorient = FALSE)
         ds@datatype <- 16
@@ -894,6 +896,7 @@ writeESTATICS <- function(mpmESTATICSModel,
       }
     }
     for (i in 1:length(pdFiles)) {
+      pdFiles <- mpmESTATICSModel$pdFiles
       ds <- readNIfTI(pdFiles[i], reorient = FALSE)
       ds@datatype <- 16
       ds@magic <- "n+1"

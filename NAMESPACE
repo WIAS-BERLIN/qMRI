@@ -1,10 +1,18 @@
 useDynLib(qMRI, .registration = TRUE, .fixes = "C_")
-exportPattern("^[[:alpha:]]+")
+#exportPattern("^[[:alpha:]]+")
 #exportClasses("mpmData")
 
 import(oro.nifti, stringr)
 
-importFrom(awsMethods,extract)
+importFrom(awsMethods,extract,setCores)
+importFrom("stats", "qchisq", "qf", "qnorm", "qt", "nls", "coef",
+           "dnorm","median","sd","deviance","lm.fit","pchisq","formula")
+importFrom("graphics","par")
+importFrom(adimpro,rimage)
+importFrom("utils", "data", "setTxtProgressBar", "txtProgressBar")
+importFrom("aws","kernsm")
+export(readMPMData,estimateESTATICS,calculateQI,smoothESTATICS)
+export(writeESTATICS)
 #exportMethods("extract")
 S3method(extract,MPMData)
 S3method(extract,ESTATICSModel)

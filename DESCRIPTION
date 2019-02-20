@@ -1,8 +1,8 @@
 Package: qMRI
 Type: Package
 Title: Methods for quantitave MRI
-Version: 0.3.2
-Date: 2018-11-12
+Version: 0.3.3
+Date: 2019-02-20
 Author@R: c(person("Joerg", "Polzehl", role = c("aut"),
                     email = "joerg.polzehl@wias-berlin.de"),
           person("Karsten", "Tabelow", role = c("aut", "cre"),
@@ -10,7 +10,7 @@ Author@R: c(person("Joerg", "Polzehl", role = c("aut"),
 Author: Karsten Tabelow [aut, cre],
   Joerg Polzehl [aut]
 Maintainer: Karsten Tabelow <karsten.tabelow@wias-berlin.de>
-Depends: R (>= 3.2.0), awsMethods (>= 1.0-1)
+Depends: R (>= 3.2.0), awsMethods (>= 1.0-1), adimpro, aws
 Imports: oro.nifti (>= 0.3.9), stringr
 LazyData: TRUE
 Description: Implementation of methods for estimation of quantitative maps
@@ -18,6 +18,6 @@ Description: Implementation of methods for estimation of quantitative maps
     smoothing methods in the framework of the ESTATICS model.
 License: GPL (>= 2)
 Copyright: This package is
-    Copyright (C) 2015-2018 Weierstrass Institute for
+    Copyright (C) 2015-2019 Weierstrass Institute for
     Applied Analysis and Stochastics.
 URL: http://www.wias-berlin.de/research/ats/imaging/

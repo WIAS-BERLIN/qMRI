@@ -573,6 +573,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
   if(switch(mpmESTATICSModel$model+1,2,3,4,0)!=nv) stop("inconsistent parameter length")
   if(!is.null(mpmData)&any(dim(mpmData)[-1]!=dimcoef)) stop("inconsistent mpmData")
   ## determine a suitable adaptation bandwidth
+  patchsize <- pmax(0,pmin(2,as.integer(patchsize)))
   lambda <- 2 * nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)*
     switch(patchsize+1,1,2.77,3.46)
   #  factor 2 (analog to 2 sigma in KL) to have more common values for alpha
@@ -589,11 +590,11 @@ smoothESTATICS <- function(mpmESTATICSModel,
                    data = mpmData)
 
   ## assign values
-  invisible(list(modelCoeff = zobj$theta,
+  obj <- list(modelCoeff = zobj$theta,
                  invCov = mpmESTATICSModel$invCov,
                  isConv = mpmESTATICSModel$isConv,
                  bi = zobj$bi,
-                 smoothPar = c(zobj$lambda, zobj$hakt, alpha),
+                 smoothPar = c(zobj$lambda, zobj$hakt, alpha, patchsize),
                  smoothedData = zobj$data,
                  sdim = mpmESTATICSModel$sdim,
                  nFiles = mpmESTATICSModel$nFiles,
@@ -603,11 +604,16 @@ smoothESTATICS <- function(mpmESTATICSModel,
                  model = mpmESTATICSModel$model,
                  maskFile = mpmESTATICSModel$maskFile,
                  mask = mpmESTATICSModel$mask,
+                 sigma = mpmESTATICSModel$sigma,
+                 L = mpmESTATICSModel$L,
                  TR = mpmESTATICSModel$TR,
                  TE = mpmESTATICSModel$TE,
                  FA = mpmESTATICSModel$FA,
                  TEScale = mpmESTATICSModel$TEScale,
-                 dataScale = mpmESTATICSModel$dataScale))
+                 dataScale = mpmESTATICSModel$dataScale)
+  class(obj) <- "sESTATICSModel"
+  invisible(obj)
+
   ## END function smoothESTATICS()
 }
 
@@ -735,9 +741,9 @@ imageQI <- function(qi,
   pd[!mask] <- 0
   if (qi$model == 2) {
     delta <- switch(view,
-                    qi$delta[slice, , ],
-                    qi$delta[, slice, ],
-                    qi$delta[, , slice])
+                    qi$MT[slice, , ],
+                    qi$MT[, slice, ],
+                    qi$MT[, , slice])
     delta[!mask] <- 0
   }
   indx <- 1:dim(r2star)[1]
@@ -799,9 +805,10 @@ writeQI <- function(qi,
   if (qi$model == 2) {
     if (verbose) cat("writing MT file ... ")
     ds@descrip <- "MT"
-    writeNIfTI(as.nifti(qi$delta, ds), file = mtfile)
+    writeNIfTI(as.nifti(qi$MT, ds), file = mtfile)
     if (verbose) cat("done\n")
   }
+  invisible(NULL)
 }
 
 writeESTATICS <- function(mpmESTATICSModel,
@@ -912,7 +919,7 @@ writeESTATICS <- function(mpmESTATICSModel,
       ii <- ii + 1
     }
   }
-
+invisible(NULL)
 }
 
 estimateQIconf <- function(mpmESTATICSmodel,

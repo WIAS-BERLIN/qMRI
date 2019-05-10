@@ -12,6 +12,12 @@ extract.ESTATICSModel <- function(x,what, ...){
   invisible(if(length(select)==1) x[[select]] else x[select])
 }
 
+extract.sESTATICSModel <- function(x,what, ...){
+  onames <- names(x)
+  select <- what[what %in% onames]
+  invisible(if(length(select)==1) x[[select]] else x[select])
+}
+
 extract.qMaps <- function(x,what, ...){
   onames <- names(x)
   select <- what[what %in% onames]

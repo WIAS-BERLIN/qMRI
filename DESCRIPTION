@@ -1,17 +1,15 @@
 Package: qMRI
 Type: Package
-Title: Methods for quantitave MRI
-Version: 0.3.3
-Date: 2019-02-20
-Author@R: c(person("Joerg", "Polzehl", role = c("aut"),
+Title: Methods for Quantitative MRI
+Version: 1.0
+Date: 2019-05-08
+Authors@R: c(person("Joerg", "Polzehl", role = c("aut"),
                     email = "joerg.polzehl@wias-berlin.de"),
           person("Karsten", "Tabelow", role = c("aut", "cre"),
                     email = "karsten.tabelow@wias-berlin.de"))
-Author: Karsten Tabelow [aut, cre],
-  Joerg Polzehl [aut]
 Maintainer: Karsten Tabelow <karsten.tabelow@wias-berlin.de>
-Depends: R (>= 3.2.0), awsMethods (>= 1.0-1), adimpro, aws
-Imports: oro.nifti (>= 0.3.9), stringr
+Depends: R (>= 3.5), awsMethods (>= 1.0)
+Imports: oro.nifti (>= 0.9), stringr, dti (>= 1.4), aws (>= 2.2), adimpro (>= 0.9)
 LazyData: TRUE
 Description: Implementation of methods for estimation of quantitative maps
     from multi-parameter mapping (MPM) acquisitions including adaptive

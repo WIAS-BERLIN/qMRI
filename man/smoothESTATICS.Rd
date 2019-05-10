@@ -40,9 +40,6 @@ Patchsize in PAWS, 0 corresponds to AWS, alternative values are 1 and 2.
   logical - provide information on progress
 }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
 \value{
 list with components
                  \item{modelCoeff }{Estimated parameter maps}

@@ -5,7 +5,9 @@
 Write estimated maps  in standardized form as NIfTI files.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Quantitative \code{R2}, \code{R1}, \code{PD} and, if available, \code{MT}-maps are written
+as compressed NIfTI files into directory the speecified directory.
+
 }
 \usage{
 writeQI(qi, dir = NULL, verbose = TRUE)
@@ -22,10 +24,6 @@ Directory name (or path) for output.
   \item{verbose}{
 logical - provide information on progress
 }
-}
-\details{
-Quantitative \code{R2}, \code{R1}, \code{PD} and, if available, \code{MT}-maps are written
-as compressed NIfTI files into directory the speecified directory.
 }
 \value{
 The function returns \code{NULL}

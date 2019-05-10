@@ -5,7 +5,12 @@
 Write maps of ESTATICS parameters in standardized form as NIfTI files.
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+   \code{R2}, \code{ST1}, \code{SPD} and, if available, \code{SMT}-maps are written
+   as compressed NIfTI files into directory the speecified directory.
+   If \code{class(mpmESTATICSModel) == "sESTATICSModel"} and an smoothed data are stored in
+   \code{mpmESTATICSModel$smoothedData} the smoothed data are stored as ompressed NIfTI files
+   in \code{dir} with filenames assembled using \code{prefix} and the names of the data source
+   files.
 }
 \usage{
 writeESTATICS(mpmESTATICSModel, dir = NULL, prefix = "sm", verbose = TRUE)
@@ -24,14 +29,6 @@ Object of class 'ESTATICSModel' or 'sESTATICSModel' as returned from function
   \item{verbose}{
   logical - provide information on progress
 }
-}
-\details{
-   \code{R2}, \code{ST1}, \code{SPD} and, if available, \code{SMT}-maps are written
-   as compressed NIfTI files into directory the speecified directory.
-   If \code{class(mpmESTATICSModel) == "sESTATICSModel"} and an smoothed data are stored in
-   \code{mpmESTATICSModel$smoothedData} the smoothed data are stored as ompressed NIfTI files
-   in \code{dir} with filenames assembled using \code{prefix} and the names of the data source
-   files.
 }
 \value{
 The function returns \code{NULL}

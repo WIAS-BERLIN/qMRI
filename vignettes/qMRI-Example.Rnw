@@ -2,6 +2,7 @@
 \newcommand{\pkg}[1]{{\normalfont\fontseries{b}\selectfont #1}\index{Packages!#1}}
 \let\proglang=\textsf
 \let\code=\texttt
+%\VignetteIndexEntry{Analyzing MPM data with package qMRI}
 
 \title{An example session for analyzing Multi-Parameter-Mapping experiments}
 \author{J\"org Polzehl}

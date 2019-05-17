@@ -129,7 +129,8 @@ vpawscov <- function(y,
                      wghts = NULL,
                      maxni = FALSE,
                      patchsize = 1,
-                     data=NULL) {
+                     data = NULL,
+                     verbose = TRUE) {
   ##
   ##  this is the version with full size invcov (triangular storage)
   ##  needed for MPM
@@ -192,7 +193,7 @@ vpawscov <- function(y,
   while (k <= kstar) {
     hakt0 <- gethani(1, 1.25 * hmax, 2, 1.25 ^ (k - 1), wghts, 1e-4)
     hakt <- gethani(1, 1.25 * hmax, 2, 1.25 ^ k, wghts, 1e-4)
-    cat("step", k, "hakt", hakt, "time", format(Sys.time()), "\n")
+    if(verbose) cat("step", k, "hakt", hakt, "time", format(Sys.time()), "\n")
     hseq <- c(hseq, hakt)
     dlw <- (2 * trunc(hakt / c(1, wghts)) + 1)
     if(k==kstar & !is.null(data)){
@@ -224,7 +225,7 @@ vpawscov <- function(y,
                        as.integer(np1),
                        as.integer(np2),
                        as.integer(np3))[c("bi", "theta", "hakt","data")]
-      data[,mask] <- zobj@data
+      data[,mask] <- zobj$data
       dim(data) <- c(nsample, dy)
     } else {
       zobj <- .Fortran(C_pvawsm2,
@@ -256,7 +257,7 @@ vpawscov <- function(y,
     x <- 1.25 ^ k
     scorrfactor <- x / (3 ^ d * prod(scorr) * prod(h0) + x)
     lambda0 <- lambda * scorrfactor
-    if (max(total) > 0) {
+    if (verbose & max(total) > 0) {
       cat(signif(total[k], 2) * 100, "%  ", sep = "")
       cat("mean(bi)", signif(mean(zobj$bi),3)," ")
     }
@@ -276,6 +277,6 @@ vpawscov <- function(y,
     lambda=lambda,
     hseq = hseq,
     bi = bi,
-    data= if(is.null(data)) data else zobj@data
+    data= if(!is.null(data)) data else NULL
   )
 }

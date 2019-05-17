@@ -8,7 +8,7 @@ importFrom(awsMethods,extract,setCores)
 importFrom("stats", "qchisq", "qf", "qnorm", "qt", "nls", "coef",
            "dnorm","median","sd","deviance","lm.fit","pchisq","formula")
 importFrom("graphics","par")
-importFrom("adimpro", "rimage")
+importFrom("adimpro", "rimage","rimage.options")
 importFrom("utils", "data", "setTxtProgressBar", "txtProgressBar")
 importFrom("aws","kernsm")
 importFrom("dti","awslsigmc")

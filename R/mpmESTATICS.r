@@ -414,7 +414,7 @@ estimateESTATICS <- function (mpmdata,
                                                 start = list(par = th),
                                                 control = list(maxiter = 200,
                                                                warnOnly = TRUE)))
-            else try(nls(ivec ~ estatics3QL(par, xmat, L, sig, L),
+            else try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
                          data = list(xmat = xmat,
                                      CL = CL,
                                      sig = sig,
@@ -587,7 +587,8 @@ smoothESTATICS <- function(mpmESTATICSModel,
                    lambda = lambda,
                    wghts = wghts,
                    patchsize = patchsize,
-                   data = mpmData)
+                   data = mpmData,
+                   verbose = verbose)
 
   ## assign values
   obj <- list(modelCoeff = zobj$theta,
@@ -770,6 +771,7 @@ imageQI <- function(qi,
 
 writeQI <- function(qi,
                     dir = NULL,
+                    prefix = "qmap",
                     verbose = TRUE) {
 
   if (!is.null(dir)) {
@@ -813,7 +815,7 @@ writeQI <- function(qi,
 
 writeESTATICS <- function(mpmESTATICSModel,
                           dir = NULL,
-                          prefix = "sm",
+                          prefix = "estatics",
                           verbose = TRUE) {
 
   if (!is.null(dir)) {

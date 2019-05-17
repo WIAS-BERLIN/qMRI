@@ -74,6 +74,41 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link{smoothESTATICS}}, \code{\link{writeESTATICS}},
 \code{\link[dti]{awslsigmc}}
 }
+\examples{
+  # run with example{"readMPMData",run.dontrun=TRUE}
+\dontrun{
+dataDir <- system.file("extdata",package="qMRI")
+#
+#  set file names for T1w, MTw and PDw images
+#
+t1Names <- paste0("t1w_",1:8,".nii.gz")
+mtNames <- paste0("mtw_",1:6,".nii.gz")
+pdNames <- paste0("pdw_",1:8,".nii.gz")
+t1Files <- file.path(dataDir, t1Names)
+mtFiles <- file.path(dataDir, mtNames)
+pdFiles <- file.path(dataDir, pdNames)
+#
+#  file names of mask and B1 field map
+#
+B1File <- file.path(dataDir, "B1map.nii.gz")
+maskFile <- file.path(dataDir, "mask.nii.gz")
+#
+#  Acquisition parameters (TE, TR, Flip Angle) for T1w, MTw and PDw images
+#
+TE <- c(2.3, 4.6, 6.9, 9.2, 11.5, 13.8, 16.1, 18.4,
+        2.3, 4.6, 6.9, 9.2, 11.5, 13.8,
+        2.3, 4.6, 6.9, 9.2, 11.5, 13.8, 16.1, 18.4)
+TR <- rep(25, 22)
+FA <- c(rep(21, 8), rep(6, 6), rep(6, 8))
+#
+#   read MPM example data
+#
+library(qMRI)
+mpm <- readMPMData(t1Files, pdFiles, mtFiles,
+                   maskFile, TR = TR, TE = TE,
+                   FA = FA, verbose = FALSE)
+}
+}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ IO }% use one of  RShowDoc("KEYWORDS")

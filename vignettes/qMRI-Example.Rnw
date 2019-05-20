@@ -1,94 +1,92 @@
 \documentclass[a4paper]{article}
 
-\usepackage{filecontents}
-
-\begin{filecontents}{qmri.bib}
-@article{Weiskopf2013,
-	Author = {Weiskopf, N. and Suckling, J. and Williams, G. and Correia, M. M. and Inkster, B. and Tait, R. and Ooi, C. and Bullmore, E. T. and Lutti, A.},
-	Doi = {10.3389/fnins.2013.00095},
-	Institution = {Wellcome Trust Centre for Neuroimaging, UCL Institute of Neurology, University College London London, UK.},
-	Journal = {Front. Neurosci.},
-	Language = {eng},
-	Medline-Pst = {epublish},
-	Pages = {95},
-	Pmid = {23772204},
-	Title = {Quantitative multi-parameter mapping of {R1, PD(*), MT, and R2(*) at 3T}: a multi-center validation.},
-	Url = {http://dx.doi.org/10.3389/fnins.2013.00095},
-	Volume = {7},
-	Year = {2013},
-	Bdsk-Url-1 = {http://dx.doi.org/10.3389/fnins.2013.00095}}
-@article{Weiskopf2014,
-	Author = {N. Weiskopf and M. F. Callaghan and O. Josephs and A. Lutti and S. Mohammadi},
-	Journal = {Front. Neurosci.},
-	Number = {278},
-	Pages = {1--10},
-	Title = {Estimating the apparent transverse relaxation time {(R2*)} from images with different contrasts {(ESTATICS)} reduces motion artifacts},
-	Volume = {8},
-	Year = {2014}}
-@article{Tabelow2019,
-	Author = {K. Tabelow and E. Balteau and J. Ashburner and M. F. Callaghan and B. Draganski and G. Helms and F. Kherif and T. Leutritz and A. Lutti and Ch. Phillips and E. Reimer and L. Ruthotto and M. Seif and N. Weiskopf and G. Ziegler and S. Mohammadi},
-	Doi = {https://doi.org/10.1016/j.neuroimage.2019.01.029},
-	Issn = {1053-8119},
-	Journal = {NeuroImage},
-	Keywords = {Quantitative MRI, In vivo histology, Microstructure, Multi-parameter mapping, Relaxometry, SPM toolbox},
-	Pages = {191 - 210},
-	Title = {hMRI -- A toolbox for quantitative MRI in neuroscience and clinical research},
-	Url = {http://www.sciencedirect.com/science/article/pii/S1053811919300291},
-	Volume = {194},
-	Year = {2019},
-	Bdsk-Url-1 = {http://www.sciencedirect.com/science/article/pii/S1053811919300291},
-	Bdsk-Url-2 = {https://doi.org/10.1016/j.neuroimage.2019.01.029}}
-@conference{Tabelow2017,
-	Author = {Tabelow, K. and D'Alonzo, Ch. and Ruthotto, L. and Callaghan, M. F. and Weiskopf, N. and Polzehl, J. and Mohammadi, S.},
-	Booktitle = {Proceedings of ISMRM 2017},
-	Date-Added = {2019-01-09 10:05:03 +0100},
-	Date-Modified = {2019-01-09 10:05:03 +0100},
-	Title = {Removing the estimation bias due to the noise floor in multi-parameter maps},
-	Year = {2017}}
-@article{PoTa2016,
-	Author = {J. Polzehl and K. Tabelow},
-	Doi = {10.1080/01621459.2016.1222284},
-	Journal = {J. Am. Stat. Assoc.},
-	Number = {516},
-	Pages = {1480-1490},
-	Title = {Low {SNR} in diffusion {MRI} models},
-	Url = {https://doi.org/10.1080/01621459.2016.1222284},
-	Volume = {111},
-	Year = {2016},
-	Bdsk-Url-1 = {https://doi.org/10.1080/01621459.2016.1222284}}
-@article{Tabelow2014a,
-	Author = {K. Tabelow and H. U. Voss and J. Polzehl},
-	Institution = {WIAS-Berlin},
-	Journal = {Med. Image Anal.},
-	Owner = {tabelow},
-	Pages = {76--86},
-	Timestamp = {2014.10.01},
-	Title = {Local estimation of the noise level in {MRI} using structural adaptation},
-	Volume = {20},
-	Year = {2015}}
-@techreport{Tabelow2017a,
-	Author = {Mohammadi, S. and D'Alonzo, Ch. and Ruthotto, L. and Polzehl, J. and Ellerbrock, I. and Callaghan, M. F. and Weiskopf, N. and Tabelow, K.},
-	Doi = {10.20347/WIAS.PREPRINT.2432},
-	Institution = {WIAS},
-	Number = {2432},
-	Title = {Simultaneous adaptive smoothing of relaxometry and quantitative magnetization transfer mapping},
-	Type = {Preprint},
-	Year = {2017},
-	Bdsk-Url-1 = {https://doi.org/10.20347/WIAS.PREPRINT.2432}}
-@techreport{PoPaTa18,
-	Author = {J. Polzehl and K. Papafitsoros and K. Tabelow},
-	Doi = {10.20347/WIAS.PREPRINT.2520},
-	Institution = {WIAS},
-	Number = {2520},
-	Title = {Patch-wise adaptive weights smoothing},
-	Type = {Preprint},
-	Url = {http://www.wias-berlin.de/preprint/2432/wias\_preprints_2432.pdf},
-	Year = {2018},
-	Bdsk-Url-1 = {http://www.wias-berlin.de/preprint/2432/wias_preprints_2432.pdf},
-	Bdsk-Url-2 = {https://doi.org/10.20347/WIAS.PREPRINT.2520},
-	Bdsk-Url-3 = {http://www.wias-berlin.de/preprint/2432/wias%5C_preprints_2432.pdf}}
-
-\end{filecontents}
+% \usepackage{filecontents}
+% 
+% \begin{filecontents}{qmri.bib}
+% @article{Weiskopf2013,
+% 	Author = {Weiskopf, N. and Suckling, J. and Williams, G. and Correia, M. M. and Inkster, B. and Tait, R. and Ooi, C. and Bullmore, E. T. and Lutti, A.},
+% 	Doi = {10.3389/fnins.2013.00095},
+% 	Institution = {Wellcome Trust Centre for Neuroimaging, UCL Institute of Neurology, University College London London, UK.},
+% 	Journal = {Front. Neurosci.},
+% 	Language = {eng},
+% 	Medline-Pst = {epublish},
+% 	Pages = {95},
+% 	Pmid = {23772204},
+% 	Title = {Quantitative multi-parameter mapping of {R1, PD(*), MT, and R2(*) at 3T}: a multi-center validation.},
+% 	Url = {http://dx.doi.org/10.3389/fnins.2013.00095},
+% 	Volume = {7},
+% 	Year = {2013},
+% 	Bdsk-Url-1 = {http://dx.doi.org/10.3389/fnins.2013.00095}}
+% @article{Weiskopf2014,
+% 	Author = {N. Weiskopf and M. F. Callaghan and O. Josephs and A. Lutti and S. Mohammadi},
+% 	Journal = {Front. Neurosci.},
+% 	Number = {278},
+% 	Pages = {1--10},
+% 	Title = {Estimating the apparent transverse relaxation time {(R2*)} from images with different contrasts {(ESTATICS)} reduces motion artifacts},
+% 	Volume = {8},
+% 	Year = {2014}}
+% @article{Tabelow2019,
+% 	Author = {K. Tabelow and E. Balteau and J. Ashburner and M. F. Callaghan and B. Draganski and G. Helms and F. Kherif and T. Leutritz and A. Lutti and Ch. Phillips and E. Reimer and L. Ruthotto and M. Seif and N. Weiskopf and G. Ziegler and S. Mohammadi},
+% 	Doi = {https://doi.org/10.1016/j.neuroimage.2019.01.029},
+% 	Issn = {1053-8119},
+% 	Journal = {NeuroImage},
+% 	Keywords = {Quantitative MRI, In vivo histology, Microstructure, Multi-parameter mapping, Relaxometry, SPM toolbox},
+% 	Pages = {191 - 210},
+% 	Title = {hMRI -- A toolbox for quantitative MRI in neuroscience and clinical research},
+% 	Url = {http://www.sciencedirect.com/science/article/pii/S1053811919300291},
+% 	Volume = {194},
+% 	Year = {2019},
+% 	Bdsk-Url-1 = {http://www.sciencedirect.com/science/article/pii/S1053811919300291},
+% 	Bdsk-Url-2 = {https://doi.org/10.1016/j.neuroimage.2019.01.029}}
+% @conference{Tabelow2017,
+% 	Author = {Tabelow, K. and D'Alonzo, Ch. and Ruthotto, L. and Callaghan, M. F. and Weiskopf, N. and Polzehl, J. and Mohammadi, S.},
+% 	Booktitle = {Proceedings of ISMRM 2017},
+% 	Date-Added = {2019-01-09 10:05:03 +0100},
+% 	Date-Modified = {2019-01-09 10:05:03 +0100},
+% 	Title = {Removing the estimation bias due to the noise floor in multi-parameter maps},
+% 	Year = {2017}}
+% @article{PoTa2016,
+% 	Author = {J. Polzehl and K. Tabelow},
+% 	Doi = {10.1080/01621459.2016.1222284},
+% 	Journal = {J. Am. Stat. Assoc.},
+% 	Number = {516},
+% 	Pages = {1480-1490},
+% 	Title = {Low {SNR} in diffusion {MRI} models},
+% 	Url = {https://doi.org/10.1080/01621459.2016.1222284},
+% 	Volume = {111},
+% 	Year = {2016},
+% 	Bdsk-Url-1 = {https://doi.org/10.1080/01621459.2016.1222284}}
+% @article{Tabelow2014a,
+% 	Author = {K. Tabelow and H. U. Voss and J. Polzehl},
+% 	Institution = {WIAS-Berlin},
+% 	Journal = {Med. Image Anal.},
+% 	Owner = {tabelow},
+% 	Pages = {76--86},
+% 	Timestamp = {2014.10.01},
+% 	Title = {Local estimation of the noise level in {MRI} using structural adaptation},
+% 	Volume = {20},
+% 	Year = {2015}}
+% @techreport{Tabelow2017a,
+% 	Author = {Mohammadi, S. and D'Alonzo, Ch. and Ruthotto, L. and Polzehl, J. and Ellerbrock, I. and Callaghan, M. F. and Weiskopf, N. and Tabelow, K.},
+% 	Doi = {10.20347/WIAS.PREPRINT.2432},
+% 	Institution = {WIAS},
+% 	Number = {2432},
+% 	Title = {Simultaneous adaptive smoothing of relaxometry and quantitative magnetization transfer mapping},
+% 	Type = {Preprint},
+% 	Year = {2017},
+% 	Bdsk-Url-1 = {https://doi.org/10.20347/WIAS.PREPRINT.2432}}
+% @techreport{PoPaTa18,
+% 	Author = {J. Polzehl and K. Papafitsoros and K. Tabelow},
+% 	Doi = {10.20347/WIAS.PREPRINT.2520},
+% 	Institution = {WIAS},
+% 	Number = {2520},
+% 	Title = {Patch-wise adaptive weights smoothing},
+% 	Type = {Preprint},
+% 	Url = {http://www.wias-berlin.de/preprint/2432/wias\_preprints_2432.pdf},
+% 	Year = {2018},
+% 	Bdsk-Url-1 = {http://www.wias-berlin.de/preprint/2432/wias_preprints_2432.pdf},
+% 	Bdsk-Url-2 = {https://doi.org/10.20347/WIAS.PREPRINT.2520}}
+% \end{filecontents}
 
 \usepackage[style=authoryear,backend=bibtex,url=false]{biblatex} %backend tells biblatex what you will be using to process the bibliography file
 \addbibresource{qmri}
@@ -102,6 +100,7 @@
 \author{J\"org Polzehl and Karsten Tabelow}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 \maketitle
 

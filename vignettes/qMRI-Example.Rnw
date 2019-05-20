@@ -92,7 +92,6 @@
 
 \usepackage[style=authoryear,backend=bibtex,url=false]{biblatex} %backend tells biblatex what you will be using to process the bibliography file
 \addbibresource{qmri}
-%\bibliography{qmri}
 
 \newcommand{\pkg}[1]{{\normalfont\fontseries{b}\selectfont #1}\index{Packages!#1}}
 \let\proglang=\textsf
@@ -101,6 +100,7 @@
 
 \title{An example session for analyzing quantitative MRI data in the Multi-Parameter Mapping framework}
 \author{J\"org Polzehl and Karsten Tabelow}
+
 \begin{document}
 
 \maketitle
@@ -228,7 +228,7 @@ The package \pkg{qMRI} implements an extension of the method that
 uses the comparison of local patches for adaptive smoothing~\parencite{PoPaTa18}.
 The resulting ESTATICS unsmoothed and smoothed parameter maps for the 
 central coronal slice can be illustrated by
-<<8, fig.width = 12, fig.height = 6.5>>=
+<<8, fig = TRUE, width = 12, height = 6.5>>=
 library(adimpro)
 rimage.options(zquantiles = c(.01, .99), ylab = "z")
 par(mfrow = c(2, 4), 
@@ -287,7 +287,7 @@ parameter of the MTw sequence \parencite{Tabelow2019}.
 
 We show the central coronal slice of the estimated quantitative maps together with the 
 maps for the ground truth used to generate the data
-<<11, fig.width = 12, fig.height = 13>>=
+<<11, fig = TRUE, width = 12, height = 13>>=
 library(oro.nifti)
 zlim <- matrix(c(0, 0, 0, 3000,
                  1.5, 35, 2, 10000),

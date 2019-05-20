@@ -4,6 +4,7 @@
 
 \begin{filecontents}{qmri.bib}
 @article{Weiskopf2013,
+	Author = {Weiskopf, Nikolaus and Suckling, John and Williams, Guy and Correia, Marta M. and Inkster, Becky and Tait, Roger and Ooi, Cinly and Bullmore, Edward T. and Lutti, Antoine},
 	Doi = {10.3389/fnins.2013.00095},
 	Institution = {Wellcome Trust Centre for Neuroimaging, UCL Institute of Neurology, University College London London, UK.},
 	Journal = {Front. Neurosci.},
@@ -30,12 +31,12 @@
 \title{An example session for analyzing quantitative MRI data in the Multi-Parameter Mapping framework}
 \author{J\"org Polzehl}
 \begin{document}
-\SweaveOpts{concordance=TRUE}
+
 \maketitle
-%\SweaveOpts{concordance=TRUE}
+
 \setkeys{Gin}{width=\textwidth}
 This document illustrates the workflow of analyzing quantitative Magentic Resonance Imaging  
-in the framework of Multi-Parameter Mapping (MPM) experiments~\citep{Weiskopf2013}.
+in the framework of Multi-Parameter Mapping (MPM) experiments~\parencite{Weiskopf2013}.
 The example uses artificial data, produced from analysis results of a real MPM experiment, supplied with 
 the package. 
 
@@ -109,7 +110,7 @@ modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                               verbose = TRUE)
 @
 The resulting ESTATICS parameter maps for the central coronal slice can be illustrated by
-<<8,fig=TRUE,width=12,height=6.5>>=
+<<8, fig.width = 12, fig.height = 6.5>>=
 library(adimpro)
 rimage.options(zquantiles=c(.01,.99), ylab="z")
 par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
@@ -154,7 +155,7 @@ qMRIQL2Maps <- calculateQI(modelMPMQL2,
 
 We show the central coranal slice of the estimated maps together with the 
 maps for the ground truth used to generate the data
-<<fig=TRUE, width=12,height=13>>=
+<<11, fig.width = 12, fig.height = 13>>=
 library(oro.nifti)
 zlim <- matrix(c(0,0,0,3000,1.5,35,2,10000),4,2)
 R1 <- readNIfTI(file.path(dataDir, "R1map.nii.gz"))
@@ -181,7 +182,7 @@ for (i in 1:4) rimage(qmap3[[i]][,11,], zlim=zlim[i,],
 
 Using quasi-likelihood is, for low SNR, supposed to reduce the bias caused by the skewness
 of the Rician distribution.
-<<>>=
+<<12>>=
 qmap0 <- extract(qMRIMaps,nmaps)
 cat("\n", "Bias of NLR estimates\n",
     "R1",mean(qmap0$R1-R1),"R2star",mean(qmap0$R2star-R2star),
@@ -191,7 +192,7 @@ cat("\n", "Bias of NLR estimates\n",
     "MT",mean(qmap1$MT-MT),"PD",mean(qmap1$PD-PD),"\n")
 @
 Let's see which estimate performs best with respect to the root mean squared error (RMSE).
-<<>>=
+<<13>>=
 cat("\n", "Root mean squared error of NLR estimate\n",
     "R1",sqrt(mean((qmap0$R1-R1)^2)),
     "R2star",sqrt(mean((qmap0$R2star-R2star)^2)),
@@ -214,7 +215,7 @@ cat("\n", "Root mean squared error of NLR estimate\n",
     "PD",sqrt(mean((qmap3$PD-PD)^2)),"\n")
 @
 For a comparison we need to compare this to the mean parameter values
-<<>>=
+<<14>>=
 cat("\n", "Mean R1", mean(R1), "Mean R2star", mean(R2star), 
           "Mean MT", mean(MT), "Mean PD", mean(PD),"\n")
 @

@@ -625,7 +625,7 @@ calculateQI <- function(mpmESTATICSModel,
 
   ## read B1 correction field
   if (!is.null(b1File)) {
-    if (verbose) cat("reading B1 correction file from", b1File, "\n")
+    if (verbose) cat("reading B1 correction file\n")# from\n", b1File, "\n")
     b1Map <- readNIfTI(b1File, reorient = FALSE)/100
     b1Map[b1Map < 0] <- 0
     if (any(dim(b1Map) != mpmESTATICSModel$sdim)) stop("dimension of B1 map does not match data dimension")

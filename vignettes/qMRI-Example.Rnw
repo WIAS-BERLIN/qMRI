@@ -35,7 +35,7 @@
 %\SweaveOpts{concordance=TRUE}
 \setkeys{Gin}{width=\textwidth}
 This document illustrates the workflow of analyzing quantitative Magentic Resonance Imaging  
-in the framework of Multi-Parameter Mapping (MPM) experiments~\ref{Weiskopf2013}.
+in the framework of Multi-Parameter Mapping (MPM) experiments~\citep{Weiskopf2013}.
 The example uses artificial data, produced from analysis results of a real MPM experiment, supplied with 
 the package. 
 

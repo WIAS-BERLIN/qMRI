@@ -76,7 +76,7 @@ Progress:
 > qMRIMaps <- calculateQI(modelMPM,
 +                         b1File = B1File,
 +                         TR2 = 3.4)
-reading B1 correction file from /Users/polzehl/Rlibs/qMRI.Rcheck/qMRI/extdata/B1map.nii.gz 
+reading B1 correction file
 calculating R1 ... Spoiling correction ... v3* 0.8mm R4 protocol
 Spoiling correction ... v3* 0.8mm R4 protocol
 done
@@ -85,7 +85,7 @@ calculating MT ... done
 > qMRIQLSmoothedp1Maps <- calculateQI(modelMPMQLsp1,
 +                                     b1File = B1File,
 +                                     TR2 = 3.4)
-reading B1 correction file from /Users/polzehl/Rlibs/qMRI.Rcheck/qMRI/extdata/B1map.nii.gz 
+reading B1 correction file
 calculating R1 ... Spoiling correction ... v3* 0.8mm R4 protocol
 Spoiling correction ... v3* 0.8mm R4 protocol
 done
@@ -112,4 +112,4 @@ mean of estimated quantitative maps
 > 
 > proc.time()
    user  system elapsed 
- 70.259   0.750  68.376 
+ 70.527   0.929  68.830 

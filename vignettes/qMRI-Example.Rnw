@@ -1,18 +1,42 @@
 \documentclass[a4paper]{article}
+
+\usepackage{filecontents}
+
+\begin{filecontents}{qmri.bib}
+@article{Weiskopf2013,
+	Doi = {10.3389/fnins.2013.00095},
+	Institution = {Wellcome Trust Centre for Neuroimaging, UCL Institute of Neurology, University College London London, UK.},
+	Journal = {Front. Neurosci.},
+	Language = {eng},
+	Medline-Pst = {epublish},
+	Pages = {95},
+	Pmid = {23772204},
+	Title = {Quantitative multi-parameter mapping of {R1, PD(*), MT, and R2(*) at 3T}: a multi-center validation.},
+	Url = {http://dx.doi.org/10.3389/fnins.2013.00095},
+	Volume = {7},
+	Year = {2013},
+	Bdsk-Url-1 = {http://dx.doi.org/10.3389/fnins.2013.00095}}
+\end{filecontents}
+
+\usepackage[style=authoryear,backend=bibtex]{biblatex} %backend tells biblatex what you will be using to process the bibliography file
+\addbibresource{qmri}
+%\bibliography{qmri}
+
 \newcommand{\pkg}[1]{{\normalfont\fontseries{b}\selectfont #1}\index{Packages!#1}}
 \let\proglang=\textsf
 \let\code=\texttt
 %\VignetteIndexEntry{Analyzing MPM data with package qMRI}
 
-\title{An example session for analyzing Multi-Parameter-Mapping experiments}
+\title{An example session for analyzing quantitative MRI data in the Multi-Parameter Mapping framework}
 \author{J\"org Polzehl}
 \begin{document}
 \SweaveOpts{concordance=TRUE}
 \maketitle
 %\SweaveOpts{concordance=TRUE}
 \setkeys{Gin}{width=\textwidth}
-This vignette illustrates the workflow of analyzing Multi-Parameter-Mapping (MPM) experiments.
-It uses artificial data, produced from analysis results of a real MPM experiment, supplied with 
+This document illustrates the workflow of analyzing quantitative Magentic Resonance Imaging  
+in the framework of Multi-Parameter Mapping (MPM) experiments~\ref{Weiskopf2013}.
+The example uses artificial data, produced from analysis results of a real MPM experiment, supplied with 
 the package. 
 
 The data consist of 22 image files in NIfTI format that are supposed to be measured using 
@@ -197,4 +221,7 @@ cat("\n", "Mean R1", mean(R1), "Mean R2star", mean(R2star),
 Note that using QL is supposed to reduce the bias of the estimated ESTATICS parameters, but does so
 at the cost of an slightly increased variance. Adaptive spatial smoothing leads to a considerable reduction in
 RMSE. Modelling of the spatially smoothed data has the additional effect of reduced bias originating from data variability.
+
+\printbibliography
+
 \end{document}

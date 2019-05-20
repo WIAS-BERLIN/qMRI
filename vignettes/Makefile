@@ -6,4 +6,4 @@ all:
 	pdflatex -interaction nonstopmode qMRI-Example.tex
 
 clean:
-	rm *.aux *.bbl *.blg *.log 
+	rm *.aux *.bbl *.blg *.log *.tex *.bib *.xml

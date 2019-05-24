@@ -8,9 +8,9 @@ C       + th(3) * exp(- th(4) * des(i,4)) * des(i,3)
 C
       implicit logical (a-z)
       integer n
-      real*8 th(4),des(n,4),fval(n),grad(n,4)
+      double precision th(4),des(n,4),fval(n),grad(n,4)
       integer i
-      real*8 z4,fv
+      double precision z4,fv
       fv=0.d0
       DO i=1,n
          z4=exp(-th(4)*des(i,4))
@@ -47,9 +47,9 @@ C       + th(2) * exp(- th(3) * des(i,3)) * des(i,2)
 C
       implicit logical (a-z)
       integer n
-      real*8 th(3),des(n,3),fval(n),grad(n,3)
+      double precision th(3),des(n,3),fval(n),grad(n,3)
       integer i
-      real*8 z3,fv
+      double precision z3,fv
       fv=0.d0
       DO i=1,n
          z3=exp(-th(3)*des(i,3))
@@ -77,9 +77,9 @@ C  fval = th(1) * exp(- th(2) * des(i,2)) * des(i,1)
 C
       implicit logical (a-z)
       integer n
-      real*8 th(2),des(n,2),fval(n),grad(n,2)
+      double precision th(2),des(n,2),fval(n),grad(n,2)
       integer i
-      real*8 z2,fv
+      double precision z2,fv
       fv=0.d0
       DO i=1,n
          z2=exp(-th(2)*des(i,2))
@@ -103,9 +103,9 @@ C       + th(3) * exp(- r2star * des(i,4)) * des(i,3)
 C
       implicit logical (a-z)
       integer n
-      real*8 th(3),r2star,des(n,4),fval(n),grad(n,3)
+      double precision th(3),r2star,des(n,4),fval(n),grad(n,3)
       integer i
-      real*8 z4,fv
+      double precision z4,fv
       fv=0.d0
       DO i=1,n
          z4=exp(-r2star*des(i,4))
@@ -141,9 +141,9 @@ C       + th(2) * exp(- r2star * des(i,3)) * des(i,2)
 C
       implicit logical (a-z)
       integer n
-      real*8 th(2),r2star,des(n,3),fval(n),grad(n,2)
+      double precision th(2),r2star,des(n,3),fval(n),grad(n,2)
       integer i
-      real*8 z3,fv
+      double precision z3,fv
       fv=0.d0
       DO i=1,n
          z3=exp(-r2star*des(i,3))
@@ -170,9 +170,9 @@ C  fval = th(1) * exp(- r2star * des(i,2)) * des(i,1)
 C
       implicit logical (a-z)
       integer n
-      real*8 th(1),r2star,des(n,2),fval(n),grad(n,1)
+      double precision th(1),r2star,des(n,2),fval(n),grad(n,1)
       integer i
-      real*8 z2,fv
+      double precision z2,fv
       fv=0.d0
       DO i=1,n
          z2=exp(-r2star*des(i,2))

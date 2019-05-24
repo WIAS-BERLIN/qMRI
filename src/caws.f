@@ -35,10 +35,10 @@ C          Kern=3     Biweight
 C          Kern=4     Triweight
 C
 CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
-      real*8 function lkern(kern,xsq)
+      double precision function lkern(kern,xsq)
       implicit none
       integer kern
-      real*8 xsq,z
+      double precision xsq,z
       IF (xsq.ge.1) THEN
          lkern=0.d0
       ELSE IF (kern.eq.1) THEN
@@ -88,15 +88,15 @@ C
 
       integer nv,n1,n2,n3,ncores
       logical aws, mask(*)
-      real*8 y(nv,*),theta(nv,*),bi(*),thnew(nv,*),s2(*),lambda,
-     1  wght(2),hakt,lwght(*),swjy(nv,ncores),s2new(*)
+      double precision y(nv,*),theta(nv,*),bi(*),thnew(nv,*),s2(*),
+     1  lambda,wght(2),hakt,lwght(*),swjy(nv,ncores),s2new(*)
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,jwind3,jwind2,
      1        iind,jind,jind3,jind2,clw1,clw2,clw3,dlw1,dlw2,dlw3,
      2        dlw12,n12,k,thrednr
-      real*8 bii,biinv,sij,swj,swj2,z,z1,z2,z3,wj,hakt2,hmax2,w1,w2,
-     1       spmb,spf
+      double precision bii,biinv,sij,swj,swj2,z,z1,z2,z3,wj,hakt2,
+     1       hmax2,w1,w2,spmb,spf
       external lkern,KLdist2
-      real*8 lkern,KLdist2
+      double precision lkern,KLdist2
 !$      integer omp_get_thread_num
 !$      external omp_get_thread_num
       thrednr = 1
@@ -235,12 +235,12 @@ C$OMP END PARALLEL
 C$OMP FLUSH(thnew,bi)
       RETURN
       END
-      real*8 function KLdistsi(thi,thj,si2,nv)
+      double precision function KLdistsi(thi,thj,si2,nv)
       implicit none
       integer nv
-      real*8 thi(nv), thj(nv), si2(nv,nv)
+      double precision thi(nv), thj(nv), si2(nv,nv)
       integer k,l
-      real*8 z,zd,thik,zdk
+      double precision z,zd,thik,zdk
       zd=thi(nv)-thj(nv)
       z=zd*zd*si2(nv,nv)
       DO k=1,nv-1
@@ -255,9 +255,9 @@ C$OMP FLUSH(thnew,bi)
       RETURN
       END
 
-      real*8 function KLdist2(thi,thj,s2)
+      double precision function KLdist2(thi,thj,s2)
       implicit none
-      real*8 thi(2), thj(2), s2, z1, z2
+      double precision thi(2), thj(2), s2, z1, z2
       z1 = thi(1)-thj(1)
       z2 = thi(2)-thj(2)
       KLdist2 = (z1*z1+z2*z2)/s2
@@ -273,9 +273,9 @@ C  Algorithmus zur Nullstellenbestimmung einer monotonen Funktion auf(0,\infty)
       subroutine gethani(x,y,kern,value,wght,eps,bw)
       implicit logical(a-z)
       integer kern
-      real*8 x,y,value,wght(2),eps,bw
-      real*8 fw1,fw2,fw3,z
-      real*8 sofw
+      double precision x,y,value,wght(2),eps,bw
+      double precision fw1,fw2,fw3,z
+      double precision sofw
       external sofw
       if(x.ge.y) RETURN
       fw1=sofw(x,kern,wght)
@@ -308,12 +308,12 @@ C  Algorithmus zur Nullstellenbestimmung einer monotonen Funktion auf(0,\infty)
       ENDIF
       RETURN
       END
-      real*8 function sofw(bw,kern,wght)
+      double precision function sofw(bw,kern,wght)
       implicit logical(a-z)
       integer kern
-      real*8 bw,wght(2)
+      double precision bw,wght(2)
       integer j1,j2,j3,dlw1,dlw2,dlw3,clw1,clw2,clw3,ih1,ih2,ih3
-      real*8 sw,sw2,h2,lkern,z1,z2,z3,z
+      double precision sw,sw2,h2,lkern,z1,z2,z3,z
       external lkern
       h2=bw*bw
 C

@@ -114,7 +114,7 @@
 \maketitle
 
 \setkeys{Gin}{width=\textwidth}
-This document illustrates the workflow of analyzing quantitative Magnetic Resonance Imaging 
+This document illustrates the workflow of analyzing quantitative Magnetic Resonance Imaging (qMRI)
 data in the framework of Multi-Parameter Mapping (MPM) experiments~\parencite{Weiskopf2013}.
 The example uses artificial noisy MPM data based on the analysis results of a publicly 
 available MPM dataset, see \url{http://hmri.info}: The original data was modeled 
@@ -333,46 +333,47 @@ reduce the bias caused by the skewness of the Rician distribution,
 cf.~\cite{PoTa2016} and \cite{Tabelow2017}.
 <<12>>=
 qmap0 <- extract(qMRIMaps,nmaps)
+mask <- extract(mpm,"mask")
 cat("\n", 
     "Bias of NLR estimates\n",
-      "R1", mean(qmap0$R1-R1), 
-      "R2star", mean(qmap0$R2star-R2star),
-      "MT", mean(qmap0$MT-MT),
-      "PD", mean(qmap0$PD-PD), "\n",
+      "R1", mean((qmap0$R1-R1)[mask]), 
+      "R2star", mean((qmap0$R2star-R2star)[mask]),
+      "MT", mean((qmap0$MT-MT)[mask]),
+      "PD", mean((qmap0$PD-PD)[mask]), "\n",
     "Bias of  QL estimates\n",
-      "R1", mean(qmap1$R1-R1),
-      "R2star", mean(qmap1$R2star-R2star),
-      "MT", mean(qmap1$MT-MT),
-      "PD", mean(qmap1$PD-PD), "\n")
+      "R1", mean((qmap1$R1-R1)[mask]),
+      "R2star", mean((qmap1$R2star-R2star)[mask]),
+      "MT", mean((qmap1$MT-MT)[mask]),
+      "PD", mean((qmap1$PD-PD)[mask]), "\n")
 @
 Let's see which estimate performs best with respect to the root mean squared error (RMSE):
 <<13>>=
 cat("\n", 
     "Root mean squared error of NLR estimate\n",
-      "R1", sqrt(mean((qmap0$R1-R1)^2)),
-      "R2star", sqrt(mean((qmap0$R2star-R2star)^2)),
-      "MT", sqrt(mean((qmap0$MT-MT)^2)),
-      "PD", sqrt(mean((qmap0$PD-PD)^2)), "\n",
+      "R1", sqrt(mean((qmap0$R1-R1)[mask]^2)),
+      "R2star", sqrt(mean((qmap0$R2star-R2star)[mask]^2)),
+      "MT", sqrt(mean((qmap0$MT-MT)[mask]^2)),
+      "PD", sqrt(mean((qmap0$PD-PD)[mask]^2)), "\n",
     "Root mean squared error of  QL estimate\n",
-      "R1", sqrt(mean((qmap1$R1-R1)^2)),
-      "R2star", sqrt(mean((qmap1$R2star-R2star)^2)),
-      "MT", sqrt(mean((qmap1$MT-MT)^2)),
-      "PD", sqrt(mean((qmap1$PD-PD)^2)),"\n",
+      "R1", sqrt(mean((qmap1$R1-R1)[mask]^2)),
+      "R2star", sqrt(mean((qmap1$R2star-R2star)[mask]^2)),
+      "MT", sqrt(mean((qmap1$MT-MT)[mask]^2)),
+      "PD", sqrt(mean((qmap1$PD-PD)[mask]^2)),"\n",
     "Root mean squared error of smoothed QL estimate\n",
-      "R1", sqrt(mean((qmap2$R1-R1)^2)),
-      "R2star", sqrt(mean((qmap2$R2star-R2star)^2)),
-      "MT", sqrt(mean((qmap2$MT-MT)^2)),
-      "PD", sqrt(mean((qmap2$PD-PD)^2)),"\n",
+      "R1", sqrt(mean((qmap2$R1-R1)[mask]^2)),
+      "R2star", sqrt(mean((qmap2$R2star-R2star)[mask]^2)),
+      "MT", sqrt(mean((qmap2$MT-MT)[mask]^2)),
+      "PD", sqrt(mean((qmap2$PD-PD)[mask]^2)),"\n",
     "Root mean squared error of QL estimate from smoothed data \n",
-      "R1", sqrt(mean((qmap3$R1-R1)^2)),
-      "R2star", sqrt(mean((qmap3$R2star-R2star)^2)),
-      "MT", sqrt(mean((qmap3$MT-MT)^2)),
-      "PD", sqrt(mean((qmap3$PD-PD)^2)),"\n")
+      "R1", sqrt(mean((qmap3$R1-R1)[mask]^2)),
+      "R2star", sqrt(mean((qmap3$R2star-R2star)[mask]^2)),
+      "MT", sqrt(mean((qmap3$MT-MT)[mask]^2)),
+      "PD", sqrt(mean((qmap3$PD-PD)[mask]^2)),"\n")
 @
 For interpretation we need to compare this to the mean parameter values
 <<14>>=
-cat("\n", "Mean R1", mean(R1), "Mean R2star", mean(R2star), 
-          "Mean MT", mean(MT), "Mean PD", mean(PD),"\n")
+cat("\n", "Mean R1", mean(R1[mask]), "Mean R2star", mean(R2star[mask]), 
+          "Mean MT", mean(MT[mask]), "Mean PD", mean(PD[mask]),"\n")
 @
 We see here, that using the quasi-likelihood estimation is supposed to 
 reduce the bias of the estimated ESTATICS parameters, but does so

@@ -60,10 +60,11 @@ qMRIQLSmoothedp1Maps <- calculateQI(modelMPMQLsp1,
 #
 qm <- extract(qMRIMaps,c("R1","R2star","MT","PD"))
 qms <- extract(qMRIQLSmoothedp1Maps,c("R1","R2star","MT","PD"))
+mask <- extract(mpm,"mask")
 cat("mean of estimated quantitative maps\n",
-    mean(qm$R1), mean(qm$R2star), mean(qm$MT), mean(qm$PD),"\n",
+    mean(qm$R1[mask]), mean(qm$R2star[mask]), mean(qm$MT[mask]), mean(qm$PD[mask]),"\n",
     "mean of estimated quantitative maps\n",
-    mean(qms$R1), mean(qms$R2star), mean(qms$MT), mean(qms$PD),"\n",
+    mean(qms$R1[mask]), mean(qms$R2star[mask]), mean(qms$MT[mask]), mean(qms$PD[mask]),"\n",
     "Root mean squared difference between estimated and smoothed quantitative maps\n",
-    sqrt(mean((qm$R1-qms$R1)^2)), sqrt(mean((qm$R2star-qms$R2star)^2)),
-    sqrt(mean((qm$MT-qms$MT)^2)), sqrt(mean((qm$PD-qms$PD)^2)),"\n")
+    sqrt(mean((qm$R1-qms$R1)[mask]^2)), sqrt(mean((qm$R2star-qms$R2star)[mask]^2)),
+    sqrt(mean((qm$MT-qms$MT)[mask]^2)), sqrt(mean((qm$PD-qms$PD)[mask]^2)),"\n")

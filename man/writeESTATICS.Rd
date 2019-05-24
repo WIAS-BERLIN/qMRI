@@ -111,7 +111,7 @@ for(i in 1:4){
 #
 #  write ESTATICS parameter maps
 #
-writeESTATICS(modelMPMQLsp1,prefix="sp1estatics")
+writeESTATICS(modelMPMQLsp1, dir=tempdir(), prefix="sp1estatics")
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -129,7 +129,7 @@ for (i in 1:4) rimage(qmap[[i]][,11,],main=paste("Smoothed",nmaps[i]))
 #
 #  write qmaps
 #
-writeQI(qMRIQLSmoothedp1Maps,prefix="sqmap")
+writeQI(qMRIQLSmoothedp1Maps, dir=tempdir(), prefix="sqmap")
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

@@ -28,7 +28,7 @@ Wellcome Trust Centre for Neuroimaging, UCL Institute of Neurology, University C
 London, UK., 2013, 7, 95
 }
 \examples{
-# run with example{"qMRI-package",run.dontrun=TRUE}
+# run with example("qMRI-package",run.dontrun=TRUE)
   \dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 #
@@ -64,10 +64,6 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
 #  Estimate Parameters in the ESTATICS model
 #
 modelMPM <- estimateESTATICS(mpm, method = "NLR")
-# Alternatively using Quasi-Likelihood
-sigma <- 50
-modelMPMQL <- estimateESTATICS(mpm, method = "QL",
-                  sigma = array(sigma,mpm$sdim), L = 1)
 #
 #  smooth maps of ESTATICS Parameters
 #
@@ -77,6 +73,18 @@ modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                               alpha = 0.004,
                               patchsize=1,
                               verbose = TRUE)
+#
+# limit calculations to voxel in the central coronal slice 
+# to reduce execution time of the example 
+#
+mpm$mask[,c(1:10,12:21),] <- FALSE 
+#                              
+# Alternatively using Quasi-Likelihood
+#
+sigma <- 50
+modelMPMQL <- estimateESTATICS(mpm, method = "QL",
+                  sigma = array(sigma,mpm$sdim), L = 1)
+
 #
 #  resulting ESTATICS parameter maps for central coronal slice
 #

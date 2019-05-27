@@ -75,7 +75,7 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link[dti]{awslsigmc}}
 }
 \examples{
-  # run with example{"readMPMData",run.dontrun=TRUE}
+  # run with example("readMPMData",run.dontrun=TRUE)
 \dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 #

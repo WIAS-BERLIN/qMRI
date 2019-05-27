@@ -177,10 +177,6 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
 #  Estimate Parameters in the ESTATICS model
 #
 modelMPM <- estimateESTATICS(mpm, method = "NLR")
-# Alternatively using Quasi-Likelihood
-sigma <- 50
-modelMPMQL <- estimateESTATICS(mpm, method = "QL",
-                  sigma = array(sigma,mpm$sdim), L = 1)
 #
 #  smooth maps of ESTATICS Parameters
 #
@@ -191,21 +187,16 @@ modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                               patchsize=1,
                               verbose = TRUE)
 #
-#  resulting ESTATICS parameter maps for central coronal slice
+# limit calculations to voxel in the central coronal slice 
+# to reduce execution time of the example 
 #
-if(require(adimpro)){
-rimage.options(zquantiles=c(.01,.99), ylab="z")
-par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
-pnames <- c("T1","MT","PD","R2star")
-for(i in 1:4){
-   rimage(modelMPMQL$modelCoeff[i,,11,])
-   title(pnames[i])
-   }
-for(i in 1:4){
-   rimage(modelMPMQLsp1$modelCoeff[i,,11,])
-   title(paste("smoothed",pnames[i]))
-   }
-}
+mpm$mask[,c(1:10,12:21),] <- FALSE 
+#                              
+# Alternatively using Quasi-Likelihood
+#
+sigma <- 50
+modelMPMQL <- estimateESTATICS(mpm, method = "QL",
+                  sigma = array(sigma,mpm$sdim), L = 1)
 #
 #  Compute quantitative maps (R1, R2star, PD, MT)
 #

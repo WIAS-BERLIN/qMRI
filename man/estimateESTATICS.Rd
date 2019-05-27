@@ -87,7 +87,7 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link[dti]{awslsigmc}}
 }
 \examples{
-  # run with example{"estimateESTATICS",run.dontrun=TRUE}
+  # run with example("estimateESTATICS",run.dontrun=TRUE)
 \dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 #
@@ -119,6 +119,11 @@ library(qMRI)
 mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
+#
+# limit calculations to voxel in the central coronal slice 
+# to reduce execution time of the example 
+#
+mpm$mask[,c(1:10,12:21),] <- FALSE 
 #
 #  Estimate Parameters in the ESTATICS model
 #

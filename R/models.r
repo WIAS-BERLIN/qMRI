@@ -150,8 +150,8 @@ estatics3QL <- function(par, design, CL, sig, L){
   grad <- matrix(CC*z$grad, n, 4)
   ind <- sfval>100
   if(any(is.na(ind))){
-     cat("estatics3QL\n","par",par,"sigma",sig,
-   "\n fv",z$fval,"\n CC",CC,"ind",ind,"\n")
+     warning(paste("estatics3QL\n","par",par,"sigma",sig,
+   "\n fv",z$fval,"\n CC",CC,"ind",ind),call.=FALSE)
   }
   if(any(ind)){
 # use LS if there is no real difference, factor to keep monotonicity
@@ -159,9 +159,8 @@ estatics3QL <- function(par, design, CL, sig, L){
      grad[ind,] <- matrix(z$grad, n, 4)[ind, ]*1.0001
   }
   if(any(is.na(grad))){
-    cat("estatics3QL/grad\n","par",par,"sigma",sig,
-  "\n fv",z$fval,"\n CC",CC,"ind",ind,"\n grad")
-  print(grad)
+    warning(paste("estatics3QL/grad\n","par",par,"sigma",sig,
+  "\n fv",z$fval,"\n CC",CC,"ind",ind,"\n grad",grad),call.=FALSE)
   }
   attr(fval, "gradient") <- grad
   fval

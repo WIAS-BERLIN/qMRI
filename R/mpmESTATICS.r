@@ -578,7 +578,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
     switch(patchsize+1,1,2.77,3.46)
   #  factor 2 (analog to 2 sigma in KL) to have more common values for alpha
   #  factor for patchsizes adjusted using simulated data
-  cat("using lambda=", lambda, " patchsize=", patchsize,"\n")
+  if(verbose) cat("using lambda=", lambda, " patchsize=", patchsize,"\n")
 
   zobj <- vpawscov(mpmESTATICSModel$modelCoeff,
                    kstar,

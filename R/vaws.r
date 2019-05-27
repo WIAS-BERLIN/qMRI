@@ -166,7 +166,7 @@ vpawscov <- function(y,
       h0[i] <- geth.gauss(scorr[i])
     if (length(h0) < d)
       h0 <- rep(h0[1], d)
-    cat("Corresponding bandwiths for specified correlation:",
+    if(verbose) cat("Corresponding bandwiths for specified correlation:",
         h0,
         "\n")
   }
@@ -180,7 +180,7 @@ vpawscov <- function(y,
   hseq <- 1
   zobj <- list(bi = rep(1, nvoxel), theta = y[,as.vector(mask)])
   bi <- zobj$bi
-  cat("Progress:")
+  if(verbose) cat("Progress:")
   total <- cumsum(1.25 ^ (1:kstar)) / sum(1.25 ^ (1:kstar))
   mc.cores <- setCores(, reprt = FALSE)
   np1 <- 2 * patchsize + 1
@@ -270,7 +270,7 @@ vpawscov <- function(y,
   bi <- numeric(n)
   bi[mask] <- zobj$bi
   dim(bi) <- dy
-  cat("\n")
+  if(verbose) cat("\n")
   list(
     theta=theta,
     hakt=hakt,

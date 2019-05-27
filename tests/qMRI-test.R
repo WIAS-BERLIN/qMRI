@@ -33,10 +33,6 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
 #  Estimate Parameters in the ESTATICS model
 #
 modelMPM <- estimateESTATICS(mpm, method = "NLR", verbose=FALSE)
-# Alternatively using Quasi-Likelihood
-sigma <- 50
-modelMPMQL <- estimateESTATICS(mpm, method = "QL",
-                  sigma = array(sigma, mpm$sdim), L = 1, verbose=FALSE)
 #
 #  smooth maps of ESTATICS Parameters
 #
@@ -46,6 +42,12 @@ modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                               alpha = 0.004,
                               patchsize=1,
                               verbose = FALSE)
+# set mask to y==11 only yo save time
+mpm$mask[,c(1:10,12:21),] <- FALSE
+# Alternatively using Quasi-Likelihood
+sigma <- 50
+modelMPMQL <- estimateESTATICS(mpm, method = "QL",
+              sigma = array(sigma, mpm$sdim), L = 1, verbose=FALSE)
 #
 #  Compute quantitative maps (R1, R2star, PD, MT)
 #

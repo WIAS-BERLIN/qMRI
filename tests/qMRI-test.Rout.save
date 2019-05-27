@@ -54,10 +54,6 @@ Use the function setCores() to change the number of CPU cores.
 > #  Estimate Parameters in the ESTATICS model
 > #
 > modelMPM <- estimateESTATICS(mpm, method = "NLR", verbose=FALSE)
-> # Alternatively using Quasi-Likelihood
-> sigma <- 50
-> modelMPMQL <- estimateESTATICS(mpm, method = "QL",
-+                   sigma = array(sigma, mpm$sdim), L = 1, verbose=FALSE)
 > #
 > #  smooth maps of ESTATICS Parameters
 > #
@@ -70,6 +66,12 @@ Use the function setCores() to change the number of CPU cores.
 +                               verbose = FALSE)
 using lambda= 125.0501  patchsize= 1 
 Progress:
+> # set mask to y==11 only yo save time
+> mpm$mask[,c(1:10,12:21),] <- FALSE
+> # Alternatively using Quasi-Likelihood
+> sigma <- 50
+> modelMPMQL <- estimateESTATICS(mpm, method = "QL",
++               sigma = array(sigma, mpm$sdim), L = 1, verbose=FALSE)
 > #
 > #  Compute quantitative maps (R1, R2star, PD, MT)
 > #
@@ -105,12 +107,12 @@ calculating MT ... done
 +     sqrt(mean((qm$R1-qms$R1)[mask]^2)), sqrt(mean((qm$R2star-qms$R2star)[mask]^2)),
 +     sqrt(mean((qm$MT-qms$MT)[mask]^2)), sqrt(mean((qm$PD-qms$PD)[mask]^2)),"\n")
 mean of estimated quantitative maps
- 0.7799036 18.03812 0.8917513 5740.889 
+ 0.7779531 18.35329 0.8929997 5770.443 
  mean of estimated quantitative maps
- 0.7754809 17.91206 0.8803852 5695.775 
+ 0.7741077 18.00786 0.8771079 5710.95 
  Root mean squared difference between estimated and smoothed quantitative maps
- 0.09521402 5.61277 0.2369349 504.4161 
+ 0.09013397 5.91376 0.2442614 502.5705 
 > 
 > proc.time()
    user  system elapsed 
- 25.976   0.460  25.134 
+ 15.918   0.335  14.913 

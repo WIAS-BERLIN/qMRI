@@ -64,8 +64,6 @@ Use the function setCores() to change the number of CPU cores.
 +                               alpha = 0.004,
 +                               patchsize=1,
 +                               verbose = FALSE)
-using lambda= 125.0501  patchsize= 1 
-Progress:
 > # set mask to y==11 only yo save time
 > mpm$mask[,c(1:10,12:21),] <- FALSE
 > # Alternatively using Quasi-Likelihood
@@ -115,4 +113,4 @@ mean of estimated quantitative maps
 > 
 > proc.time()
    user  system elapsed 
- 15.918   0.335  14.913 
+ 15.872   0.329  14.876 

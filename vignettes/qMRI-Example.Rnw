@@ -194,13 +194,13 @@ modelMPM <- estimateESTATICS(mpm,
 @
 <<7,echo=FALSE>>=
 # evaluate this here to be able to reduce the mask afterwards
-setCores(2)
+# setCores(2)
 modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                                 mpmData = extract(mpm, "ddata"),
                                 kstar = 16,
                                 alpha = 0.004,
                                 patchsize = 1,
-                                verbose = TRUE)
+                                verbose = FALSE)
 mpm$mask[,c(1:10,12:21),] <- FALSE
 @
 using nonlinear least-squares regression. However, the low 
@@ -237,13 +237,13 @@ variability of the estimated parameter maps and, if \code{mpmData}
 is specified, the observed image data:
 % this code has been evaluated before
 <<7,eval=FALSE>>=
-setCores(2)
+# use setCores(ncores) to enable openMP parallelization 
 modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                                 mpmData = extract(mpm, "ddata"),
                                 kstar = 16,
                                 alpha = 0.004,
                                 patchsize = 1,
-                                verbose = TRUE)
+                                verbose = FALSE)
 @
 The package \pkg{qMRI} implements an extension of the method that 
 uses the comparison of local patches for adaptive smoothing~\parencite{PoPaTa18}.
@@ -387,8 +387,9 @@ cat("\n",
 @
 For interpretation we need to compare this to the mean parameter values
 <<14>>=
-cat("\n", "Mean R1", mean(R1[mask]), "Mean R2star", mean(R2star[mask]), 
-          "Mean MT", mean(MT[mask]), "Mean PD", mean(PD[mask]),"\n")
+cat("Mean R1", mean(R1[mask]), "Mean R2star", 
+    mean(R2star[mask]), "Mean MT", mean(MT[mask]), 
+    "Mean PD", mean(PD[mask]),"\n")
 @
 We see here, that using the quasi-likelihood estimation is supposed to 
 reduce the bias of the estimated ESTATICS parameters, but does so

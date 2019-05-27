@@ -192,6 +192,17 @@ modelMPM <- estimateESTATICS(mpm,
                              method = "NLR", 
                              verbose = FALSE)
 @
+<<7,echo=FALSE>>=
+# evaluate this here to be able to reduce the mask afterwards
+setCores(2)
+modelMPMQLsp1 <- smoothESTATICS(modelMPM,
+                                mpmData = extract(mpm, "ddata"),
+                                kstar = 16,
+                                alpha = 0.004,
+                                patchsize = 1,
+                                verbose = TRUE)
+mpm$mask[,c(1:10,12:21),] <- FALSE
+@
 using nonlinear least-squares regression. However, the low 
 low signal-to-noise ratio (SNR) in the data leads to a bias for the 
 parameter estimates, see~\cite{PoTa2016} and \cite{Tabelow2017}.
@@ -224,7 +235,8 @@ the estimated quantitative maps. \cite{Tabelow2017a} introduced a
 structural adaptive smoothing method that can be used to reduce the 
 variability of the estimated parameter maps and, if \code{mpmData} 
 is specified, the observed image data:
-<<7>>=
+% this code has been evaluated before
+<<7,eval=FALSE>>=
 setCores(2)
 modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                                 mpmData = extract(mpm, "ddata"),
@@ -258,6 +270,9 @@ parameter maps of the ESTATICS model, but also to the data itself.
 From this new parameter maps can be estimated by the quasi-likelihood 
 formulation and thus avoiding the bias due to the skewness in the signal
 distribution: 
+<<9a,echo=FALSE>>=
+
+@
 <<9>>=
 mpmsp1 <- mpm
 mpmsp1$ddata <- modelMPMQLsp1$smoothedData

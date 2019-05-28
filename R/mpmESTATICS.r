@@ -775,7 +775,7 @@ writeQI <- function(qi,
                     verbose = TRUE) {
 
   if (!is.null(dir)) {
-    dir.create(dir)
+    if(!dir.exists(dir)) dir.create(dir)
     r2file <- file.path(dir, "R2")
     r1file <- file.path(dir, "R1")
     pdfile <- file.path(dir, "PD")
@@ -819,7 +819,7 @@ writeESTATICS <- function(mpmESTATICSModel,
                           verbose = TRUE) {
 
   if (!is.null(dir)) {
-    dir.create(dir)
+    if(!dir.exists(dir)) dir.create(dir)
     r2file <- file.path(dir, "R2")
     st1file <- file.path(dir, "ST1")
     spdfile <- file.path(dir, "SPD")
@@ -971,7 +971,7 @@ writeQIconf <- function(qiConf,
                         dir= NULL,
                         verbose = TRUE) {
   if (!is.null(dir)) {
-    dir.create(dir)
+    if(!dir.exists(dir)) dir.create(dir)
     r1file <- file.path(dir, "R1")
     r1Lfile <- file.path(dir, "R1lower")
     r1Ufile <- file.path(dir, "R1upper")

@@ -87,8 +87,6 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link[dti]{awslsigmc}}
 }
 \examples{
-  # run with example("estimateESTATICS",run.dontrun=TRUE)
-\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 #
 #  set file names for T1w, MTw and PDw images
@@ -132,7 +130,6 @@ modelMPM <- estimateESTATICS(mpm, method = "NLR")
 sigma <- 50
 modelMPMQL <- estimateESTATICS(mpm, method = "QL",
                   sigma = array(sigma,mpm$sdim), L = 1)
-}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

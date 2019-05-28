@@ -40,9 +40,8 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link{readMPMData}}, \code{\link{estimateESTATICS}},\code{\link{calculateQI}}
 }
 \examples{
-  # run with example("writeQI",run.dontrun=TRUE)
-\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
+outDir <- tempdir()
 #
 #  set file names for T1w, MTw and PDw images
 #
@@ -107,12 +106,11 @@ rimage.options(zquantiles=c(.01,.99), ylab="z")
 par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
 nmaps <- c("R1","R2star","PD","MT")
 qmap <- extract(qMRIMaps,nmaps)
+}
 #
 #  write qmaps
 #
-writeQI(qMRISmoothedp1Maps, dir=tempdir(), prefix="sqmap")
-}
-}
+writeQI(qMRIMaps, dir=outDir, prefix="qmap")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -43,9 +43,8 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link{smoothESTATICS}}
 }
 \examples{
-  # run with example("writeESTATICS",run.dontrun=TRUE)
-\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
+outDir <- tempdir()
 #
 #  set file names for T1w, MTw and PDw images
 #
@@ -76,49 +75,30 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
 #
+# limit calculations to voxel in the central coronal slice 
+# to reduce execution time of the example 
+#
+mpm$mask[,c(1:10,12:21),] <- FALSE 
+#
 #  Estimate Parameters in the ESTATICS model
 #
 modelMPM <- estimateESTATICS(mpm, method = "NLR")
-#
-#  smooth maps of ESTATICS Parameters
-#
-setCores(2)
-modelMPMQLsp1 <- smoothESTATICS(modelMPM,
-                              kstar = 16,
-                              alpha = 0.004,
-                              patchsize=1,
-                              verbose = TRUE)
-#
-# limit calculations to voxel in the central slice to reduce execution time of the example 
-#
-mpm$mask[,c(1:10,12:21),] <- FALSE 
-#                              
-# Alternatively using Quasi-Likelihood
-#
-sigma <- 50
-modelMPMQL <- estimateESTATICS(mpm, method = "QL",
-                  sigma = array(sigma,mpm$sdim), L = 1)
 #
 #  resulting ESTATICS parameter maps for central coronal slice
 #
 if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
-par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
+par(mfrow=c(2,2),mar=c(3,3,3,1),mgp=c(2,1,0))
 pnames <- c("T1","MT","PD","R2star")
 for(i in 1:4){
-   rimage(modelMPMQL$modelCoeff[i,,11,])
+   rimage(modelMPM$modelCoeff[i,,11,])
    title(pnames[i])
-   }
-for(i in 1:4){
-   rimage(modelMPMQLsp1$modelCoeff[i,,11,])
-   title(paste("smoothed",pnames[i]))
    }
 }
 #
 #  write ESTATICS parameter maps
 #
-writeESTATICS(modelMPMQLsp1, dir=tempdir(), prefix="sp1estatics")
-}
+writeESTATICS(modelMPM, dir=outDir, prefix="estatics")
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

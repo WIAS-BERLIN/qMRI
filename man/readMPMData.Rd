@@ -75,8 +75,6 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link[dti]{awslsigmc}}
 }
 \examples{
-  # run with example("readMPMData",run.dontrun=TRUE)
-\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 #
 #  set file names for T1w, MTw and PDw images
@@ -108,7 +106,7 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
 }
-}
+
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
 \keyword{ IO }% use one of  RShowDoc("KEYWORDS")

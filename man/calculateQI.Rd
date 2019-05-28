@@ -69,8 +69,6 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link[dti]{awslsigmc}}
 }
 \examples{
-  # run with example{"calculateQI",run.dontrun=TRUE}
-\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 #
 #  set file names for T1w, MTw and PDw images
@@ -137,7 +135,6 @@ par(mfrow=c(2,2),mar=c(3,3,3,1),mgp=c(2,1,0))
 nmaps <- c("R1","R2star","PD","MT")
 qmap <- extract(qMRIMaps,nmaps)
 for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
-}
 }
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

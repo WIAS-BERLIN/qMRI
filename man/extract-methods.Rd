@@ -91,7 +91,7 @@ and \code{"qMaps"}.
   \itemize{
   \item{"modelCoeff"}{Estimated parameter maps}
   \item{"invCov" }{ map of inverse covariance matrices}
-  \item{"rsigma"}{map of residual standard deviations}
+  \item{"rsigma"}{ map of residual standard deviations}
   \item{"isConv" }{ convergence indicator map}
   \item{"bi"}{ Sum of weights map from AWS/PAWS}
   \item{"smoothPar"}{ smooting parameters used in AWS/PAWS}
@@ -142,7 +142,6 @@ and \code{"qMaps"}.
   J\"org Polzehl \email{polzehl@wias-berlin.de}
 }
 \examples{
-\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 #
 #  set file names for T1w, MTw and PDw images
@@ -174,38 +173,44 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
 #
-#  Estimate Parameters in the ESTATICS model
+#  display some data
 #
-modelMPM <- estimateESTATICS(mpm, method = "NLR")
-#
-#  smooth maps of ESTATICS Parameters
-#
-setCores(2)
-modelMPMQLsp1 <- smoothESTATICS(modelMPM,
-                              kstar = 16,
-                              alpha = 0.004,
-                              patchsize=1,
-                              verbose = TRUE)
+data <- extract(mpm,"ddata")
+if(require(adimpro)){
+rimage.options(ylab = "z")
+par(mfrow=c(1,3),mar=c(3,3,3,1),mgp=c(2,1,0))
+rimage(data[1,,11,], main="first T1w image")
+rimage(data[9,,11,], main="first MTw image")
+rimage(data[15,,11,], main="first PDw image")
+}
 #
 # limit calculations to voxel in the central coronal slice 
 # to reduce execution time of the example 
 #
 mpm$mask[,c(1:10,12:21),] <- FALSE 
-#                              
-# Alternatively using Quasi-Likelihood
 #
-sigma <- 50
-modelMPMQL <- estimateESTATICS(mpm, method = "QL",
-                  sigma = array(sigma,mpm$sdim), L = 1)
+#  Estimate Parameters in the ESTATICS model
+#
+modelMPM <- estimateESTATICS(mpm, method = "NLR")
+#
+#  Parameter maps and residual standard deviation 
+#
+z <- extract(modelMPM,c("rsigma","modelCoeff"))
+if(require(adimpro)){
+rimage.options(ylab = "z")
+par(mfrow=c(1,5),mar=c(3,3,3,1),mgp=c(2,1,0))
+rimage(z$modelCoeff[1,,11,], main="S_T1")
+rimage(z$modelCoeff[2,,11,], main="S_MT")
+rimage(z$modelCoeff[3,,11,], main="S_PD")
+rimage(z$modelCoeff[4,,11,], main="R2star")
+rimage(z$rsigma[,11,], main="Residual sd")
+}
 #
 #  Compute quantitative maps (R1, R2star, PD, MT)
 #
-qMRIQLMaps <- calculateQI(modelMPMQL,
+qMRIMaps <- calculateQI(modelMPM,
                         b1File = B1File,
                         TR2 = 3.4)
-qMRIQLSmoothedp1Maps <- calculateQI(modelMPMQLsp1,
-                                    b1File = B1File,
-                                    TR2 = 3.4)
 #
 #  resulting quantitative maps for central coronal slice
 #
@@ -213,11 +218,8 @@ if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
 par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
 nmaps <- c("R1","R2star","PD","MT")
-qmap <- extract(qMRIQLMaps,nmaps)
+qmap <- extract(qMRIMaps,nmaps)
 for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
-qmap <- extract(qMRIQLSmoothedp1Maps,nmaps)
-for (i in 1:4) rimage(qmap[[i]][,11,],main=paste("Smoothed",nmaps[i]))
-}
 }
 }
 \keyword{ methods }% use one of  RShowDoc("KEYWORDS")

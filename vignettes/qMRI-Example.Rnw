@@ -194,7 +194,7 @@ modelMPM <- estimateESTATICS(mpm,
 @
 <<7,echo=FALSE>>=
 # evaluate this here to be able to reduce the mask afterwards
-# setCores(2)
+setCores(2, reprt=FALSE)
 modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                                 mpmData = extract(mpm, "ddata"),
                                 kstar = 16,
@@ -238,6 +238,7 @@ is specified, the observed image data:
 % this code has been evaluated before
 <<7,eval=FALSE>>=
 # use setCores(ncores) to enable openMP parallelization 
+setCores(2,reprt=FALSE)
 modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                                 mpmData = extract(mpm, "ddata"),
                                 kstar = 16,

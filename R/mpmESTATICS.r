@@ -776,15 +776,15 @@ writeQI <- function(qi,
 
   if (!is.null(dir)) {
     if(!dir.exists(dir)) dir.create(dir)
-    r2file <- file.path(dir, "R2")
-    r1file <- file.path(dir, "R1")
-    pdfile <- file.path(dir, "PD")
-    mtfile <- file.path(dir, "MT")
+    r2file <- file.path(dir, paste0(prefix,"R2"))
+    r1file <- file.path(dir, paste0(prefix,"R1"))
+    pdfile <- file.path(dir, paste0(prefix,"PD"))
+    mtfile <- file.path(dir, paste0(prefix,"MT"))
   } else {
-    r2file <- "R2"
-    r1file <- "R1"
-    pdfile <- "PD"
-    mtfile <- "MT"
+    r2file <- paste0(prefix,"R2")
+    r1file <- paste0(prefix,"R1")
+    pdfile <- paste0(prefix,"PD")
+    mtfile <- paste0(prefix,"MT")
   }
 
   ds <- readNIfTI(qi$t1Files[1], reorient = FALSE)
@@ -820,15 +820,15 @@ writeESTATICS <- function(mpmESTATICSModel,
 
   if (!is.null(dir)) {
     if(!dir.exists(dir)) dir.create(dir)
-    r2file <- file.path(dir, "R2")
-    st1file <- file.path(dir, "ST1")
-    spdfile <- file.path(dir, "SPD")
-    smtfile <- file.path(dir, "SMT")
+    r2file <- file.path(dir, paste0(prefix,"R2"))
+    st1file <- file.path(dir, paste0(prefix,"ST1"))
+    spdfile <- file.path(dir, paste0(prefix,"SPD"))
+    smtfile <- file.path(dir, paste0(prefix,"SMT"))
   } else {
-    r2file <- "R2"
-    st1file <- "ST1"
-    spdfile <- "SPD"
-    smtfile <- "SMT"
+    r2file <- paste0(prefix,"R2")
+    st1file <- paste0(prefix,"ST1")
+    spdfile <- paste0(prefix,"SPD")
+    smtfile <- paste0(prefix,"SMT")
   }
 
   ds <- readNIfTI(mpmESTATICSModel$t1Files[1], reorient = FALSE)

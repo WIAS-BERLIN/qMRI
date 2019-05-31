@@ -312,7 +312,7 @@ estimateESTATICS <- function (mpmdata,
                               dataScale = 1000,
                               method = c("NLR", "QL"),
                               sigma = NULL,
-                              L = NULL,
+                              L = 1,
                               maxR2star=50,
                               verbose = TRUE) {
 

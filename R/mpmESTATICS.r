@@ -332,7 +332,7 @@ estimateESTATICS <- function (mpmdata,
                               maxR2star=50,
                               verbose = TRUE) {
 
-  validate_MPMData(mpmdata)
+  # validate_MPMData(mpmdata)
 
   ## create the design matrix of the model
   if (mpmdata$model == 2) {

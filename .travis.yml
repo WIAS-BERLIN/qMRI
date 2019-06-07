@@ -70,6 +70,7 @@ before_install:
     fi
   - install_python_requirements ;    
   - R CMD javareconf ;  
+  - gsl-config --version ;
   # - ralias; R -e "cat('test')"; ls travis_*.log
 
 after_success:

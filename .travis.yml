@@ -61,6 +61,8 @@ before_install:
     then
       gsl_install ;
     fi
+  - gsl-config --version ;
+  - gsl_install_source;     
   - if [[ "${PACKAGE_NAME}" == "ROpenCVLite" || "${PACKAGE_NAME}" == "Rvision" ]]; 
     then
       shopt -s expand_aliases ;
@@ -70,7 +72,6 @@ before_install:
     fi
   - install_python_requirements ;    
   - R CMD javareconf ;  
-  - gsl-config --version ;
   # - ralias; R -e "cat('test')"; ls travis_*.log
 
 after_success:

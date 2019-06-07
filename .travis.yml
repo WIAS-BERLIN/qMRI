@@ -57,7 +57,7 @@ before_install:
     then
       fftw_install ;
     fi
-  - if [[ "${PACKAGE_NAME}" == "dti" ]]; 
+  - if [[ "${PACKAGE_NAME}" == "dti" || "${PACKAGE_NAME}" == "qMRI" ]]; 
     then
       gsl_install ;
     fi

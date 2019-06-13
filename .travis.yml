@@ -7,6 +7,7 @@ bioc_required: true
 cran: http://cran.rstudio.com
 dist: trusty
 
+
 addons:
   apt:
     packages:

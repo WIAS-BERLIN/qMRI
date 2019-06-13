@@ -196,7 +196,8 @@ modelMPM <- estimateESTATICS(mpm,
 # evaluate this here to be able to reduce the mask afterwards
 # setCores(2)
 modelMPMQLsp1 <- smoothESTATICS(modelMPM,
-                                mpmData = extract(mpm, "ddata"),
+                                # mpmData = extract(mpm, "ddata"),
+                                mpmData = mpm$ddata,
                                 kstar = 16,
                                 alpha = 0.004,
                                 patchsize = 1,
@@ -223,7 +224,8 @@ which in this case of artificial data is explicitly known.
 Alternatively, a map of scale parameters
 could be estimated using function \code{awslsigmc} from package \pkg{dti}
 <<eval=FALSE>>=
-ddata <- extract(mpm,"ddata")
+# ddata <- extract(mpm,"ddata")
+ddata = mpm$ddata
 if(require(dti)) sigma <- awslsigmc(ddata[1,,,],16)$sigma
 @
 see \cite{Tabelow2014a} for details of the method.
@@ -239,7 +241,7 @@ is specified, the observed image data:
 <<7a,eval=FALSE>>=
 # use setCores(ncores) to enable openMP parallelization
 modelMPMQLsp1 <- smoothESTATICS(modelMPM,
-                                mpmData = extract(mpm, "ddata"),
+                                mpmData = mpm$ddata,
                                 kstar = 16,
                                 alpha = 0.004,
                                 patchsize = 1,

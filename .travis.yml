@@ -73,6 +73,8 @@ before_install:
     fi
   - install_python_requirements ;    
   - R CMD javareconf ;  
+  - pwd;
+  - cat DESCRIPTION; 
   # - ralias; R -e "cat('test')"; ls travis_*.log
 
 after_success:

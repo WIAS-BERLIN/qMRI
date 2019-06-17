@@ -55,7 +55,6 @@ before_install:
     then
       fftw_install ;
     fi
-  - gsl-config --prefix; gsl-config --version ; gsl-config  --cflags; gsl-config  --libs
   - which -a gsl-config;
   - gsl_install_source;
   - which -a gsl-config;

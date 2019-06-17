@@ -64,6 +64,7 @@ before_install:
     fi
   - gsl-config --version ;
   - gsl_install_source;     
+  - gsl-config --version ;
   - if [[ "${PACKAGE_NAME}" == "ROpenCVLite" || "${PACKAGE_NAME}" == "Rvision" ]]; 
     then
       shopt -s expand_aliases ;

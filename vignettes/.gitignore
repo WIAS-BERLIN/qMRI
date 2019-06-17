@@ -1,2 +1,7 @@
 *.html
 *.R
+*.aux
+*.bbl
+*.tex
+*.synctex.gz
+*.run.xml

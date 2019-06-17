@@ -12,9 +12,6 @@ addons:
   apt:
     packages:
     - libfftw3-dev
-    - libgsl0-dev
-    - libgsl0ldbl
-
 r:
 - release
 - devel
@@ -57,10 +54,6 @@ before_install:
   - if [[ "${PACKAGE_NAME}" == "waveslim" ]]; 
     then
       fftw_install ;
-    fi
-  - if [[ "${PACKAGE_NAME}" == "dti" || "${PACKAGE_NAME}" == "qMRI" ]]; 
-    then
-      gsl_install ;
     fi
   - gsl-config --prefix; gsl-config --version ; gsl-config  --cflags; gsl-config  --libs
   - which -a gsl-config;

@@ -14,7 +14,7 @@ a specification of the scale parameter sigma of the data distribution.
 }
 \usage{
 estimateESTATICS(mpmdata, TEScale = 100, dataScale = 1000, method = c("NLR", "QL"),
-                 sigma = NULL, L = NULL, maxR2star = 50, verbose = TRUE)
+                 sigma = NULL, L = 1, maxR2star = 50, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -87,6 +87,7 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link[dti]{awslsigmc}}
 }
 \examples{
+\donttest{
 dataDir <- system.file("extdata",package="qMRI")
 #
 #  set file names for T1w, MTw and PDw images
@@ -118,10 +119,10 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
 #
-# limit calculations to voxel in the central coronal slice 
-# to reduce execution time of the example 
+# limit calculations to voxel in the central coronal slice
+# to reduce execution time of the example
 #
-mpm$mask[,c(1:10,12:21),] <- FALSE 
+mpm$mask[,c(1:10,12:21),] <- FALSE
 #
 #  Estimate Parameters in the ESTATICS model
 #
@@ -130,6 +131,7 @@ modelMPM <- estimateESTATICS(mpm, method = "NLR")
 sigma <- 50
 modelMPMQL <- estimateESTATICS(mpm, method = "QL",
                   sigma = array(sigma,mpm$sdim), L = 1)
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

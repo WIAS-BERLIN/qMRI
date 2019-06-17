@@ -178,22 +178,22 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
 data <- extract(mpm,"ddata")
 if(require(adimpro)){
 rimage.options(ylab = "z")
-par(mfrow=c(1,3),mar=c(3,3,3,1),mgp=c(2,1,0))
+oldpar <- par(mfrow=c(1,3),mar=c(3,3,3,1),mgp=c(2,1,0))
 rimage(data[1,,11,], main="first T1w image")
 rimage(data[9,,11,], main="first MTw image")
 rimage(data[15,,11,], main="first PDw image")
 }
 #
-# limit calculations to voxel in the central coronal slice 
-# to reduce execution time of the example 
+# limit calculations to voxel in the central coronal slice
+# to reduce execution time of the example
 #
-mpm$mask[,c(1:10,12:21),] <- FALSE 
+mpm$mask[,c(1:10,12:21),] <- FALSE
 #
 #  Estimate Parameters in the ESTATICS model
 #
 modelMPM <- estimateESTATICS(mpm, method = "NLR")
 #
-#  Parameter maps and residual standard deviation 
+#  Parameter maps and residual standard deviation
 #
 z <- extract(modelMPM,c("rsigma","modelCoeff"))
 if(require(adimpro)){
@@ -221,6 +221,7 @@ nmaps <- c("R1","R2star","PD","MT")
 qmap <- extract(qMRIMaps,nmaps)
 for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
 }
+par(oldpar)
 }
 \keyword{ methods }% use one of  RShowDoc("KEYWORDS")
 \keyword{ manip }% __ONLY ONE__ keyword per line

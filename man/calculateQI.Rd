@@ -100,10 +100,10 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
 #
-# limit calculations to voxel in the central coronal slice 
-# to reduce execution time of the example 
+# limit calculations to voxel in the central coronal slice
+# to reduce execution time of the example
 #
-mpm$mask[,c(1:10,12:21),] <- FALSE 
+mpm$mask[,c(1:10,12:21),] <- FALSE
 #
 #  Estimate Parameters in the ESTATICS model
 #
@@ -113,7 +113,7 @@ modelMPM <- estimateESTATICS(mpm, method = "NLR")
 #
 if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
-par(mfrow=c(2,2),mar=c(3,3,3,1),mgp=c(2,1,0))
+oldpar <- par(mfrow=c(2,2),mar=c(3,3,3,1),mgp=c(2,1,0))
 pnames <- c("T1","MT","PD","R2star")
 for(i in 1:4){
    rimage(modelMPM$modelCoeff[i,,11,])
@@ -136,6 +136,7 @@ nmaps <- c("R1","R2star","PD","MT")
 qmap <- extract(qMRIMaps,nmaps)
 for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
 }
+par(oldpar)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -57,8 +57,7 @@ Use the function setCores() to change the number of CPU cores.
 > #
 > #  smooth maps of ESTATICS Parameters
 > #
-> setCores(2)
-  Total CPU cores available: 8  CPU cores in use: 2.
+> setCores(2, reprt = FALSE)
 > modelMPMQLsp1 <- smoothESTATICS(modelMPM,
 +                               kstar = 16,
 +                               alpha = 0.004,
@@ -113,4 +112,4 @@ mean of estimated quantitative maps
 > 
 > proc.time()
    user  system elapsed 
- 15.872   0.329  14.876 
+ 16.280   0.390  15.386 

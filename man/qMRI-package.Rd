@@ -28,8 +28,7 @@ Wellcome Trust Centre for Neuroimaging, UCL Institute of Neurology, University C
 London, UK., 2013, 7, 95
 }
 \examples{
-# run with example("qMRI-package",run.dontrun=TRUE)
-  \dontrun{
+\donttest{
 dataDir <- system.file("extdata",package="qMRI")
 #
 #  set file names for T1w, MTw and PDw images
@@ -74,11 +73,11 @@ modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                               patchsize=1,
                               verbose = TRUE)
 #
-# limit calculations to voxel in the central coronal slice 
-# to reduce execution time of the example 
+# limit calculations to voxel in the central coronal slice
+# to reduce execution time of the example
 #
-mpm$mask[,c(1:10,12:21),] <- FALSE 
-#                              
+mpm$mask[,c(1:10,12:21),] <- FALSE
+#
 # Alternatively using Quasi-Likelihood
 #
 sigma <- 50
@@ -90,7 +89,7 @@ modelMPMQL <- estimateESTATICS(mpm, method = "QL",
 #
 if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
-par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
+oldpar <- par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
 pnames <- c("T1","MT","PD","R2star")
 for(i in 1:4){
    rimage(modelMPMQL$modelCoeff[i,,11,])
@@ -122,6 +121,7 @@ for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
 qmap <- extract(qMRIQLSmoothedp1Maps,nmaps)
 for (i in 1:4) rimage(qmap[[i]][,11,],main=paste("Smoothed",nmaps[i]))
 }
+par(oldpar)
 }
 }
 \keyword{ package }

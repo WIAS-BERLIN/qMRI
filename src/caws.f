@@ -87,7 +87,8 @@ C
       implicit none
 
       integer nv,n1,n2,n3,ncores
-      logical aws, mask(*)
+      logical aws
+      integer mask(*)
       double precision y(nv,*),theta(nv,*),bi(*),thnew(nv,*),s2(*),
      1  lambda,wght(2),hakt,lwght(*),swjy(nv,ncores),s2new(*)
       integer ih1,ih2,ih3,i1,i2,i3,j1,j2,j3,jw1,jw2,jw3,jwind3,jwind2,
@@ -164,7 +165,7 @@ C$OMP& sij,wj,j3,jw3,jind3,z3,jwind3,j2,jw2,jind2,z2,jwind2,
 C$OMP& j1,jw1,jind,z1,z,thrednr,swj2)
 C$OMP DO SCHEDULE(GUIDED)
       DO iind=1,n1*n2*n3
-         if(.not.mask(iind)) CYCLE
+         if(mask(iind).eq.0) CYCLE
 !$         thrednr = omp_get_thread_num()+1
 C returns value in 0:(ncores-1)
          i1=mod(iind,n1)
@@ -203,7 +204,7 @@ C  first stochastic term
                   j1=jw1+i1
                   if(j1.lt.1.or.j1.gt.n1) CYCLE
                   jind=j1+jind2
-                  if(.not.mask(jind)) CYCLE
+                  if(mask(jind).eq.0) CYCLE
                   wj=lwght(jw1+clw1+1+jwind2)
                   IF (aws) THEN
                      sij=KLdist2(theta(1,iind),theta(1,jind),s2(iind))
@@ -408,7 +409,7 @@ C   size of work needs to be 2*nind
 C
       implicit none
       integer n1,n2,n3,nind,ind(3,nind),ncores
-      logical mask(n1,n2,n3)
+      integer mask(n1,n2,n3)
       double precision y(n1,n2,n3),yout(n1,n2,n3),work(nind,ncores)
       integer i1,i2,i3,j1,j2,j3,j,k,thrednr
       double precision fmedian
@@ -423,7 +424,7 @@ C$OMP DO SCHEDULE(GUIDED)
 !$         thrednr = omp_get_thread_num()+1
          DO i2=1,n2
             DO i3=1,n3
-               if(.not.mask(i1,i2,i3)) THEN
+               if(mask(i1,i2,i3).eq.0) THEN
                   yout(i1,i2,i3) = y(i1,i2,i3)
                   CYCLE
                ENDIF
@@ -435,7 +436,7 @@ C$OMP DO SCHEDULE(GUIDED)
                   if(j2.le.0.or.j2.gt.n2) CYCLE
                   j3=i3+ind(3,j)
                   if(j3.le.0.or.j3.gt.n3) CYCLE
-                  if(.not.mask(j1,j2,j3)) CYCLE
+                  if(mask(j1,j2,j3).eq.0) CYCLE
                   if(y(j1,j2,j3).le.0.d0) CYCLE
                   k=k+1
                   work(k,thrednr)=y(j1,j2,j3)

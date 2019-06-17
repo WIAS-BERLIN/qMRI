@@ -35,7 +35,7 @@ static R_NativePrimitiveArgType gethani_t[]={REALSXP, REALSXP, INTSXP, REALSXP,
   REALSXP, REALSXP, REALSXP};
 static R_NativePrimitiveArgType hg1f1_t[]={REALSXP, REALSXP, REALSXP, INTSXP,
   REALSXP};
-static R_NativePrimitiveArgType mediansm_t[]={REALSXP, LGLSXP, INTSXP, INTSXP,
+static R_NativePrimitiveArgType mediansm_t[]={REALSXP, INTSXP, INTSXP, INTSXP,
   INTSXP, INTSXP, INTSXP, REALSXP, INTSXP, REALSXP};
 static R_NativePrimitiveArgType paramw3_t[]={REALSXP, REALSXP, INTSXP, REALSXP,
   INTSXP};
@@ -58,7 +58,7 @@ static R_NativePrimitiveArgType estatics3_t[]={REALSXP, REALSXP, INTSXP, REALSXP
   REALSXP};
 static R_NativePrimitiveArgType estatics3fixedr2_t[]={REALSXP, REALSXP, REALSXP, INTSXP,
     REALSXP, REALSXP};
-static R_NativePrimitiveArgType vaws2_t[]={REALSXP, LGLSXP, INTSXP, INTSXP,
+static R_NativePrimitiveArgType vaws2_t[]={REALSXP, INTSXP, INTSXP, INTSXP,
   INTSXP, INTSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP, REALSXP,
   REALSXP, INTSXP, REALSXP, REALSXP, REALSXP};
 

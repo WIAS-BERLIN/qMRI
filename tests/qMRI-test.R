@@ -36,7 +36,7 @@ modelMPM <- estimateESTATICS(mpm, method = "NLR", verbose=FALSE)
 #
 #  smooth maps of ESTATICS Parameters
 #
-setCores(2)
+setCores(2, reprt = FALSE)
 modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                               kstar = 16,
                               alpha = 0.004,

@@ -1,8 +1,8 @@
 Package: qMRI
 Type: Package
 Title: Methods for Quantitative Magnetic Resonance Imaging (qMRI)
-Version: 1.0
-Date: 2019-05-08
+Version: 1.0.1
+Date: 2019-06-17
 Authors@R: c(person("Joerg", "Polzehl", role = c("aut"),
                     email = "joerg.polzehl@wias-berlin.de"),
              person("Karsten", "Tabelow", role = c("aut", "cre"),
@@ -13,12 +13,12 @@ Depends: R (>= 3.5), awsMethods (>= 1.0)
 Imports: oro.nifti (>= 0.9), stringr, dti (>= 1.4), aws (>= 2.2), adimpro (>= 0.9)
 LazyData: TRUE
 Description: Implementation of methods for estimation of quantitative maps
-    from Multi-Parameter Mapping (MPM) acquisitions (Weiskopf et al. (2013) 
+    from Multi-Parameter Mapping (MPM) acquisitions (Weiskopf et al. (2013)
     <doi:10.3389/fnins.2013.00095>) including adaptive
     smoothing methods in the framework of the ESTATICS model
-    (Estimating the apparent transverse relaxation time (R2*) from images with 
-    different contrasts, Weiskopf et al. (2014) <doi:10.3389/fnins.2014.00278>). 
-    The smoothing method is described in Mohammadi et al. (2017). 
+    (Estimating the apparent transverse relaxation time (R2*) from images with
+    different contrasts, Weiskopf et al. (2014) <doi:10.3389/fnins.2014.00278>).
+    The smoothing method is described in Mohammadi et al. (2017).
     <doi:10.20347/WIAS.PREPRINT.2432>.
 License: GPL (>= 2)
 Copyright: This package is

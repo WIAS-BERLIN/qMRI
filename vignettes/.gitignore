@@ -5,3 +5,7 @@
 *.tex
 *.synctex.gz
 *.run.xml
+*.blg
+*.pdf
+*.log
+*.bib

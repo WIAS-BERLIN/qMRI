@@ -56,7 +56,7 @@ before_install:
       fftw_install ;
     fi
   - gsl_install_source;
-  - which -a gsl-config;
+  - echo $LD_LIBRARY_PATH ;
   - gsl-config --prefix; gsl-config --version ; gsl-config  --cflags; gsl-config  --libs
   - if [[ "${PACKAGE_NAME}" == "ROpenCVLite" || "${PACKAGE_NAME}" == "Rvision" ]]; 
     then

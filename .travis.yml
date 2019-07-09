@@ -35,6 +35,7 @@ before_install:
   - fname=travis_helpers.sh
   - wget -O ${fname} http://bit.ly/travis_helpers
   - cat ${fname}; source ${fname}; rm ${fname}  
+  - sudo tlmgr install filecontents ;
   - cat DESCRIPTION
   - start_xvfb ;
   - export rver=`r_version`; echo $rver ;

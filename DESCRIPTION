@@ -9,7 +9,7 @@ Authors@R: c(person("Joerg", "Polzehl", role = c("aut"),
                     email = "karsten.tabelow@wias-berlin.de"),
              person("WIAS Berlin", role = c("cph", "fnd")))
 Maintainer: Karsten Tabelow <karsten.tabelow@wias-berlin.de>
-Depends: R (>= 3.5), awsMethods (>= 1.0)
+Depends: R (>= 3.1), awsMethods (>= 1.0)
 Imports: oro.nifti (>= 0.9), stringr, dti (>= 1.4), aws (>= 2.2),
         adimpro (>= 0.9)
 LazyData: TRUE
@@ -31,3 +31,4 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+

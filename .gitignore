@@ -1,0 +1,5 @@
+.Rproj.user
+src/*.o
+src/*.so
+.Rhistory
+inst/doc

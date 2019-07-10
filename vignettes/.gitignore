@@ -1,0 +1,11 @@
+*.html
+*.R
+*.aux
+*.bbl
+*.tex
+*.synctex.gz
+*.run.xml
+*.blg
+*.pdf
+*.log
+*.bib

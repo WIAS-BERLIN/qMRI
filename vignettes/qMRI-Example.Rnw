@@ -17,7 +17,7 @@
 	Volume = {7},
 	Year = {2013},
 	Bdsk-Url-1 = {http://dx.doi.org/10.3389/fnins.2013.00095}}
-	
+
  @article{Weiskopf2014,
 	Author = {N. Weiskopf and M. F. Callaghan and O. Josephs and A. Lutti and S. Mohammadi},
 	Journal = {Front. Neurosci.},
@@ -26,7 +26,7 @@
 	Title = {Estimating the apparent transverse relaxation time {(R2*)} from images with different contrasts {(ESTATICS)} reduces motion artifacts},
 	Volume = {8},
 	Year = {2014}}
-	
+
  @article{Tabelow2019,
 	Author = {K. Tabelow and E. Balteau and J. Ashburner and M. F. Callaghan and B. Draganski and G. Helms and F. Kherif and T. Leutritz and A. Lutti and Ch. Phillips and E. Reimer and L. Ruthotto and M. Seif and N. Weiskopf and G. Ziegler and S. Mohammadi},
 	Doi = {https://doi.org/10.1016/j.neuroimage.2019.01.029},
@@ -40,7 +40,7 @@
 	Year = {2019},
 	Bdsk-Url-1 = {http://www.sciencedirect.com/science/article/pii/S1053811919300291},
 	Bdsk-Url-2 = {https://doi.org/10.1016/j.neuroimage.2019.01.029}}
-	
+
  @conference{Tabelow2017,
 	Author = {Tabelow, K. and D'Alonzo, Ch. and Ruthotto, L. and Callaghan, M. F. and Weiskopf, N. and Polzehl, J. and Mohammadi, S.},
 	Booktitle = {Proceedings of ISMRM 2017},
@@ -48,7 +48,7 @@
 	Date-Modified = {2019-01-09 10:05:03 +0100},
 	Title = {Removing the estimation bias due to the noise floor in multi-parameter maps},
 	Year = {2017}}
-	
+
  @article{PoTa2016,
 	Author = {J. Polzehl and K. Tabelow},
 	Doi = {10.1080/01621459.2016.1222284},
@@ -60,7 +60,7 @@
 	Volume = {111},
 	Year = {2016},
 	Bdsk-Url-1 = {https://doi.org/10.1080/01621459.2016.1222284}}
-	
+
  @article{Tabelow2014a,
 	Author = {K. Tabelow and H. U. Voss and J. Polzehl},
 	Institution = {WIAS-Berlin},
@@ -71,7 +71,7 @@
 	Title = {Local estimation of the noise level in {MRI} using structural adaptation},
 	Volume = {20},
 	Year = {2015}}
-	
+
  @techreport{Tabelow2017a,
 	Author = {Mohammadi, S. and D'Alonzo, Ch. and Ruthotto, L. and Polzehl, J. and Ellerbrock, I. and Callaghan, M. F. and Weiskopf, N. and Tabelow, K.},
 	Doi = {10.20347/WIAS.PREPRINT.2432},
@@ -81,7 +81,7 @@
 	Type = {Preprint},
 	Year = {2017},
 	Bdsk-Url-1 = {https://doi.org/10.20347/WIAS.PREPRINT.2432}}
-	
+
  @techreport{PoPaTa18,
 	Author = {J. Polzehl and K. Papafitsoros and K. Tabelow},
 	Doi = {10.20347/WIAS.PREPRINT.2520},
@@ -116,24 +116,24 @@
 \setkeys{Gin}{width=\textwidth}
 This document illustrates the workflow of analyzing quantitative Magnetic Resonance Imaging (qMRI)
 data in the framework of Multi-Parameter Mapping (MPM) experiments~\parencite{Weiskopf2013}.
-The example uses artificial noisy MPM data based on the analysis results of a publicly 
-available MPM dataset, see \url{http://hmri.info}: The original data was modeled 
-using the ESTATICS model~\parencite{Weiskopf2014}. Its four adaptively smoothed parameter 
-maps were used to generate the artificial data on a selected (small) sub cube with Rician 
-noise by creating corresponding signal echos following the ESTATICS model equation. 
-The artificial data is supplied with this package together with the smoothed quantitative 
-maps (relaxation rates $R_1$ and $R_2^\star$, proton density $P\!D$, and magnetization 
-transfer $M\!T$) from the original data for ground truth comparison. 
+The example uses artificial noisy MPM data based on the analysis results of a publicly
+available MPM dataset, see \url{http://hmri.info}: The original data was modeled
+using the ESTATICS model~\parencite{Weiskopf2014}. Its four adaptively smoothed parameter
+maps were used to generate the artificial data on a selected (small) sub cube with Rician
+noise by creating corresponding signal echos following the ESTATICS model equation.
+The artificial data is supplied with this package together with the smoothed quantitative
+maps (relaxation rates $R_1$ and $R_2^\star$, proton density $P\!D$, and magnetization
+transfer $M\!T$) from the original data for ground truth comparison.
 
-Specifically, the data consist of, in total, 22 image volumes in NIfTI format that 
-correspond to multiple echos of three different imaging modalities, i.e., 8 echos 
-of $T_1$ weighted images, 8 echos of proton density ($P\!D$) weighted images and 
-6 images from a dual excitation FLASH magnetization transfer ($M\!T$) weighted 
-sequence. Each echo in the image volumes is ``acquired'' at an echo time, repetition time 
-and flip angle, that equal those of the original experiment. The quantitative maps 
-suffer from a $B_1$ transmit (and receive) bias, that can be corrected for, if the smooth 
+Specifically, the data consist of, in total, 22 image volumes in NIfTI format that
+correspond to multiple echos of three different imaging modalities, i.e., 8 echos
+of $T_1$ weighted images, 8 echos of proton density ($P\!D$) weighted images and
+6 images from a dual excitation FLASH magnetization transfer ($M\!T$) weighted
+sequence. Each echo in the image volumes is ``acquired'' at an echo time, repetition time
+and flip angle, that equal those of the original experiment. The quantitative maps
+suffer from a $B_1$ transmit (and receive) bias, that can be corrected for, if the smooth
 $B_1$ correction field that affects the local flip angle is known~\parencite{Tabelow2019}.
-An estimate for this field is supplied with the package, too. 
+An estimate for this field is supplied with the package, too.
 
 \section{Reading the MPM data}
 <<0,echo=FALSE>>=
@@ -144,8 +144,8 @@ First, we specify the directory where the data are stored within the package
 dataDir <- system.file("extdata", package = "qMRI")
 @
 
-The filenames of the data correspond to the weighting of the imaging. We create 
-the paths of the data files including the $B_1$ field map a mask file (which 
+The filenames of the data correspond to the weighting of the imaging. We create
+the paths of the data files including the $B_1$ field map a mask file (which
 in this cases describes the whole data cube, only):
 <<2>>=
 t1Names <- paste0("t1w_", 1:8, ".nii.gz")
@@ -156,10 +156,10 @@ mtFiles <- file.path(dataDir, mtNames)
 pdFiles <- file.path(dataDir, pdNames)
 B1File <- file.path(dataDir, "B1map.nii.gz")
 maskFile <- file.path(dataDir, "mask.nii.gz")
-@ 
+@
 
-The acquisition parameters (echo time ($T\!E$) in milliseconds, repetition time 
-($T\!R$) in milliseconds and flip angle ($F\!A$) in degree) for each volume are 
+The acquisition parameters (echo time ($T\!E$) in milliseconds, repetition time
+($T\!R$) in milliseconds and flip angle ($F\!A$) in degree) for each volume are
 replicated from the original MPM data:
 <<3>>=
 TE <- c(2.3, 4.6, 6.9, 9.2, 11.5, 13.8, 16.1, 18.4,
@@ -170,26 +170,26 @@ FA <- c(rep(21, 8), rep(6, 6), rep(6, 8))
 @
 
 
-The package \pkg{pkg} provides a function \code{readMPMData} to read the data 
-into an \proglang{R} session 
+The package \pkg{pkg} provides a function \code{readMPMData} to read the data
+into an \proglang{R} session
 <<4>>=
 library(qMRI)
 mpm <- readMPMData(t1Files, pdFiles, mtFiles,
-                   maskFile, 
-                   TR = TR, TE = TE, FA = FA, 
+                   maskFile,
+                   TR = TR, TE = TE, FA = FA,
                    verbose = FALSE)
 @
 which creates an object \code{mpm} of class \code{"MPMdata"}.
 
 \section{Parameter estimation (ESTATICS)}
 
-The ESTATICS model \parencite{Weiskopf2014} describes the data 
-from an MPM sequence by the relaxation rate $R_2^\star$ for the 
-signal decay with the echo time $T\!E$ and the three absolute 
-values for $T\!E = 0$. Parameters in this model can be estimated by 
+The ESTATICS model \parencite{Weiskopf2014} describes the data
+from an MPM sequence by the relaxation rate $R_2^\star$ for the
+signal decay with the echo time $T\!E$ and the three absolute
+values for $T\!E = 0$. Parameters in this model can be estimated by
 <<5>>=
-modelMPM <- estimateESTATICS(mpm, 
-                             method = "NLR", 
+modelMPM <- estimateESTATICS(mpm,
+                             method = "NLR",
                              verbose = FALSE)
 @
 <<7,echo=FALSE>>=
@@ -201,76 +201,82 @@ modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                                 alpha = 0.004,
                                 patchsize = 1,
                                 verbose = FALSE)
-mpm$mask[,c(1:10,12:21),] <- FALSE
+# reduce mask to save time
+mask <- extract(mpm,"mask")
+mask[,c(1:10,12:21),] <- FALSE
+mpm <- qMRI:::setMPMmask(mpm, mask)
 @
-using nonlinear least-squares regression. However, the low 
-low signal-to-noise ratio (SNR) in the data leads to a bias for the 
+using nonlinear least-squares regression. However, the low
+low signal-to-noise ratio (SNR) in the data leads to a bias for the
 parameter estimates, see~\cite{PoTa2016} and \cite{Tabelow2017}.
-Therefore the parameter estimation can alternatively be performed by 
+Therefore the parameter estimation can alternatively be performed by
 <<6>>=
 sigma <- array(50, mpm$sdim)
-modelMPMQL <- estimateESTATICS(mpm, 
+modelMPMQL <- estimateESTATICS(mpm,
                                method = "QL",
-                               sigma = sigma, 
-                               L = 1, 
+                               sigma = sigma,
+                               L = 1,
                                verbose = FALSE)
 @
-using a quasi-likelihood formulation~\parencite{PoTa2016, Tabelow2017}. 
-It avoids, in case of low SNR, the bias caused by the skewness of the 
-Rician signal distribution. The application of this method  
-requires to specify the scale parameter $\sigma$ of the Rician distribution, 
-which in this case of artificial data is explicitly known. 
+using a quasi-likelihood formulation~\parencite{PoTa2016, Tabelow2017}.
+It avoids, in case of low SNR, the bias caused by the skewness of the
+Rician signal distribution. The application of this method
+requires to specify the scale parameter $\sigma$ of the Rician distribution,
+which in this case of artificial data is explicitly known.
 Alternatively, a map of scale parameters
 could be estimated using function \code{awslsigmc} from package \pkg{dti}
 <<eval=FALSE>>=
 ddata <- extract(mpm,"ddata")
-if(require(dti)) sigma <- awslsigmc(ddata[1,,,],16)$sigma
+mask <- extract(mpm,"mask")
+if(require(dti)) sigma <- awslsigmc(ddata[1,,,],16,mask)$sigma
 @
 see \cite{Tabelow2014a} for details of the method.
 
 \section{Structural adaptive smoothing}
 
 Data from MPM sequences suffer from noise hindering the quality of
-the estimated quantitative maps. \cite{Tabelow2017a} introduced a 
-structural adaptive smoothing method that can be used to reduce the 
-variability of the estimated parameter maps and, if \code{mpmData} 
+the estimated quantitative maps. \cite{Tabelow2017a} introduced a
+structural adaptive smoothing method that can be used to reduce the
+variability of the estimated parameter maps and, if \code{mpmData}
 is specified, the observed image data:
 % this code has been evaluated before
 <<7,eval=FALSE>>=
-# use setCores(ncores) to enable openMP parallelization 
+# use setCores(ncores) to enable openMP parallelization
 setCores(2,reprt=FALSE)
-modelMPMQLsp1 <- smoothESTATICS(modelMPM,
+modelMPMQLsp1 <- smoothESTATICS(modelMPMQL,
                                 mpmData = extract(mpm, "ddata"),
                                 kstar = 16,
                                 alpha = 0.004,
                                 patchsize = 1,
                                 verbose = FALSE)
 @
-The package \pkg{qMRI} implements an extension of the method that 
+The package \pkg{qMRI} implements an extension of the method that
 uses the comparison of local patches for adaptive smoothing~\parencite{PoPaTa18}.
-The resulting ESTATICS unsmoothed and smoothed parameter maps for the 
+The resulting ESTATICS unsmoothed and smoothed parameter maps for the
 central coronal slice can be illustrated by
 <<8, fig = TRUE, width = 12, height = 6.5>>=
 library(adimpro)
 rimage.options(zquantiles = c(.01, .99), ylab = "z")
-par(mfrow = c(2, 4), 
+par(mfrow = c(2, 4),
     mar = c(3, 3, 3, 1), mgp = c(2, 1, 0))
 pnames <- c("T1", "MT", "PD", "R2star")
 for (i in 1:4) {
-  rimage(modelMPMQL$modelCoeff[i, , 11, ])
+  modelCoeff <- extract(modelMPMQL,"modelCoeff")
+  rimage(modelCoeff[i, , 11, ])
   title(pnames[i])
 }
 for (i in 1:4) {
-  rimage(modelMPMQLsp1$modelCoeff[i, , 11, ])
+  modelCoeff <- extract(modelMPMQLsp1,"modelCoeff")
+  rimage(modelCoeff[i, , 11, ])
   title(paste("smoothed", pnames[i]))
 }
 @
 
-The preceding code also applies the adaptive smoothing not only to the 
+The preceding code also applies the adaptive smoothing not only to the
 parameter maps of the ESTATICS model, but also to the data itself.
-From this new parameter maps can be estimated by the quasi-likelihood 
+From this new parameter maps can be estimated by the quasi-likelihood
 formulation and thus avoiding the bias due to the skewness in the signal
-distribution: 
+distribution:
 <<9a,echo=FALSE>>=
 
 @
@@ -278,20 +284,20 @@ distribution:
 mpmsp1 <- mpm
 mpmsp1$ddata <- modelMPMQLsp1$smoothedData
 sigma <- array(50, mpm$sdim)
-modelMPMQL2 <- estimateESTATICS(mpmsp1, 
+modelMPMQL2 <- estimateESTATICS(mpmsp1,
                                 method = "QL",
-                                sigma = sigma, 
-                                L = 1, 
+                                sigma = sigma,
+                                L = 1,
                                 verbose = FALSE)
 @
-Note, that we again employ the same Rician scale parameter, i.e., 
+Note, that we again employ the same Rician scale parameter, i.e.,
 of the unprocessed data, cf. the discussion in \cite{PoTa2016}.
 
 
 
 \section{Calculating quantitative maps}
 
-Finally, from the (un)smoothed parameter maps of the ESTATICS model, we 
+Finally, from the (un)smoothed parameter maps of the ESTATICS model, we
 can compute the quantitative $R_1$, $R_2^\star$, $P\!D$ and $M\!T$ maps
 <<10>>=
 qMRIMaps <- calculateQI(modelMPM,
@@ -310,7 +316,7 @@ qMRIQL2Maps <- calculateQI(modelMPMQL2,
 The calculation requires the $B_1$-bias field, if available, and the $T\!R_2$
 parameter of the MTw sequence \parencite{Tabelow2019}.
 
-We show the central coronal slice of the estimated quantitative maps together with the 
+We show the central coronal slice of the estimated quantitative maps together with the
 maps for the ground truth used to generate the data
 <<11, fig = TRUE, width = 12, height = 13>>=
 library(oro.nifti)
@@ -325,21 +331,21 @@ rimage.options(ylab = "z")
 par(mfrow = c(4, 4),
     mar = c(3, 3, 3, 1), mgp = c(2, 1, 0))
 nmaps <- c("R1", "R2star", "MT", "PD")
-rimage(R1[, 11, ], zlim = zlim[1, ], 
+rimage(R1[, 11, ], zlim = zlim[1, ],
        main = paste("true", nmaps[1]))
-rimage(R2star[, 11, ], zlim = zlim[2, ], 
+rimage(R2star[, 11, ], zlim = zlim[2, ],
        main = paste("true", nmaps[2]))
-rimage(MT[, 11, ], zlim = zlim[3, ], 
+rimage(MT[, 11, ], zlim = zlim[3, ],
        main = paste("true", nmaps[3]),
        col = colMT)
-rimage(PD[, 11, ], zlim = zlim[4, ], 
+rimage(PD[, 11, ], zlim = zlim[4, ],
        main = paste("true", nmaps[4]))
 qmap1 <- extract(qMRIQLMaps, nmaps)
-for (i in 1:4) rimage(qmap1[[i]][, 11, ], zlim = zlim[i, ], 
+for (i in 1:4) rimage(qmap1[[i]][, 11, ], zlim = zlim[i, ],
                       main = paste("Estimated", nmaps[i]),
                       col = if(i==3) colMT else grey(0:225/255))
 qmap2 <- extract(qMRIQLSmoothedp1Maps, nmaps)
-for (i in 1:4) rimage(qmap2[[i]][, 11, ], zlim = zlim[i, ], 
+for (i in 1:4) rimage(qmap2[[i]][, 11, ], zlim = zlim[i, ],
                       main = paste("Smoothed", nmaps[i]),
                       col = if(i==3) colMT else grey(0:225/255))
 qmap3 <- extract(qMRIQL2Maps, nmaps)
@@ -350,15 +356,15 @@ for (i in 1:4) rimage(qmap3[[i]][, 11, ], zlim = zlim[i, ],
 The color scheme \code{colMT} is designed to emphasize the grey matter (magenta)
 / white matter (yellow) contrast in the MT image with a \code{zlim = c(0,2)}.
 
-Using the quasi-likelihood estimation method is, for low SNR, supposed to 
-reduce the bias caused by the skewness of the Rician distribution, 
+Using the quasi-likelihood estimation method is, for low SNR, supposed to
+reduce the bias caused by the skewness of the Rician distribution,
 cf.~\cite{PoTa2016} and \cite{Tabelow2017}.
 <<12>>=
 qmap0 <- extract(qMRIMaps,nmaps)
 mask <- extract(mpm,"mask")
-cat("\n", 
+cat("\n",
     "Bias of NLR estimates\n",
-      "R1", mean((qmap0$R1-R1)[mask]), 
+      "R1", mean((qmap0$R1-R1)[mask]),
       "R2star", mean((qmap0$R2star-R2star)[mask]),
       "MT", mean((qmap0$MT-MT)[mask]),
       "PD", mean((qmap0$PD-PD)[mask]), "\n",
@@ -370,7 +376,7 @@ cat("\n",
 @
 Let's see which estimate performs best with respect to the root mean squared error (RMSE):
 <<13>>=
-cat("\n", 
+cat("\n",
     "Root mean squared error of NLR estimate\n",
       "R1", sqrt(mean((qmap0$R1-R1)[mask]^2)),
       "R2star", sqrt(mean((qmap0$R2star-R2star)[mask]^2)),
@@ -394,15 +400,15 @@ cat("\n",
 @
 For interpretation we need to compare this to the mean parameter values
 <<14>>=
-cat("Mean R1", mean(R1[mask]), "Mean R2star", 
-    mean(R2star[mask]), "Mean MT", mean(MT[mask]), 
+cat("Mean R1", mean(R1[mask]), "Mean R2star",
+    mean(R2star[mask]), "Mean MT", mean(MT[mask]),
     "Mean PD", mean(PD[mask]),"\n")
 @
-We see here, that using the quasi-likelihood estimation is supposed to 
+We see here, that using the quasi-likelihood estimation is supposed to
 reduce the bias of the estimated ESTATICS parameters, but does so
-at the cost of a slightly increased variance. Structural adaptive 
-smoothing leads to a considerable reduction in RMSE. 
-Modelling of the spatially smoothed data has the additional effect of 
+at the cost of a slightly increased variance. Structural adaptive
+smoothing leads to a considerable reduction in RMSE.
+Modelling of the spatially smoothed data has the additional effect of
 reduced bias originating from data variability.
 
 \printbibliography

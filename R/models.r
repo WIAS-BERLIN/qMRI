@@ -327,8 +327,7 @@ ESTATICS.confidence <- function(theta,si2,aT1,aPD,TR=1,df=NULL,alpha=0.05){
 
 initth <- function(mpmdata, TEScale=100, dataScale=100){
   ## get initial estimates for ESTATICS parameters
-  mask <- mpmdata$mask
-  nvox <- prod(mpmdata$sdim)
+  nvox <- sum(mpmdata$mask)
   TE <- mpmdata$TE/TEScale
   if(mpmdata$model==2){
      nT1 <- length(mpmdata$t1Files)
@@ -338,17 +337,16 @@ initth <- function(mpmdata, TEScale=100, dataScale=100){
      nPD <- length(mpmdata$pdFiles)
      indPD <- nT1+nMT+c(1,nPD)
      th <- matrix(0,4,nvox)
-     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]/dataScale
-     MT <- matrix(mpmdata$ddata[indMT,,,],2,nvox)[,mask]/dataScale
-     PD <- matrix(mpmdata$ddata[indPD,,,],2,nvox)[,mask]/dataScale
+     T1 <- matrix(mpmdata$ddata[indT1,],2,nvox)/dataScale
+     MT <- matrix(mpmdata$ddata[indMT,],2,nvox)/dataScale
+     PD <- matrix(mpmdata$ddata[indPD,],2,nvox)/dataScale
      R2star <- pmax(1e-6,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
              (log(MT[1,])-log(MT[2,]))/diff(TE[indMT])+
              (log(PD[1,])-log(PD[2,]))/diff(TE[indPD]))/3)
-     th[1,mask] <- T1[1,]*exp(R2star*TE[1])
-     th[2,mask] <- MT[1,]*exp(R2star*TE[nT1+1])
-     th[3,mask] <- PD[1,]*exp(R2star*TE[nT1+nMT+1])
-     th[4,mask] <- R2star
-     dim(th) <- c(4,mpmdata$sdim)
+     th[1,] <- T1[1,]*exp(R2star*TE[1])
+     th[2,] <- MT[1,]*exp(R2star*TE[nT1+1])
+     th[3,] <- PD[1,]*exp(R2star*TE[nT1+nMT+1])
+     th[4,] <- R2star
   }
   if(mpmdata$model==1){
      nT1 <- length(mpmdata$t1Files)
@@ -356,24 +354,22 @@ initth <- function(mpmdata, TEScale=100, dataScale=100){
      n2 <- length(mpmdata$pdFiles)
      ind2 <- c(nT1+1,mpmdata$nFiles)
      th <- matrix(0,3,nvox)
-     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]/dataScale
-     S <- matrix(mpmdata$ddata[ind2,,,],2,nvox)[,mask]/dataScale
+     T1 <- matrix(mpmdata$ddata[indT1,],2,nvox)/dataScale
+     S <- matrix(mpmdata$ddata[ind2,],2,nvox)/dataScale
      R2star <- pmax(0,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
              (log(S[1,])-log(S[2,]))/diff(TE[ind2]))/2)
-     th[1,mask] <- T1[1,]*exp(R2star*TE[1])
-     th[2,mask] <- S[1,]*exp(R2star*TE[nT1+1])
-     th[3,mask] <- R2star
-     dim(th) <- c(3,mpmdata$sdim)
+     th[1,] <- T1[1,]*exp(R2star*TE[1])
+     th[2,] <- S[1,]*exp(R2star*TE[nT1+1])
+     th[3,] <- R2star
   }
   if(mpmdata$model==0){
      nT1 <- mpmdata$nFiles
      indT1 <- c(1,nT1)
      th <- matrix(0,2,nvox)
-     T1 <- matrix(mpmdata$ddata[indT1,,,],2,nvox)[,mask]/dataScale
+     T1 <- matrix(mpmdata$ddata[indT1,],2,nvox)/dataScale
      R2star <- pmax(0,(log(T1[1,])-log(T1[2,]))/diff(TE[indT1]))
-     th[1,mask] <- T1[1,]*exp(R2star*TE[1])
-     th[2,mask] <- R2star
-     dim(th) <- c(2,mpmdata$sdim)
+     th[1,] <- T1[1,]*exp(R2star*TE[1])
+     th[2,] <- R2star
   }
   th
 }

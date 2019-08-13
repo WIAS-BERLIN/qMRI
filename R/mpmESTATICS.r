@@ -28,12 +28,24 @@ readMPMData  <-  function(t1Files  = NULL,
   } else {
     2L # the model including MT
   }
+  # first read or set the mask array
+  ## TODO: set mask TRUE also if maskFile does not exist or cannot be read by readNIFTI()
+  if (is.null(maskFile)) {
+    if (verbose) cat("found no mask file, setting mask TRUE everywhere")
+    mask <- array(TRUE, sdim)
+  } else {
+    if (verbose) cat("reading mask file ... ")
+    mask <- as.logical(readNIfTI(maskFile, reorient = FALSE))
+    dim(mask) <- sdim
+    if (verbose) cat("done\n")
+  }
+  nvoxel <- sum(mask)
 
   ## count the number of data volumes (if (is.null(mtFiles)) length(mtFiles) == 0)
   nFiles <- length(t1Files) + length(mtFiles) + length(pdFiles)
 
-  # the array for the data itself
-  ddata <- array(0, c(nFiles, prod(sdim)))
+  # the array for the data itself, will only contain data for voxel within mask
+  ddata <- array(0, c(nFiles, nvoxel))
 
   ## for each files we have a TR, TE, and flip angle (FA)
   if (is.null(TR) || is.null(TE) || is.null(FA)) {
@@ -53,7 +65,7 @@ readMPMData  <-  function(t1Files  = NULL,
   if (verbose) pb <- txtProgressBar(min = 0, max = length(t1Files), style = 3)
   for (i in 1:length(t1Files)) {
     ds <- readNIfTI(t1Files[i], reorient = FALSE)
-    ddata[ii, ] <- ds
+    ddata[ii, ] <- ds[mask]
     if(readParameterFlag) {
       ## IMPORTANT: This is special to Siawoosh data
       res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
@@ -73,7 +85,7 @@ readMPMData  <-  function(t1Files  = NULL,
     if (verbose) pb <- txtProgressBar(min = 0, max = length(mtFiles), style = 3)
     for (i in 1:length(mtFiles)) {
       ds <- readNIfTI(mtFiles[i], reorient = FALSE)
-      ddata[ii, ] <- ds
+      ddata[ii, ] <- ds[mask]
       if(readParameterFlag) {
         ## IMPORTANT: This is special to Siawoosh data
         res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
@@ -94,7 +106,7 @@ readMPMData  <-  function(t1Files  = NULL,
     if (verbose) pb <- txtProgressBar(min = 0, max = length(pdFiles), style = 3)
     for (i in 1:length(pdFiles)) {
       ds <- readNIfTI(pdFiles[i], reorient = FALSE)
-      ddata[ii, ] <- ds
+      ddata[ii, ] <- ds[mask]
       if(readParameterFlag) {
         ## IMPORTANT: This is special to Siawoosh data
         res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
@@ -109,20 +121,19 @@ readMPMData  <-  function(t1Files  = NULL,
     }
     if (verbose) close(pb)
   }
-  dim(ddata) <- c(nFiles, sdim)
   ## ... done!
 
-  # the mask array
-  ## TODO: set mask TRUE also if maskFile does not exist or cannot be read by readNIFTI()
-  if (is.null(maskFile)) {
-    if (verbose) cat("found no mask file, setting mask TRUE everywhere")
-    mask <- array(TRUE, sdim)
-  } else {
-    if (verbose) cat("reading mask file ... ")
-    mask <- as.logical(readNIfTI(maskFile, reorient = FALSE))
-    dim(mask) <- sdim
-    if (verbose) cat("done\n")
-  }
+  ## exclude all voxel from mask with all zeros for a modality
+  if (verbose) cat("Searching for voxel with zeros only in any modality ...")
+  nT1 <- length(t1Files)
+  nMT <- length(mtFiles)
+  nPD <- length(pdFiles)
+  zerovoxel <- apply(ddata[1:nT1,] <= 0, 2, all)
+  zerovoxel <- zerovoxel|apply(ddata[nT1+nMT+1:nPD,] <= 0, 2, all)
+  if(model==2) zerovoxel <- zerovoxel|apply(ddata[nT1+1:nMT,] <= 0, 2, all)
+  mask[mask] <- !zerovoxel ## exclude zerovoxel from mask
+  ddata <- ddata[, !zerovoxel] ## remove zerovoxel from ddata
+
   obj <- list(ddata = ddata,
               sdim = sdim,
               nFiles = nFiles,
@@ -333,7 +344,7 @@ estimateESTATICS <- function (mpmdata,
                               verbose = TRUE) {
 
   # validate_MPMData(mpmdata)
-
+  nvoxel <- sum(mpmdata$mask)
   ## create the design matrix of the model
   if (mpmdata$model == 2) {
     xmat <- matrix(0, mpmdata$nFiles, 4)
@@ -365,14 +376,11 @@ estimateESTATICS <- function (mpmdata,
     print(xmat)
   }
 
-  ## exclude all voxel from mask with all zeros for a modality
-  if (verbose) cat("Searching for voxel with zeros only ...")
-  zerovoxel <- apply(mpmdata$ddata <= 0, 2:4, any) & mpmdata$mask
-  mpmdata$mask[zerovoxel] <- FALSE
   if (verbose) cat(" done\n")
 
   ## obbtain initial estimates from linearized model
   thetas <- initth(mpmdata, TEScale, dataScale)
+  ## now only contains estimates for voxel in mask
 
   ## prepare the standard deviation array in case of the quasi-likelihood estimation (QL)
   if (method == "QL") {
@@ -387,6 +395,9 @@ estimateESTATICS <- function (mpmdata,
     } else {
       stop("Dimension of argument sigma does not match the data")
     }
+    sigma <- sigma[mpmdata$mask]
+    CLarray <- CLarray[mpmdata$mask]
+    ## only need values within mask
   }
 
   ## create inde vectors for the data with different weighting (T1w, MTw, PDw)
@@ -403,28 +414,29 @@ estimateESTATICS <- function (mpmdata,
   }
 
   ## create necessary arrays
-  isConv <- array(FALSE, mpmdata$sdim)
-  isThresh <- array(FALSE, mpmdata$sdim)
-  modelCoeff <- array(0, c(npar, mpmdata$sdim))
-  invCov <- array(0, c(npar, npar, mpmdata$sdim))
-  rsigma <- array(0, mpmdata$sdim)
+  isConv <- array(FALSE, nvoxel)
+  isThresh <- array(FALSE, nvoxel)
+  modelCoeff <- array(0, c(npar, nvoxel))
+  invCov <- array(0, c(npar, npar, nvoxel))
+  rsigma <- array(0, nvoxel)
 
 
   if (verbose) cat("Start estimation", format(Sys.time()), "\n")
-  for (z in 1:mpmdata$sdim[3]) {
-    for (y in 1:mpmdata$sdim[2]) {
-      for (x in 1:mpmdata$sdim[1]) {
-        if (mpmdata$mask[x, y, z]) {
+  for(xyz in 1:nvoxel){
+#  for (z in 1:mpmdata$sdim[3]) {
+#    for (y in 1:mpmdata$sdim[2]) {
+#      for (x in 1:mpmdata$sdim[1]) {
+#        if (mpmdata$mask[x, y, z]) {
 
           if (method == "QL") {
             if(!homsigma) {
-              sig <- sigma[x, y, z]
-              CL <- CLarray[x, y, z]
+              sig <- sigma[xyz]
+              CL <- CLarray[xyz]
             }
           }
 
-          ivec <- mpmdata$ddata[, x, y, z]/dataScale
-          th <- thetas[, x, y, z]
+          ivec <- mpmdata$ddata[, xyz]/dataScale
+          th <- thetas[, xyz]
 
           if (mpmdata$model == 2) {
             res <- if (method == "NLR") try(nls(ivec ~ estatics3(par, xmat),
@@ -472,12 +484,12 @@ estimateESTATICS <- function (mpmdata,
 
           if (class(res) != "try-error") {
             sres <- getnlspars(res)
-            isConv[x, y, z] <- as.integer(res$convInfo$isConv)
-            modelCoeff[, x, y, z] <- sres$coefficients
+            isConv[xyz] <- as.integer(res$convInfo$isConv)
+            modelCoeff[, xyz] <- sres$coefficients
             if (sres$sigma != 0) {
               invCovtmp <- sres$XtX
-              invCov[, , x, y, z] <- invCovtmp/sres$sigma^2
-              rsigma[x, y, z] <- sres$sigma
+              invCov[, , xyz] <- invCovtmp/sres$sigma^2
+              rsigma[xyz] <- sres$sigma
             }
           }
 
@@ -486,15 +498,15 @@ estimateESTATICS <- function (mpmdata,
             ## fallback for not converged or R2star out of range
             sres <- linearizedESTATICS(ivec, xmat, maxR2star)
             ## thats already the solution for NLR if R2star is fixed
-            isThresh[x, y, z] <- sres$invCov[npar, npar] == 0
-            isConv[x, y, z] <- 255 ## partially linearized NLR model
+            isThresh[xyz] <- sres$invCov[npar, npar] == 0
+            isConv[xyz] <- 255 ## partially linearized NLR model
             xmat0 <- sres$xmat
             th <- sres$theta
-            modelCoeff[-npar, x, y, z] <- sres$theta
-            modelCoeff[npar, x, y, z] <- sres$R2star
+            modelCoeff[-npar, xyz] <- sres$theta
+            modelCoeff[npar, xyz] <- sres$R2star
             if (sres$sigma2 != 0) {
-              invCov[, , x, y, z] <- sres$invCov
-              rsigma[x, y, z] <- sqrt(sres$sigma2)
+              invCov[, , xyz] <- sres$invCov
+              rsigma[xyz] <- sqrt(sres$sigma2)
             }
 
             if (method == "QL") {
@@ -529,23 +541,23 @@ estimateESTATICS <- function (mpmdata,
                                control = list(maxiter = 200,
                                               warnOnly = TRUE)))
               if (class(res) != "try-error") {
-                isConv[x, y, z] <- as.integer(res$convInfo$isConv)
+                isConv[xyz] <- as.integer(res$convInfo$isConv)
                 sres <- getnlspars(res)
-                modelCoeff[-npar, x, y, z] <- sres$coefficients
+                modelCoeff[-npar, xyz] <- sres$coefficients
                 if (sres$sigma != 0) {
                   invCovtmp <- sres$XtX
-                  invCov[-npar, -npar, x, y, z] <- invCovtmp/sres$sigma^2
-                  rsigma[x, y, z] <- sres$sigma
+                  invCov[-npar, -npar, xyz] <- invCovtmp/sres$sigma^2
+                  rsigma[xyz] <- sres$sigma
                 }
               } else {
-                mpmdata$mask[x, y, z] <- FALSE
+                mpmdata$mask[xyz] <- FALSE
               }
             }
           }#fallback
-        }#mask
-      }#x
-    }#y
-    if (verbose) cat("z", z, "time", format(Sys.time()), "\n")
+#        }#mask
+#      }#x
+#    }#y
+    if (verbose) if(xyz%/%10000*10000==xyz) cat("completed", xyz, "voxel  time", format(Sys.time()), "\n")
   }#z
   if (verbose) cat("Finished estimation", format(Sys.time()), "\n")
 
@@ -580,16 +592,27 @@ smoothESTATICS <- function(mpmESTATICSModel,
                            alpha = 0.025,
                            patchsize = 0,
                            wghts = NULL,
-                           verbose = TRUE) {
+                           verbose = TRUE) {#1
   ##
   ##  consistency checks
   ##
-  nv <- dim(mpmESTATICSModel$modelCoeff)[1]
-  dimcoef <- dim(mpmESTATICSModel$modelCoeff)[-1]
-  if(any(dim(mpmESTATICSModel$invCov)[-(1:2)]!=dimcoef)) stop("inconsistent invCov")
-  if(any(dim(mpmESTATICSModel$mask)!=dimcoef)) stop("inconsistent mask")
-  if(switch(mpmESTATICSModel$model+1,2,3,4,0)!=nv) stop("inconsistent parameter length")
-  if(!is.null(mpmData)&any(dim(mpmData)[-1]!=dimcoef)) stop("inconsistent mpmData")
+  nv <- mpmESTATICSModel$model+2
+  mask <- mpmESTATICSModel$mask
+  nvoxel <- sum(mask)
+  sdim <- mpmESTATICSModel$sdim
+  if(any(dim(mpmESTATICSModel$invCov)!=c(nv,nv,nvoxel))) stop("inconsistent invCov")
+  if(any(dim(mask)!=sdim)) stop("inconsistent mask")
+  if(any(dim(mpmESTATICSModel$modelCoeff)!=c(nv,nvoxel))) stop("inconsistent parameter length")
+  if(!is.null(mpmData)){#2
+      # allow for mpmData to be expanded or to only contain data within mask
+      if(any(dim(mpmData)[-1]!=nvoxel)){#3
+         if(all(dim(mpmData)[-1]==sdim)){#4
+#  reduce mpmData to voxel within mask
+            dim(mpmData) <- c(dim(mpmData)[1],prod(sdim))
+            mpmData <- mpmData[,mask]
+         } else stop("inconsistent mpmData")
+      }#3
+  }#2
   ## determine a suitable adaptation bandwidth
   patchsize <- pmax(0,pmin(2,as.integer(patchsize)))
   lambda <- 2 * nv * qf(1 - alpha, nv, mpmESTATICSModel$nFiles - nv)*
@@ -601,13 +624,12 @@ smoothESTATICS <- function(mpmESTATICSModel,
   zobj <- vpawscov(mpmESTATICSModel$modelCoeff,
                    kstar,
                    mpmESTATICSModel$invCov,
-                   mpmESTATICSModel$mask,
+                   mask,
                    lambda = lambda,
                    wghts = wghts,
                    patchsize = patchsize,
                    data = mpmData,
                    verbose = verbose)
-
   ## assign values
   obj <- list(modelCoeff = zobj$theta,
                  invCov = mpmESTATICSModel$invCov,
@@ -622,7 +644,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
                  mtFiles = mpmESTATICSModel$mtFiles,
                  model = mpmESTATICSModel$model,
                  maskFile = mpmESTATICSModel$maskFile,
-                 mask = mpmESTATICSModel$mask,
+                 mask = mask,
                  sigma = mpmESTATICSModel$sigma,
                  L = mpmESTATICSModel$L,
                  TR = mpmESTATICSModel$TR,
@@ -651,7 +673,7 @@ calculateQI <- function(mpmESTATICSModel,
     if (verbose) cat("no B1 correction\n")
     b1Map <- array(1, mpmESTATICSModel$sdim)
   }
-
+  b1Map <- b1Map[mpmESTATICSModel$mask]
   ## get correct flip angles and TR times
   t1FA <- mpmESTATICSModel$FA[1]
   pdFA <- mpmESTATICSModel$FA[length(mpmESTATICSModel$t1Files) + length(mpmESTATICSModel$mtFiles) + 1]
@@ -668,11 +690,11 @@ calculateQI <- function(mpmESTATICSModel,
   COSalphapd <- cos(alphapd)
   rm(alphat1, alphapd)
   if (mpmESTATICSModel$model == 2) {
-    enum <- mpmESTATICSModel$modelCoeff[1, , , ] - SINalphat1/SINalphapd * mpmESTATICSModel$modelCoeff[3, , , ]
-    denom <- mpmESTATICSModel$modelCoeff[1, , , ] * COSalphat1 - SINalphat1/SINalphapd * mpmESTATICSModel$modelCoeff[3, , , ] * COSalphapd
+    enum <- mpmESTATICSModel$modelCoeff[1, ] - SINalphat1/SINalphapd * mpmESTATICSModel$modelCoeff[3, ]
+    denom <- mpmESTATICSModel$modelCoeff[1, ] * COSalphat1 - SINalphat1/SINalphapd * mpmESTATICSModel$modelCoeff[3, ] * COSalphapd
   } else {
-    enum <- mpmESTATICSModel$modelCoeff[1, , , ] - SINalphat1/SINalphapd * mpmESTATICSModel$modelCoeff[2, , , ]
-    denom <- mpmESTATICSModel$modelCoeff[1, , , ] * COSalphat1 - SINalphat1/SINalphapd * mpmESTATICSModel$modelCoeff[2, , , ] * COSalphapd
+    enum <- mpmESTATICSModel$modelCoeff[1, ] - SINalphat1/SINalphapd * mpmESTATICSModel$modelCoeff[2, ]
+    denom <- mpmESTATICSModel$modelCoeff[1, ] * COSalphat1 - SINalphat1/SINalphapd * mpmESTATICSModel$modelCoeff[2, ] * COSalphapd
   }
   E1 <- enum/denom
   rm(enum, denom, COSalphapd, SINalphapd)
@@ -691,7 +713,7 @@ calculateQI <- function(mpmESTATICSModel,
 
   ## calculate PD
   if (verbose) cat("calculating PD ... ")
-  enum <- (1 - COSalphat1 * E1) * mpmESTATICSModel$modelCoeff[1, , , ] * mpmESTATICSModel$dataScale
+  enum <- (1 - COSalphat1 * E1) * mpmESTATICSModel$modelCoeff[1, ] * mpmESTATICSModel$dataScale
   denom <- SINalphat1 * (1 - E1)
   PD <- enum / denom
   rm(enum, denom, SINalphat1)
@@ -705,8 +727,8 @@ calculateQI <- function(mpmESTATICSModel,
     alphamt <- b1Map * mtFA / 180 * pi
     E1mt <- E1^(mtTR/t1TR)
     E2mt <- E1^(TR2/t1TR)
-    enom <- mpmESTATICSModel$modelCoeff[2, , , ]  * mpmESTATICSModel$dataScale - (1 - E2mt) * sin(alphamt) * PD
-    denom <- mpmESTATICSModel$modelCoeff[2, , , ]  * mpmESTATICSModel$dataScale * cos(alphamt) *E1mt + PD * (E2mt  - E1mt) * sin(alphamt)
+    enom <- mpmESTATICSModel$modelCoeff[2, ]  * mpmESTATICSModel$dataScale - (1 - E2mt) * sin(alphamt) * PD
+    denom <- mpmESTATICSModel$modelCoeff[2, ]  * mpmESTATICSModel$dataScale * cos(alphamt) *E1mt + PD * (E2mt  - E1mt) * sin(alphamt)
     delta <- 1 - enom / denom
     rm(alphamt, enom, denom)
 
@@ -717,7 +739,8 @@ calculateQI <- function(mpmESTATICSModel,
   } else {
     delta <- NULL
   }
-  R2star <- if (mpmESTATICSModel$model == 2) 1000 * mpmESTATICSModel$modelCoeff[4, , , ]/mpmESTATICSModel$TEScale else 1000 * mpmESTATICSModel$modelCoeff[3, , , ]/mpmESTATICSModel$TEScale
+  R2star <- if (mpmESTATICSModel$model == 2) 1000 * mpmESTATICSModel$modelCoeff[4, ]/mpmESTATICSModel$TEScale else
+                                             1000 * mpmESTATICSModel$modelCoeff[3, ]/mpmESTATICSModel$TEScale
   R2star[!mpmESTATICSModel$mask] <- NA
 # set values outside the mask to NA as we have with the other qMaps due to denom=0
   obj <- list(b1Map = b1Map,
@@ -725,6 +748,7 @@ calculateQI <- function(mpmESTATICSModel,
               R2star = R2star,
               PD = PD,
               MT = delta,
+              sdim = mpmESTATICSModel$sdim,
               model = mpmESTATICSModel$model,
               t1Files = mpmESTATICSModel$t1Files,
               mtFiles = mpmESTATICSModel$mtFiles,
@@ -732,7 +756,6 @@ calculateQI <- function(mpmESTATICSModel,
               mask = mpmESTATICSModel$mask)
   class(obj) <- "qMaps"
   invisible(obj)
-
 }
 
 imageQI <- function(qi,
@@ -743,26 +766,30 @@ imageQI <- function(qi,
                  qi$mask[slice, , ],
                  qi$mask[, slice, ],
                  qi$mask[, , slice])
+  R2star <- extract(qi, "R2star")
   r2star <- switch(view,
-                   qi$R2star[slice, , ],
-                   qi$R2star[, slice, ],
-                   qi$R2star[, , slice])
+                   R2star[slice, , ],
+                   R2star[, slice, ],
+                   R2star[, , slice])
   r2star[!mask] <- 0
+  R1 <- extract(qi, "R1")
   r1 <- switch(view,
-               qi$R1[slice, , ],
-               qi$R1[, slice, ],
-               qi$R1[, , slice])
+               R1[slice, , ],
+               R1[, slice, ],
+               R1[, , slice])
   r1[!mask] <- 0
+  PD <- extract(qi, "PD")
   pd <- switch(view,
-               qi$PD[slice, , ],
-               qi$PD[, slice, ],
-               qi$PD[, , slice])
+               PD[slice, , ],
+               PD[, slice, ],
+               PD[, , slice])
   pd[!mask] <- 0
   if (qi$model == 2) {
+    MT <- extract(qi, "MT")
     delta <- switch(view,
-                    qi$MT[slice, , ],
-                    qi$MT[, slice, ],
-                    qi$MT[, , slice])
+                    MT[slice, , ],
+                    MT[, slice, ],
+                    MT[, , slice])
     delta[!mask] <- 0
   }
   indx <- 1:dim(r2star)[1]
@@ -780,9 +807,6 @@ imageQI <- function(qi,
     rimage(indx, indy, r1, zlim = c(0.0002, 0.0015), main = "R1")
     rimage(indx, indy, pd, zlim = c(0, 10000), main = "PD")
   }
-
-
-
   par(def.par)
 }
 
@@ -812,20 +836,20 @@ writeQI <- function(qi,
 
   if (verbose) cat("writing R2 file ... ")
   ds@descrip <- "R2"
-  writeNIfTI(as.nifti(qi$R2star, ds), file = r2file)
+  writeNIfTI(as.nifti(extract(qi,"R2star"), ds), file = r2file)
   if (verbose) cat("done\n")
   if (verbose) cat("writing R1 file ... ")
   ds@descrip <- "R1"
-  writeNIfTI(as.nifti(qi$R1, ds), file = r1file)
+  writeNIfTI(as.nifti(extract(qi,"R1"), ds), file = r1file)
   if (verbose) cat("done\n")
   if (verbose) cat("writing PD file ... ")
   ds@descrip <- "PD"
-  writeNIfTI(as.nifti(qi$PD, ds), file = pdfile)
+  writeNIfTI(as.nifti(extract(qi,"PD"), ds), file = pdfile)
   if (verbose) cat("done\n")
   if (qi$model == 2) {
     if (verbose) cat("writing MT file ... ")
     ds@descrip <- "MT"
-    writeNIfTI(as.nifti(qi$MT, ds), file = mtfile)
+    writeNIfTI(as.nifti(extract(qi,"MT"), ds), file = mtfile)
     if (verbose) cat("done\n")
   }
   invisible(NULL)
@@ -854,39 +878,41 @@ writeESTATICS <- function(mpmESTATICSModel,
   ds@magic <- "n+1"
   ds@vox_offset <- 352
 
+  modelCoeff <- extract(mpmESTATICSModel,"modelCoeff")
   if (mpmESTATICSModel$model == 2) {
     if (verbose) cat("writing R2 file ... ")
     ds@descrip <- "R2"
-    writeNIfTI(as.nifti(mpmESTATICSModel$modelCoeff[4, , , ], ds), file = r2file)
+    writeNIfTI(as.nifti(modelCoeff[4, , , ], ds), file = r2file)
     if (verbose) cat("done\n")
     if (verbose) cat("writing ST1 file ... ")
     ds@descrip <- "ST1"
-    writeNIfTI(as.nifti(mpmESTATICSModel$modelCoeff[1, , , ], ds), file = st1file)
+    writeNIfTI(as.nifti(modelCoeff[1, , , ], ds), file = st1file)
     if (verbose) cat("done\n")
     if (verbose) cat("writing SPD file ... ")
     ds@descrip <- "SPD"
-    writeNIfTI(as.nifti(mpmESTATICSModel$modelCoeff[3, , , ], ds), file = spdfile)
+    writeNIfTI(as.nifti(modelCoeff[3, , , ], ds), file = spdfile)
     if (verbose) cat("done\n")
     if (verbose) cat("writing SMT file ... ")
     ds@descrip <- "SMT"
-    writeNIfTI(as.nifti(mpmESTATICSModel$modelCoeff[2, , , ], ds), file = smtfile)
+    writeNIfTI(as.nifti(modelCoeff[2, , , ], ds), file = smtfile)
     if (verbose) cat("done\n")
   } else {
     if (verbose) cat("writing R2 file ... ")
     ds@descrip <- "R2"
-    writeNIfTI(as.nifti(mpmESTATICSModel$modelCoeff[3, , , ], ds), file = r2file)
+    writeNIfTI(as.nifti(modelCoeff[3, , , ], ds), file = r2file)
     if (verbose) cat("done\n")
     if (verbose) cat("writing ST1 file ... ")
     ds@descrip <- "ST1"
-    writeNIfTI(as.nifti(mpmESTATICSModel$modelCoeff[1, , , ], ds), file = st1file)
+    writeNIfTI(as.nifti(modelCoeff[1, , , ], ds), file = st1file)
     if (verbose) cat("done\n")
     if (verbose) cat("writing SPD file ... ")
     ds@descrip <- "SPD"
-    writeNIfTI(as.nifti(mpmESTATICSModel$modelCoeff[2, , , ], ds), file = spdfile)
+    writeNIfTI(as.nifti(modelCoeff[2, , , ], ds), file = spdfile)
     if (verbose) cat("done\n")
   }
 
   if (!is.null(mpmESTATICSModel$smoothedData)) {
+    smoothedData <- extract(mpmESTATICSModel,"smoothedData")
     ii <- 1
     t1Files <- mpmESTATICSModel$t1Files
     for (i in 1:length(t1Files)) {
@@ -900,7 +926,7 @@ writeESTATICS <- function(mpmESTATICSModel,
         fname <- paste(prefix, basename(t1Files[i]), sep = "")
       }
       if (verbose) cat("writing", fname, "... ")
-      writeNIfTI(as.nifti(mpmESTATICSModel$smoothedData[ii, , , ], ds), file = fname)
+      writeNIfTI(as.nifti(smoothedData[ii, , , ], ds), file = fname)
       if (verbose) cat("done\n")
       ii <- ii + 1
     }
@@ -917,7 +943,7 @@ writeESTATICS <- function(mpmESTATICSModel,
           fname <- paste(prefix, basename(mtFiles[i]), sep = "")
         }
         if (verbose) cat("writing", fname, "... ")
-        writeNIfTI(as.nifti(mpmESTATICSModel$smoothedData[ii, , , ], ds), file = fname)
+        writeNIfTI(as.nifti(smoothedData[ii, , , ], ds), file = fname)
         if (verbose) cat("done\n")
         ii <- ii + 1
       }
@@ -934,7 +960,7 @@ writeESTATICS <- function(mpmESTATICSModel,
         fname <- paste(prefix, basename(pdFiles[i]), sep = "")
       }
       if (verbose) cat("writing", fname, "... ")
-      writeNIfTI(as.nifti(mpmESTATICSModel$smoothedData[ii, , , ], ds), file = fname)
+      writeNIfTI(as.nifti(smoothedData[ii, , , ], ds), file = fname)
       if (verbose) cat("done\n")
       ii <- ii + 1
     }
@@ -955,23 +981,24 @@ estimateQIconf <- function(mpmESTATICSmodel,
   CIR1 <- array(0, c(2, mpmESTATICSmodel$sdim))
   R2 <- array(0, mpmESTATICSmodel$sdim)
   CIR2 <- array(0, c(2, mpmESTATICSmodel$sdim))
-  for (z in 1:mpmESTATICSmodel$sdim[3]) {
-    for (y in 1:mpmESTATICSmodel$sdim[2]) {
-      for (x in 1:mpmESTATICSmodel$sdim[1]) {
-        if (mpmESTATICSmodel$mask[x, y, z]) {
+  for (xyz in 1:sum(mpmESTATICSmodel$mask)){
+  #for (z in 1:mpmESTATICSmodel$sdim[3]) {
+  #  for (y in 1:mpmESTATICSmodel$sdim[2]) {
+  #    for (x in 1:mpmESTATICSmodel$sdim[1]) {
+  #      if (mpmESTATICSmodel$mask[x, y, z]) {
           if (is.null(mpmESTATICSmodel$bi)) {
             zz <- ESTATICS.confidence(mpmESTATICSmodel$modelCoeff[, x, y, z], mpmESTATICSmodel$invCov[, , x, y, z], mpmESTATICSmodel$FA[1]*pi/180, mpmESTATICSmodel$FA[length(mpmESTATICSmodel$t1Files) + length(mpmESTATICSmodel$mtFiles) + 1]*pi/180, mpmESTATICSmodel$TR[1], df=mpmESTATICSmodel$nFiles-4, 0.05)
           } else {
             zz <- ESTATICS.confidence(mpmESTATICSmodel$modelCoeff[, x, y, z], mpmESTATICSmodel$invCov[, , x, y, z] * mpmESTATICSmodel$bi[x, y, z], mpmESTATICSmodel$FA[1]*pi/180, mpmESTATICSmodel$FA[length(mpmESTATICSmodel$t1Files) + length(mpmESTATICSmodel$mtFiles) + 1]*pi/180, mpmESTATICSmodel$TR[1], df=mpmESTATICSmodel$nFiles-4, 0.05)
           }
-          R2[x, y, z] <- zz$R2star
-          R1[x, y, z] <- zz$R1
-          CIR1[, x, y, z] <- zz$CIR1
-          CIR2[, x, y, z] <- zz$CIR2star
-        }
-      }
-    }
-    if (verbose) cat(z, format(Sys.time()), "\n")
+          R2[xyz] <- zz$R2star
+          R1[xyz] <- zz$R1
+          CIR1[, xyz] <- zz$CIR1
+          CIR2[, xyz] <- zz$CIR2star
+#        }
+#      }
+#    }
+    if (verbose) if(xyz%/%10000*10000==xyz) cat(xyz,"voxel completed  time", format(Sys.time()), "\n")
   }
 
   invisible(list(R1 = R1,
@@ -1012,28 +1039,32 @@ writeQIconf <- function(qiConf,
 
   if (verbose) cat("writing R1 file ... ")
   ds@descrip <- "R1"
-  writeNIfTI(as.nifti(qiConf$R1, ds), file = r1file)
+  R1 <- extract(qiConf, "R1")
+  writeNIfTI(as.nifti(R1, ds), file = r1file)
   if (verbose) cat("done\n")
   if (verbose) cat("writing R1lower file ... ")
   ds@descrip <- "R1lower"
-  writeNIfTI(as.nifti(qiConf$CIR1[1, , , ], ds), file = r1Lfile)
+  CIR1 <- extract(qiConf, "CIR1")
+  writeNIfTI(as.nifti(CIR1[1, , , ], ds), file = r1Lfile)
   if (verbose) cat("done\n")
   if (verbose) cat("writing R1upper file ... ")
   ds@descrip <- "R1upper"
-  writeNIfTI(as.nifti(qiConf$CIR1[2, , , ], ds), file = r1Ufile)
+  writeNIfTI(as.nifti(CIR1[2, , , ], ds), file = r1Ufile)
   if (verbose) cat("done\n")
 
   if (verbose) cat("writing R2 file ... ")
   ds@descrip <- "R2"
-  writeNIfTI(as.nifti(qiConf$R2star, ds), file = r2file)
+  R2star <- extract(qiConf,"R2star")
+  writeNIfTI(as.nifti(R2star, ds), file = r2file)
   if (verbose) cat("done\n")
   if (verbose) cat("writing R2lower file ... ")
   ds@descrip <- "R2lower"
-  writeNIfTI(as.nifti(qiConf$CIR2star[1, , , ], ds), file = r2Lfile)
+  CIR2star <- extract(qiConf,"CIR2star")
+  writeNIfTI(as.nifti(CIR2star[1, , , ], ds), file = r2Lfile)
   if (verbose) cat("done\n")
   if (verbose) cat("writing R2upper file ... ")
   ds@descrip <- "R2upper"
-  writeNIfTI(as.nifti(qiConf$CIR2star[2, , , ], ds), file = r2Ufile)
+  writeNIfTI(as.nifti(CIR2star[2, , , ], ds), file = r2Ufile)
   if (verbose) cat("done\n")
 
 }

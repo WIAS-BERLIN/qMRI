@@ -345,6 +345,7 @@ estimateESTATICS <- function (mpmdata,
 
   # validate_MPMData(mpmdata)
   nvoxel <- sum(mpmdata$mask)
+  method <- method[1]
   ## create the design matrix of the model
   if (mpmdata$model == 2) {
     xmat <- matrix(0, mpmdata$nFiles, 4)
@@ -557,7 +558,7 @@ estimateESTATICS <- function (mpmdata,
 #        }#mask
 #      }#x
 #    }#y
-    if (verbose) if(xyz%/%10000*10000==xyz) cat("completed", xyz, "voxel  time", format(Sys.time()), "\n")
+    if (verbose) if(xyz%/%10000*10000==xyz) cat("completed", xyz, "of", nvoxel, "voxel  time", format(Sys.time()), "\n")
   }#z
   if (verbose) cat("Finished estimation", format(Sys.time()), "\n")
 
@@ -741,8 +742,7 @@ calculateQI <- function(mpmESTATICSModel,
   }
   R2star <- if (mpmESTATICSModel$model == 2) 1000 * mpmESTATICSModel$modelCoeff[4, ]/mpmESTATICSModel$TEScale else
                                              1000 * mpmESTATICSModel$modelCoeff[3, ]/mpmESTATICSModel$TEScale
-  R2star[!mpmESTATICSModel$mask] <- NA
-# set values outside the mask to NA as we have with the other qMaps due to denom=0
+  # set values outside the mask to NA as we have with the other qMaps due to denom=0
   obj <- list(b1Map = b1Map,
               R1 = R1 * 1000,
               R2star = R2star,

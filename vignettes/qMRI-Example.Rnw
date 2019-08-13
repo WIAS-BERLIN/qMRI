@@ -201,6 +201,8 @@ modelMPMQLsp1 <- smoothESTATICS(modelMPM,
                                 alpha = 0.004,
                                 patchsize = 1,
                                 verbose = FALSE)
+@
+<<7a, echo=FALSE>>=
 # reduce mask to save time
 mask <- extract(mpm,"mask")
 mask[,c(1:10,12:21),] <- FALSE
@@ -278,15 +280,14 @@ From this new parameter maps can be estimated by the quasi-likelihood
 formulation and thus avoiding the bias due to the skewness in the signal
 distribution:
 <<9a,echo=FALSE>>=
-
+mpmsp1 <- mpm
+ddata <- extract(modelMPMQLsp1,"smoothedData")
+dim(ddata) <- c(dim(ddata)[1],prod(dim(ddata)[-1]))
+mpmsp1$ddata <- ddata[,mpm$mask]
 @
 <<9>>=
-mpmsp1 <- mpm
-mpmsp1$ddata <- modelMPMQLsp1$smoothedData
-sigma <- array(50, mpm$sdim)
-modelMPMQL2 <- estimateESTATICS(mpmsp1,
-                                method = "QL",
-                                sigma = sigma,
+modelMPM2 <- estimateESTATICS(mpmsp1,
+                                method = "NLR",
                                 L = 1,
                                 verbose = FALSE)
 @
@@ -309,7 +310,7 @@ qMRIQLMaps <- calculateQI(modelMPMQL,
 qMRIQLSmoothedp1Maps <- calculateQI(modelMPMQLsp1,
                                     b1File = B1File,
                                     TR2 = 3.4)
-qMRIQL2Maps <- calculateQI(modelMPMQL2,
+qMRIMaps2 <- calculateQI(modelMPM2,
                            b1File = B1File,
                            TR2 = 3.4)
 @
@@ -348,7 +349,7 @@ qmap2 <- extract(qMRIQLSmoothedp1Maps, nmaps)
 for (i in 1:4) rimage(qmap2[[i]][, 11, ], zlim = zlim[i, ],
                       main = paste("Smoothed", nmaps[i]),
                       col = if(i==3) colMT else grey(0:225/255))
-qmap3 <- extract(qMRIQL2Maps, nmaps)
+qmap3 <- extract(qMRIMaps2, nmaps)
 for (i in 1:4) rimage(qmap3[[i]][, 11, ], zlim = zlim[i, ],
                       main = paste("Smoothed data", nmaps[i]),
                       col = if(i==3) colMT else grey(0:225/255))
@@ -392,7 +393,7 @@ cat("\n",
       "R2star", sqrt(mean((qmap2$R2star-R2star)[mask]^2)),
       "MT", sqrt(mean((qmap2$MT-MT)[mask]^2)),
       "PD", sqrt(mean((qmap2$PD-PD)[mask]^2)),"\n",
-    "Root mean squared error of QL estimate from smoothed data \n",
+    "Root mean squared error of estimate from smoothed data \n",
       "R1", sqrt(mean((qmap3$R1-R1)[mask]^2)),
       "R2star", sqrt(mean((qmap3$R2star-R2star)[mask]^2)),
       "MT", sqrt(mean((qmap3$MT-MT)[mask]^2)),

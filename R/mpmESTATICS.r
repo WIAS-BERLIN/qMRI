@@ -341,17 +341,22 @@ estimateESTATICS <- function (mpmdata,
                               sigma = NULL,
                               L = 1,
                               maxR2star=50,
+                              varest = c("RSS","data"),
                               verbose = TRUE) {
 
   # validate_MPMData(mpmdata)
   nvoxel <- sum(mpmdata$mask)
   method <- method[1]
+  varest <- varest[1]
   ## create the design matrix of the model
+  nT1 <- length(mpmdata$t1Files)
+  nMT <- length(mpmdata$MTFiles)
+  nPD <- length(mpmdata$PDFiles)
   if (mpmdata$model == 2) {
     xmat <- matrix(0, mpmdata$nFiles, 4)
-    xmat[1:length(mpmdata$t1Files), 1] <- 1
-    xmat[(length(mpmdata$t1Files) + 1):(length(mpmdata$t1Files) + length(mpmdata$mtFiles)), 2] <- 1
-    xmat[(length(mpmdata$t1Files) + length(mpmdata$mtFiles) + 1):mpmdata$nFiles, 3] <- 1
+    xmat[1:nT1, 1] <- 1
+    xmat[(nT1 + 1):(nT1 + nMT), 2] <- 1
+    xmat[(nT1 + nMT + 1):mpmdata$nFiles, 3] <- 1
     xmat[, 4] <- mpmdata$TE/TEScale
     ## ... for our model in estatics3() ...
     ## S_{T1} = par[1] * exp(- par[4] * TE)
@@ -359,15 +364,15 @@ estimateESTATICS <- function (mpmdata,
     ## S_{PD} = par[3] * exp(- par[4] * TE)
   } else if (mpmdata$model == 1) {
     xmat <- matrix(0, mpmdata$nFiles, 3)
-    xmat[1:length(mpmdata$t1Files), 1] <- 1
-    xmat[(length(mpmdata$t1Files) + 1):mpmdata$nFiles, 2] <- 1
+    xmat[1:nT1, 1] <- 1
+    xmat[(nT1 + 1):mpmdata$nFiles, 2] <- 1
     xmat[, 3] <- mpmdata$TE / TEScale
     ## ... for our model in estatics2() ...
     ## S_{T1} = par[1] * exp(- par[3] * TE)
     ## S_{PD} = par[2] * exp(- par[3] * TE)
   } else {
     xmat <- matrix(0, mpmdata$nFiles, 2)
-    xmat[1:length(mpmdata$t1Files), 1] <- 1
+    xmat[1:nT1, 1] <- 1
     xmat[, 2] <- mpmdata$TE / TEScale
     ## ... for our model in estatics1() ...
     ## S_{T1} = par[1] * exp(- par[2] * TE)
@@ -378,6 +383,20 @@ estimateESTATICS <- function (mpmdata,
   }
 
   if (verbose) cat(" done\n")
+  if(varest=="data"){
+     if(verbose) cat("estimating variance maps from data")
+     ind <- switch(mpmdata$model,1,c(1,1+nT1),c(1,1+nT1,1+nT1+nMT))
+     sind <- switch(mpmdata$model,rep(1,nT1), c(rep(1,nT1),rep(2,nPD)),
+                                c(rep(1,nT1), rep(1,nMT), rep(1,nPD)))
+     ddata <- extract(mpmdata,"ddata")[ind,,,drop=FALSE]
+     shat <- ddata
+     for( i in 1:mpmdata$model){
+        shat[i,,,] <- awslsigmc(ddata[i,,,],steps=16,
+            mask=extract(mpmdata,"mask"),family="Gauss")$sigma
+     }
+     dim(shat) <- c(mpmdata$model,prod(mpmdata$sdim))
+     shat <- shat[,mpmdata$mask]
+  } else shat <- NULL
 
   ## obbtain initial estimates from linearized model
   thetas <- initth(mpmdata, TEScale, dataScale)
@@ -422,12 +441,11 @@ estimateESTATICS <- function (mpmdata,
   rsigma <- array(0, nvoxel)
 
 
-  if (verbose) cat("Start estimation", format(Sys.time()), "\n")
+  if (verbose){
+     cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
+     pb <- txtProgressBar(0, nvoxel, style = 3)
+   }
   for(xyz in 1:nvoxel){
-#  for (z in 1:mpmdata$sdim[3]) {
-#    for (y in 1:mpmdata$sdim[2]) {
-#      for (x in 1:mpmdata$sdim[1]) {
-#        if (mpmdata$mask[x, y, z]) {
 
           if (method == "QL") {
             if(!homsigma) {
@@ -484,12 +502,12 @@ estimateESTATICS <- function (mpmdata,
           }
 
           if (class(res) != "try-error") {
-            sres <- getnlspars(res)
+            sres <- if(varest=="RSS") getnlspars(res) else
+                 getnlspars2(res, shat[, xyz], sind )
             isConv[xyz] <- as.integer(res$convInfo$isConv)
             modelCoeff[, xyz] <- sres$coefficients
             if (sres$sigma != 0) {
-              invCovtmp <- sres$XtX
-              invCov[, , xyz] <- invCovtmp/sres$sigma^2
+              invCov[, , xyz] <- sres$invCov
               rsigma[xyz] <- sres$sigma
             }
           }
@@ -497,7 +515,8 @@ estimateESTATICS <- function (mpmdata,
           if (class(res) == "try-error" || coef(res)[npar] > maxR2star || coef(res)[npar] < 0) {
 
             ## fallback for not converged or R2star out of range
-            sres <- linearizedESTATICS(ivec, xmat, maxR2star)
+            sres <- if(varest=="RSS") linearizedESTATICS(ivec, xmat, maxR2star) else
+                                        linearizedESTATICS2(ivec, xmat, maxR2star, shat[, xyz], sind )
             ## thats already the solution for NLR if R2star is fixed
             isThresh[xyz] <- sres$invCov[npar, npar] == 0
             isConv[xyz] <- 255 ## partially linearized NLR model
@@ -555,12 +574,13 @@ estimateESTATICS <- function (mpmdata,
               }
             }
           }#fallback
-#        }#mask
-#      }#x
-#    }#y
-    if (verbose) if(xyz%/%10000*10000==xyz) cat("completed", xyz, "of", nvoxel, "voxel  time", format(Sys.time()), "\n")
+#    if (verbose) if(xyz%/%10000*10000==xyz) cat("completed", xyz, "of", nvoxel, "voxel  time", format(Sys.time()), "\n")
+if (verbose) if(xyz%/%1000*1000==xyz) setTxtProgressBar(pb, xyz)
   }#z
-  if (verbose) cat("Finished estimation", format(Sys.time()), "\n")
+  if (verbose){
+    close(pb)
+    cat("Finished estimation", format(Sys.time()), "\n")
+  }
 
   obj <- list(modelCoeff = modelCoeff,
               invCov = invCov,
@@ -576,6 +596,7 @@ estimateESTATICS <- function (mpmdata,
               maskFile = mpmdata$maskFile,
               mask = mpmdata$mask,
               sigma = sigma,
+              shat = shat, ## sigma estimated from
               L = L,
               TR = mpmdata$TR,
               TE = mpmdata$TE,
@@ -635,6 +656,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
   obj <- list(modelCoeff = zobj$theta,
                  invCov = mpmESTATICSModel$invCov,
                  isConv = mpmESTATICSModel$isConv,
+                 rsigma = mpmESTATICSModel$rsigma,
                  bi = zobj$bi,
                  smoothPar = c(zobj$lambda, zobj$hakt, alpha, patchsize),
                  smoothedData = zobj$data,
@@ -987,9 +1009,16 @@ estimateQIconf <- function(mpmESTATICSmodel,
   #    for (x in 1:mpmESTATICSmodel$sdim[1]) {
   #      if (mpmESTATICSmodel$mask[x, y, z]) {
           if (is.null(mpmESTATICSmodel$bi)) {
-            zz <- ESTATICS.confidence(mpmESTATICSmodel$modelCoeff[, x, y, z], mpmESTATICSmodel$invCov[, , x, y, z], mpmESTATICSmodel$FA[1]*pi/180, mpmESTATICSmodel$FA[length(mpmESTATICSmodel$t1Files) + length(mpmESTATICSmodel$mtFiles) + 1]*pi/180, mpmESTATICSmodel$TR[1], df=mpmESTATICSmodel$nFiles-4, 0.05)
+            zz <- ESTATICS.confidence(mpmESTATICSmodel$modelCoeff[, xyz],
+              mpmESTATICSmodel$invCov[, , xyz], mpmESTATICSmodel$FA[1]*pi/180,
+              mpmESTATICSmodel$FA[length(mpmESTATICSmodel$t1Files) + length(mpmESTATICSmodel$mtFiles) + 1]*pi/180,
+              mpmESTATICSmodel$TR[1], df=mpmESTATICSmodel$nFiles-4, 0.05)
           } else {
-            zz <- ESTATICS.confidence(mpmESTATICSmodel$modelCoeff[, x, y, z], mpmESTATICSmodel$invCov[, , x, y, z] * mpmESTATICSmodel$bi[x, y, z], mpmESTATICSmodel$FA[1]*pi/180, mpmESTATICSmodel$FA[length(mpmESTATICSmodel$t1Files) + length(mpmESTATICSmodel$mtFiles) + 1]*pi/180, mpmESTATICSmodel$TR[1], df=mpmESTATICSmodel$nFiles-4, 0.05)
+            zz <- ESTATICS.confidence(mpmESTATICSmodel$modelCoeff[, xyz],
+              mpmESTATICSmodel$invCov[, , xyz] * mpmESTATICSmodel$bi[xyz],
+              mpmESTATICSmodel$FA[1]*pi/180,
+              mpmESTATICSmodel$FA[length(mpmESTATICSmodel$t1Files) + length(mpmESTATICSmodel$mtFiles) + 1]*pi/180,
+              mpmESTATICSmodel$TR[1], df=mpmESTATICSmodel$nFiles-4, 0.05)
           }
           R2[xyz] <- zz$R2star
           R1[xyz] <- zz$R1

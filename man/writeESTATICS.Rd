@@ -58,7 +58,7 @@ pdFiles <- file.path(dataDir, pdNames)
 #  file names of mask and B1 field map
 #
 B1File <- file.path(dataDir, "B1map.nii.gz")
-maskFile <- file.path(dataDir, "mask.nii.gz")
+maskFile <- file.path(dataDir, "mask0.nii.gz")
 #
 #  Acquisition parameters (TE, TR, Flip Angle) for T1w, MTw and PDw images
 #
@@ -75,11 +75,6 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
 #
-# limit calculations to voxel in the central coronal slice
-# to reduce execution time of the example
-#
-mpm$mask[,c(1:10,12:21),] <- FALSE
-#
 #  Estimate Parameters in the ESTATICS model
 #
 modelMPM <- estimateESTATICS(mpm, method = "NLR")
@@ -90,8 +85,9 @@ if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
 oldpar <- par(mfrow=c(2,2),mar=c(3,3,3,1),mgp=c(2,1,0))
 pnames <- c("T1","MT","PD","R2star")
+modelCoeff <- extract(modelMPM,"modelCoeff")
 for(i in 1:4){
-   rimage(modelMPM$modelCoeff[i,,11,])
+   rimage(modelCoeff[i,,11,])
    title(pnames[i])
    }
 }

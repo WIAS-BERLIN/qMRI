@@ -67,23 +67,11 @@ modelMPM <- estimateESTATICS(mpm, method = "NLR")
 #  smooth maps of ESTATICS Parameters
 #
 setCores(2)
-modelMPMQLsp1 <- smoothESTATICS(modelMPM,
+modelMPMsp1 <- smoothESTATICS(modelMPM,
                               kstar = 16,
                               alpha = 0.004,
                               patchsize=1,
                               verbose = TRUE)
-#
-# limit calculations to voxel in the central coronal slice
-# to reduce execution time of the example
-#
-mpm$mask[,c(1:10,12:21),] <- FALSE
-#
-# Alternatively using Quasi-Likelihood
-#
-sigma <- 50
-modelMPMQL <- estimateESTATICS(mpm, method = "QL",
-                  sigma = array(sigma,mpm$sdim), L = 1)
-
 #
 #  resulting ESTATICS parameter maps for central coronal slice
 #
@@ -91,22 +79,24 @@ if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
 oldpar <- par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
 pnames <- c("T1","MT","PD","R2star")
+modelCoeff <- extract(modelMPM,"modelCoeff")
 for(i in 1:4){
-   rimage(modelMPMQL$modelCoeff[i,,11,])
+   rimage(modelCoeff[i,,11,])
    title(pnames[i])
    }
+   modelCoeff <- extract(modelMPMsp1,"modelCoeff")
 for(i in 1:4){
-   rimage(modelMPMQLsp1$modelCoeff[i,,11,])
+   rimage(modelCoeff[i,,11,])
    title(paste("smoothed",pnames[i]))
    }
 }
 #
 #  Compute quantitative maps (R1, R2star, PD, MT)
 #
-qMRIQLMaps <- calculateQI(modelMPMQL,
+qMRIMaps <- calculateQI(modelMPM,
                         b1File = B1File,
                         TR2 = 3.4)
-qMRIQLSmoothedp1Maps <- calculateQI(modelMPMQLsp1,
+qMRISmoothedp1Maps <- calculateQI(modelMPMsp1,
                                     b1File = B1File,
                                     TR2 = 3.4)
 #
@@ -116,9 +106,9 @@ if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
 par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
 nmaps <- c("R1","R2star","PD","MT")
-qmap <- extract(qMRIQLMaps,nmaps)
+qmap <- extract(qMRIMaps,nmaps)
 for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
-qmap <- extract(qMRIQLSmoothedp1Maps,nmaps)
+qmap <- extract(qMRISmoothedp1Maps,nmaps)
 for (i in 1:4) rimage(qmap[[i]][,11,],main=paste("Smoothed",nmaps[i]))
 }
 par(oldpar)

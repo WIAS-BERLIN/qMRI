@@ -68,6 +68,8 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link{smoothESTATICS}}, \code{\link{writeESTATICS}},
 \code{\link[dti]{awslsigmc}}
 }
+\keyword{ models }% use one of  RShowDoc("KEYWORDS")
+
 \examples{
 dataDir <- system.file("extdata",package="qMRI")
 #
@@ -83,7 +85,7 @@ pdFiles <- file.path(dataDir, pdNames)
 #  file names of mask and B1 field map
 #
 B1File <- file.path(dataDir, "B1map.nii.gz")
-maskFile <- file.path(dataDir, "mask.nii.gz")
+maskFile <- file.path(dataDir, "mask0.nii.gz")
 #
 #  Acquisition parameters (TE, TR, Flip Angle) for T1w, MTw and PDw images
 #
@@ -103,7 +105,6 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
 # limit calculations to voxel in the central coronal slice
 # to reduce execution time of the example
 #
-mpm$mask[,c(1:10,12:21),] <- FALSE
 #
 #  Estimate Parameters in the ESTATICS model
 #
@@ -115,8 +116,9 @@ if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
 oldpar <- par(mfrow=c(2,2),mar=c(3,3,3,1),mgp=c(2,1,0))
 pnames <- c("T1","MT","PD","R2star")
+modelCoeff <- extract(modelMPM,"modelCoeff")
 for(i in 1:4){
-   rimage(modelMPM$modelCoeff[i,,11,])
+   rimage(modelCoeff[i,,11,])
    title(pnames[i])
    }
 }
@@ -134,10 +136,11 @@ rimage.options(zquantiles=c(.01,.99), ylab="z")
 par(mfrow=c(2,2),mar=c(3,3,3,1),mgp=c(2,1,0))
 nmaps <- c("R1","R2star","PD","MT")
 qmap <- extract(qMRIMaps,nmaps)
-for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
+for (i in 1:4){
+   rimage(qmap[[i]][,11,],main=nmaps[i])
 }
 par(oldpar)
 }
+}
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.
-\keyword{ models }% use one of  RShowDoc("KEYWORDS")

@@ -14,7 +14,8 @@ a specification of the scale parameter sigma of the data distribution.
 }
 \usage{
 estimateESTATICS(mpmdata, TEScale = 100, dataScale = 1000, method = c("NLR", "QL"),
-                 sigma = NULL, L = 1, maxR2star = 50, verbose = TRUE)
+                 sigma = NULL, L = 1, maxR2star = 50,
+                 varest = c("RSS", "data"), verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -40,6 +41,11 @@ estimateESTATICS(mpmdata, TEScale = 100, dataScale = 1000, method = c("NLR", "QL
 }
   \item{maxR2star}{
   maximum value allowed for the R2star parameter in the ESTATICS model.
+}
+\item{varest}{
+  For parameter covariance estimation use either residual sum of squares (RSS)
+  or estimate variances for T1, MT (is available) and PD from higest intensity
+  images using function \code{awslsigmc}from package \pkg{dti}.
 }
   \item{verbose}{
    logical: Monitor process.
@@ -102,7 +108,7 @@ pdFiles <- file.path(dataDir, pdNames)
 #  file names of mask and B1 field map
 #
 B1File <- file.path(dataDir, "B1map.nii.gz")
-maskFile <- file.path(dataDir, "mask.nii.gz")
+maskFile <- file.path(dataDir, "mask0.nii.gz")
 #
 #  Acquisition parameters (TE, TR, Flip Angle) for T1w, MTw and PDw images
 #
@@ -118,11 +124,6 @@ library(qMRI)
 mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
-#
-# limit calculations to voxel in the central coronal slice
-# to reduce execution time of the example
-#
-mpm$mask[,c(1:10,12:21),] <- FALSE
 #
 #  Estimate Parameters in the ESTATICS model
 #

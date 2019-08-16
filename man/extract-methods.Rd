@@ -156,7 +156,7 @@ pdFiles <- file.path(dataDir, pdNames)
 #  file names of mask and B1 field map
 #
 B1File <- file.path(dataDir, "B1map.nii.gz")
-maskFile <- file.path(dataDir, "mask.nii.gz")
+maskFile <- file.path(dataDir, "mask0.nii.gz")
 #
 #  Acquisition parameters (TE, TR, Flip Angle) for T1w, MTw and PDw images
 #
@@ -183,11 +183,6 @@ rimage(data[1,,11,], main="first T1w image")
 rimage(data[9,,11,], main="first MTw image")
 rimage(data[15,,11,], main="first PDw image")
 }
-#
-# limit calculations to voxel in the central coronal slice
-# to reduce execution time of the example
-#
-mpm$mask[,c(1:10,12:21),] <- FALSE
 #
 #  Estimate Parameters in the ESTATICS model
 #

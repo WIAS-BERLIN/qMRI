@@ -58,17 +58,11 @@ Use the function setCores() to change the number of CPU cores.
 > #  smooth maps of ESTATICS Parameters
 > #
 > setCores(2, reprt = FALSE)
-> modelMPMQLsp1 <- smoothESTATICS(modelMPM,
+> modelMPMsp1 <- smoothESTATICS(modelMPM,
 +                               kstar = 16,
 +                               alpha = 0.004,
 +                               patchsize=1,
 +                               verbose = FALSE)
-> # set mask to y==11 only yo save time
-> mpm$mask[,c(1:10,12:21),] <- FALSE
-> # Alternatively using Quasi-Likelihood
-> sigma <- 50
-> modelMPMQL <- estimateESTATICS(mpm, method = "QL",
-+               sigma = array(sigma, mpm$sdim), L = 1, verbose=FALSE)
 > #
 > #  Compute quantitative maps (R1, R2star, PD, MT)
 > #
@@ -81,7 +75,7 @@ Spoiling correction ... v3* 0.8mm R4 protocol
 done
 calculating PD ... done
 calculating MT ... done
-> qMRIQLSmoothedp1Maps <- calculateQI(modelMPMQLsp1,
+> qMRISmoothedp1Maps <- calculateQI(modelMPMsp1,
 +                                     b1File = B1File,
 +                                     TR2 = 3.4)
 reading B1 correction file
@@ -94,22 +88,46 @@ calculating MT ... done
 > #   some statistics on differences between results
 > #
 > qm <- extract(qMRIMaps,c("R1","R2star","MT","PD"))
-> qms <- extract(qMRIQLSmoothedp1Maps,c("R1","R2star","MT","PD"))
+> qms <- extract(qMRISmoothedp1Maps,c("R1","R2star","MT","PD"))
 > mask <- extract(mpm,"mask")
 > cat("mean of estimated quantitative maps\n",
 +     mean(qm$R1[mask]), mean(qm$R2star[mask]), mean(qm$MT[mask]), mean(qm$PD[mask]),"\n",
-+     "mean of estimated quantitative maps\n",
++     "mean of smoothed quantitative maps\n",
 +     mean(qms$R1[mask]), mean(qms$R2star[mask]), mean(qms$MT[mask]), mean(qms$PD[mask]),"\n",
 +     "Root mean squared difference between estimated and smoothed quantitative maps\n",
 +     sqrt(mean((qm$R1-qms$R1)[mask]^2)), sqrt(mean((qm$R2star-qms$R2star)[mask]^2)),
 +     sqrt(mean((qm$MT-qms$MT)[mask]^2)), sqrt(mean((qm$PD-qms$PD)[mask]^2)),"\n")
 mean of estimated quantitative maps
- 0.7779531 18.35329 0.8929997 5770.443 
- mean of estimated quantitative maps
- 0.7741077 18.00786 0.8771079 5710.95 
+ 0.7799036 18.03812 0.8917513 5740.889 
+ mean of smoothed quantitative maps
+ 0.7754809 17.91206 0.8803852 5695.775 
  Root mean squared difference between estimated and smoothed quantitative maps
- 0.09013397 5.91376 0.2442614 502.5705 
+ 0.09521402 5.61277 0.2369349 504.4161 
+> # set mask to y==11 only yo save time
+> # reduce mask to save time, need also to adapt storage of data
+> mask <- extract(mpm,"mask")
+> mask[,c(1:10,12:21),] <- FALSE
+> mpm <- qMRI:::setMPMmask(mpm, mask)
+> # Alternatively using Quasi-Likelihood
+> sigma <- 50
+> modelMPMQL <- estimateESTATICS(mpm, method = "QL",
++                 sigma = array(sigma, mpm$sdim), L = 1, verbose=FALSE)
+> qMRIMapsQL <- calculateQI(modelMPMQL,
++                 b1File = B1File,
++                 TR2 = 3.4)
+reading B1 correction file
+calculating R1 ... Spoiling correction ... v3* 0.8mm R4 protocol
+Spoiling correction ... v3* 0.8mm R4 protocol
+done
+calculating PD ... done
+calculating MT ... done
+> mask <- extract(mpm,"mask")
+> qmQL <- extract(qMRIMapsQL,c("R1","R2star","MT","PD"))
+> cat("mean of estimated quantitative maps using QL\n",
++     mean(qmQL$R1[mask]), mean(qmQL$R2star[mask]), mean(qmQL$MT[mask]), mean(qmQL$PD[mask]),"\n")
+mean of estimated quantitative maps using QL
+ 0.7726782 18.74322 0.9159376 5774.662 
 > 
 > proc.time()
    user  system elapsed 
- 16.280   0.390  15.386 
+ 15.184   0.208  14.055 

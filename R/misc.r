@@ -56,6 +56,12 @@ extract.ESTATICSModel <- function(x,what, ...){
         dim(sigma) <- sdim
         z[["sigma"]] <- sigma
      }
+     if("rsigma" %in% select){
+        sigma <- array(0,prod(sdim))
+        sigma[mask] <- x$rsigma
+        dim(sigma) <- sdim
+        z[["rsigma"]] <- sigma
+     }
   }
   invisible(if(length(select)==1) z[[select]] else z[select])
 }
@@ -197,7 +203,7 @@ getnlspars <- function (object) {
   XtX <- t(Rmat)%*%Rmat
   dimnames(XtX) <- list(pnames, pnames)
   ans <- list(formula = formula(object), residuals = r, sigma = sqrt(resvar),
-              df = c(p, rdf), XtX = XtX, call = object$call,
+              df = c(p, rdf), XtX = XtX, invCov = XtX/resvar, call = object$call,
               convInfo = object$convInfo, control = object$control,
               na.action = object$na.action, coefficients = param)
   ans
@@ -214,4 +220,31 @@ setMPMmask <- function(mpmData,mask){
    mpmData$mask <- mask
    mpmData$maskFile <- "none"
    mpmData
+}
+
+getnlspars2 <- function (object, sigma, ind) {
+#
+#   using variance estimates from data instead of RSS
+#
+  r <- as.vector(object$m$resid())
+  w <- object$weights
+  n <- if (!is.null(w))
+    sum(w > 0)
+  else length(r)
+  param <- coef(object)
+  pnames <- names(param)
+  p <- length(param)
+  rdf <- n - p
+  resvar <- if (rdf <= 0)
+    NaN
+  else deviance(object)/rdf
+  Rmat <- object$m$Rmat()
+  XtX <- t(Rmat)%*%Rmat
+  XtXsinv <- XtX%*%solve(t(Rmat)%*%diag(sigma[ind]^2)%*%Rmat)%*%XtX
+  dimnames(XtX) <- list(pnames, pnames)
+  ans <- list(formula = formula(object), residuals = r, sigma = sqrt(resvar),
+              df = c(p, rdf), XtX = XtX, invCov=XtXsinv,call = object$call,
+              convInfo = object$convInfo, control = object$control,
+              na.action = object$na.action, coefficients = param)
+  ans
 }

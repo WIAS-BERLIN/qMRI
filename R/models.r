@@ -399,3 +399,33 @@ linearizedESTATICS <- function(ivec, xmat, maxR2star){
     invcov[-npar,-npar] <- t(xmat0)%*%xmat0/sigma2
     list(theta=theta, R2star=R2star, invCov=invcov, sigma2 = sigma2, xmat=xmat0)
 }
+
+linearizedESTATICS2 <- function(ivec, xmat, maxR2star, sigma, ind){
+  #
+  #   using variance estimates from data instead of RSS
+  #
+    dimx <- dim(xmat)
+    npar <- dimx[2]
+    invcov <- matrix(0,npar,npar)
+    z <- lm.fit(xmat,log(ivec))
+    R2star <- -z$coefficients[npar]
+    XtXR2s <- sum(xmat[,npar]^2)
+    invcov[npar,npar] <- XtXR2s^2/sum(xmat[,npar]^2*sigma[ind]^2)
+    if (R2star < 0){
+      R2star <- 0
+      invcov[npar,npar] <- 0
+#  boundary of parameter space no reliable confidence information
+    }
+    if (R2star > maxR2star){
+      R2star <- 0
+      invcov[npar,npar] <- 0
+#  boundary of parameter space no reliable confidence information
+    }
+    xmat0 <- xmat[,-npar]*exp(-R2star*xmat[,npar])
+    z <- lm.fit(xmat0,ivec)
+    theta <- z$coefficients
+    sigma2 <- sum(z$residuals^2)/(-diff(dimx)+1)
+    XtX0 <- t(xmat0)%*%xmat0
+    invcov[-npar,-npar] <- XtX0%*%solve(t(xmat0)%*%diag(sigma[ind]^2)%*%xmat0)%*%XtX0
+    list(theta=theta, R2star=R2star, invCov=invcov, sigma2 = sigma2, xmat=xmat0)
+}

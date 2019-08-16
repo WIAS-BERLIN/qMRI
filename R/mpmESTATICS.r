@@ -350,8 +350,8 @@ estimateESTATICS <- function (mpmdata,
   varest <- varest[1]
   ## create the design matrix of the model
   nT1 <- length(mpmdata$t1Files)
-  nMT <- length(mpmdata$MTFiles)
-  nPD <- length(mpmdata$PDFiles)
+  nMT <- length(mpmdata$mtFiles)
+  nPD <- length(mpmdata$pdFiles)
   if (mpmdata$model == 2) {
     xmat <- matrix(0, mpmdata$nFiles, 4)
     xmat[1:nT1, 1] <- 1

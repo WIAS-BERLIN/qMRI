@@ -238,9 +238,19 @@ getnlspars2 <- function (object, sigma, ind) {
   resvar <- if (rdf <= 0)
     NaN
   else deviance(object)/rdf
-  Rmat <- object$m$Rmat()
-  XtX <- t(Rmat)%*%Rmat
-  XtXsinv <- XtX%*%solve(t(Rmat)%*%diag(sigma[ind]^2)%*%Rmat)%*%XtX
+  grad <- object$m$gradient()
+  XtX <- t(grad)%*%grad
+  sgrad <- sigma[ind] * grad
+  z <- svd(sgrad)
+  if(any(z$d<1e-6*max(z$d))){
+     cat("singular covariance\ngradient:\n")
+     print(grad)
+     cat("sigma\n")
+     print(sigma[ind])
+  }
+  z$d <- pmax(z$d,1e-6*max(z$d))
+  sXtXinv <- z$v%*%diag(1/z$d^2)%*%t(z$v)
+  XtXsinv <- XtX%*%sXtXinv%*%XtX
   dimnames(XtX) <- list(pnames, pnames)
   ans <- list(formula = formula(object), residuals = r, sigma = sqrt(resvar),
               df = c(p, rdf), XtX = XtX, invCov=XtXsinv,call = object$call,

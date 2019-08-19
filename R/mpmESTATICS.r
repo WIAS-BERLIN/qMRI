@@ -384,18 +384,21 @@ estimateESTATICS <- function (mpmdata,
 
   if (verbose) cat(" done\n")
   if(varest=="data"){
-     if(verbose) cat("estimating variance maps from data")
-     ind <- switch(mpmdata$model,1,c(1,1+nT1),c(1,1+nT1,1+nT1+nMT))
-     sind <- switch(mpmdata$model,rep(1,nT1), c(rep(1,nT1),rep(2,nPD)),
-                                c(rep(1,nT1), rep(1,nMT), rep(1,nPD)))
-     ddata <- extract(mpmdata,"ddata")[ind,,,drop=FALSE]
+     modelp1 <- mpmdata$model+1
+     if(verbose) cat("estimating variance maps from data\n")
+     ind <- switch(modelp1,1,c(1,1+nT1),c(1,1+nT1,1+nT1+nMT))
+     sind <- switch(modelp1,rep(1,nT1), c(rep(1,nT1),rep(2,nPD)),
+                                c(rep(1,nT1), rep(2,nMT), rep(3,nPD)))
+     ddata <- extract(mpmdata,"ddata")[ind,,,,drop=FALSE]
      shat <- ddata
-     for( i in 1:mpmdata$model){
+     for( i in 1:modelp1){
         shat[i,,,] <- awslsigmc(ddata[i,,,],steps=16,
             mask=extract(mpmdata,"mask"),family="Gauss")$sigma
      }
-     dim(shat) <- c(mpmdata$model,prod(mpmdata$sdim))
+     dim(shat) <- c(modelp1,prod(mpmdata$sdim))
      shat <- shat[,mpmdata$mask]
+     shat[shat==0] <- median(shat)
+     shat <- shat/dataScale
   } else shat <- NULL
 
   ## obbtain initial estimates from linearized model

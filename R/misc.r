@@ -168,6 +168,36 @@ extract.qMaps <- function(x,what, ...){
   invisible(if(length(select)==1) z[[select]] else z[select])
 }
 
+setMethod("[",
+    signature(x = "mpmData"),
+    function (x, i, j, k, ..., drop = TRUE)
+    {
+      args <- sys.call(-1)
+      if (missing(i)) i <- TRUE
+      if (missing(j)) j <- TRUE
+      if (missing(k)) k <- TRUE
+      if (is.logical(i)) ddimi <- x$sdim[1] else ddimi <- length(i)
+      if (is.logical(j)) ddimj <- x$sdim[2] else ddimj <- length(j)
+      if (is.logical(k)) ddimk <- x$sdim[3] else ddimk <- length(k)
+
+      mask <- x$mask
+      nvoxel <- sum(mask)
+      newmask <- mask[i,j,k]
+      newnvoxel <- sum(newmask)
+      if(newnvoxel != nvoxel){
+#  need to adjust index of voxel in mask
+         index <- array(0,x$sdim)
+         index[mask] <- 1:nvoxel
+         index <- index[i,j,k]
+         index <- index[index>0]
+         x$ddata <- x$ddata[,index]
+      }
+      x$mask <- newmask
+      x$sdim <- c(ddimi, ddimj, ddimk)
+      x
+    }
+)
+
 
 hg1f1 <- function(a, b, z){
   ##

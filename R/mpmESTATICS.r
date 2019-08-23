@@ -392,12 +392,12 @@ estimateESTATICS <- function (mpmdata,
      ddata <- extract(mpmdata,"ddata")[ind,,,,drop=FALSE]
      shat <- ddata
      for( i in 1:modelp1){
-        shat[i,,,] <- awslsigmc(ddata[i,,,],steps=16,
+        shat[i,,,] <- awslsigmc(ddata[i,,,],steps=16,hsig=2.5,lambda=6,
             mask=extract(mpmdata,"mask"),family="Gauss")$sigma
      }
      dim(shat) <- c(modelp1,prod(mpmdata$sdim))
      shat <- shat[,mpmdata$mask]
-     shat[shat==0] <- median(shat)
+     shat[shat==0] <- quantile(shat,.8)
      shat <- shat/dataScale
   } else shat <- NULL
 

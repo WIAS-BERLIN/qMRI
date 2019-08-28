@@ -5,6 +5,12 @@
 \alias{extract.ESTATICSModel}
 \alias{extract.sESTATICSModel}
 \alias{extract.qMaps}
+\alias{[.ANY-method}
+\alias{[.MPMData}
+\alias{[.ESTATICSModel}
+\alias{[.sESTATICSModel}
+\alias{[.qMaps}
+
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Methods to extract information from objects of class \code{"MPMData"},
@@ -12,14 +18,23 @@ Methods to extract information from objects of class \code{"MPMData"},
 and \code{"qMaps"}.
 }
 \description{
-The methods extract and/or compute specified statistics from object of class
+The extract-methods extract and/or compute specified statistics from object of class
 \code{"MPMData"}, \code{"ESTATICSModel"}, \code{"sESTATICSModel"}
 and \code{"qMaps"}.
+The [-methods can be used to reduce objects of class
+\code{"MPMData"}, \code{"ESTATICSModel"}, \code{"sESTATICSModel"}
+and \code{"qMaps"} such that they .
+
 }
 \usage{
 \S3method{extract}{MPMData}(x, what, ...)
 \S3method{extract}{ESTATICSModel}(x, what, ...)
+\S3method{extract}{sESTATICSModel}(x, what, ...)
 \S3method{extract}{qMaps}(x, what, ...)
+\S3method{[}{MPMData}(x, i, j, k, ...)
+\S3method{[}{ESTATICSModel}(x, i, j, k, ...)
+\S3method{[}{sESTATICSModel}(x, i, j, k, ...)
+\S3method{[}{qMaps}(x, i, j, k, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -29,6 +44,15 @@ and \code{"qMaps"}.
 }
   \item{what}{
    Character vector of of names of statistics to extract. See Methods Section for details.
+}
+  \item{i}{
+   index vector for first spatial dimension
+}
+  \item{j}{
+   index vector for second spatial dimension
+}
+  \item{k}{
+   index vector for third spatial dimension
 }
   \item{\dots}{
   additional parameters, currently unused.

@@ -690,6 +690,18 @@ calculateQI <- function(mpmESTATICSModel,
                         verbose = TRUE) {
 
   ## read B1 correction field
+  if (mpmESTATICSModel$model==0){
+     warning("No b1-field correction possible. Returning R2star and ST1 maps from ESTATICS model")
+     obj <- list(R2star = mpmESTATICSModel$modelCoeff[2, ]/mpmESTATICSModel$TEScale,
+                 ST1 = mpmESTATICSModel$modelCoeff[1, ]/mpmESTATICSModel$dataScale,
+                 model = mpmESTATICSModel$model,
+                 t1Files = mpmESTATICSModel$t1Files,
+                 mtFiles = mpmESTATICSModel$mtFiles,
+                 pdFiles = mpmESTATICSModel$pdFiles,
+                 mask = mpmESTATICSModel$mask)
+     class(obj) <- "qMaps"
+     invisible(obj)
+  }
   if (!is.null(b1File)) {
     if (verbose) cat("reading B1 correction file\n")# from\n", b1File, "\n")
     b1Map <- readNIfTI(b1File, reorient = FALSE)/100

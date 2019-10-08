@@ -392,7 +392,7 @@ linearizedESTATICS <- function(ivec, xmat, maxR2star){
       invcov[npar,npar] <- 0
 #  boundary of parameter space no reliable confidence information
     }
-    xmat0 <- xmat[,-npar]*exp(-R2star*xmat[,npar])
+    xmat0 <- xmat[,-npar,drop=FALSE]*exp(-R2star*xmat[,npar])
     z <- lm.fit(xmat0,ivec)
     theta <- z$coefficients
     sigma2 <- sum(z$residuals^2)/(-diff(dimx)+1)

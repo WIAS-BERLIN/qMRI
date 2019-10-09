@@ -55,9 +55,9 @@ estatics1 <- function(par, design){
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(3*n))[c("fval", "grad")]
+                grad = double(2*n))[c("fval", "grad")]
   fval <- z$fval
-  attr(fval, "gradient") <- matrix(z$grad, n, 3)
+  attr(fval, "gradient") <- matrix(z$grad, n, 2)
   fval
 }
 
@@ -119,9 +119,9 @@ estatics1fixedR2 <- function(par, R2star, design){
                 as.double(design),
                 as.integer(n),
                 fval = double(n),
-                grad = double(2*n))[c("fval", "grad")]
+                grad = double(n))[c("fval", "grad")]
   fval <- z$fval
-  attr(fval, "gradient") <- matrix(z$grad, n, 2)
+  attr(fval, "gradient") <- matrix(z$grad, n, 1)
   fval
 }
 

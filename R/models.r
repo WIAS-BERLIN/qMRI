@@ -340,7 +340,7 @@ initth <- function(mpmdata, TEScale=100, dataScale=100){
      T1 <- matrix(mpmdata$ddata[indT1,],2,nvox)/dataScale
      MT <- matrix(mpmdata$ddata[indMT,],2,nvox)/dataScale
      PD <- matrix(mpmdata$ddata[indPD,],2,nvox)/dataScale
-     R2star <- pmax(1e-6,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
+     R2star <- pmax(1e-2,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
              (log(MT[1,])-log(MT[2,]))/diff(TE[indMT])+
              (log(PD[1,])-log(PD[2,]))/diff(TE[indPD]))/3)
      th[1,] <- T1[1,]*exp(R2star*TE[1])
@@ -356,7 +356,7 @@ initth <- function(mpmdata, TEScale=100, dataScale=100){
      th <- matrix(0,3,nvox)
      T1 <- matrix(mpmdata$ddata[indT1,],2,nvox)/dataScale
      S <- matrix(mpmdata$ddata[ind2,],2,nvox)/dataScale
-     R2star <- pmax(0,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
+     R2star <- pmax(1e-2,((log(T1[1,])-log(T1[2,]))/diff(TE[indT1])+
              (log(S[1,])-log(S[2,]))/diff(TE[ind2]))/2)
      th[1,] <- T1[1,]*exp(R2star*TE[1])
      th[2,] <- S[1,]*exp(R2star*TE[nT1+1])
@@ -367,7 +367,7 @@ initth <- function(mpmdata, TEScale=100, dataScale=100){
      indT1 <- c(1,nT1)
      th <- matrix(0,2,nvox)
      T1 <- matrix(mpmdata$ddata[indT1,],2,nvox)/dataScale
-     R2star <- pmax(0,(log(T1[1,])-log(T1[2,]))/diff(TE[indT1]))
+     R2star <- pmax(1e-2,(log(T1[1,])-log(T1[2,]))/diff(TE[indT1]))
      th[1,] <- T1[1,]*exp(R2star*TE[1])
      th[2,] <- R2star
   }

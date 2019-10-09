@@ -135,6 +135,7 @@ estatics3QL <- function(par, design, CL, sig, L){
   ## S_{MT} = par[2] * exp(- par[4] * TE)
   ## S_{PD} = par[3] * exp(- par[4] * TE)
   ##
+  par <- pmax(0,par)
   n <- dim(design)[1]
   if(par[4] > 20) par[4] <- 20
   z <- .Fortran(C_estatics3,
@@ -175,6 +176,7 @@ estatics2QL <- function(par, design, CL, sig, L){
   ## S_{T1} = par[1] * exp(- par[3] * TE)
   ## S_{PD} = par[2] * exp(- par[3] * TE)
   ##
+  par <- pmax(0,par)
   n <- dim(design)[1]
   z <- .Fortran(C_estatics2,
                 as.double(par),
@@ -203,6 +205,8 @@ estatics1QL <- function(par, design, CL, sig, L){
   ##
   ## S_{T1} = par[1] * exp(- par[2] * TE)
   ##
+  par <- pmax(0,par)
+
   n <- dim(design)[1]
   z <- .Fortran(C_estatics1,
                 as.double(par),
@@ -382,13 +386,13 @@ linearizedESTATICS <- function(ivec, xmat, maxR2star){
     R2star <- -z$coefficients[npar]
     sigma2R2s <- sum(z$residuals^2)/(-diff(dimx))
     invcov[npar,npar] <- sum(xmat[,npar]^2)/sigma2R2s
-    if (R2star < 0){
-      R2star <- 0
+    if (R2star < 0.001){
+      R2star <- 0.001
       invcov[npar,npar] <- 0
 #  boundary of parameter space no reliable confidence information
     }
     if (R2star > maxR2star){
-      R2star <- 0
+      R2star <- maxR2star
       invcov[npar,npar] <- 0
 #  boundary of parameter space no reliable confidence information
     }
@@ -411,13 +415,13 @@ linearizedESTATICS2 <- function(ivec, xmat, maxR2star, sigma, ind){
     R2star <- -z$coefficients[npar]
     XtXR2s <- sum(xmat[,npar]^2)
     invcov[npar,npar] <- XtXR2s^2/sum(xmat[,npar]^2*sigma[ind]^2)
-    if (R2star < 0){
-      R2star <- 0
+    if (R2star < 0.001){
+      R2star <- 0.001
       invcov[npar,npar] <- 0
 #  boundary of parameter space no reliable confidence information
     }
     if (R2star > maxR2star){
-      R2star <- 0
+      R2star <- maxR2star
       invcov[npar,npar] <- 0
 #  boundary of parameter space no reliable confidence information
     }

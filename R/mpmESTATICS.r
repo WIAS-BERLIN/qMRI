@@ -383,8 +383,8 @@ estimateESTATICS <- function (mpmdata,
   }
 
   if (verbose) cat(" done\n")
+  modelp1 <- mpmdata$model+1
   if(varest=="data"){
-     modelp1 <- mpmdata$model+1
      if(verbose) cat("estimating variance maps from data\n")
      ind <- switch(modelp1,1,c(1,1+nT1),c(1,1+nT1,1+nT1+nMT))
      sind <- switch(modelp1,rep(1,nT1), c(rep(1,nT1),rep(2,nPD)),
@@ -404,8 +404,10 @@ estimateESTATICS <- function (mpmdata,
   ## obbtain initial estimates from linearized model
   thetas <- initth(mpmdata, TEScale, dataScale)
   ## now only contains estimates for voxel in mask
-
-  ## prepare the standard deviation array in case of the quasi-likelihood estimation (QL)
+  ## set lower and upper vales for parameters
+  lower <- pmax(.001,apply(thetas,1,min))
+  upper <- pmin(c(rep(65532/dataScale,modelp1),50),apply(thetas,1,max))
+## prepare the standard deviation array in case of the quasi-likelihood estimation (QL)
   if (method == "QL") {
     sigma <- sigma/dataScale
     CLarray <- sigma * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
@@ -474,6 +476,27 @@ estimateESTATICS <- function (mpmdata,
                          start = list(par = th),
                          control = list(maxiter = 200,
                                         warnOnly = TRUE)))
+            if (class(res) == "try-error"){
+# retry with port algorithm and bounds
+              th <- pmin(upper,pmax(lower,th))
+              res <- if (method == "NLR") try(nls(ivec ~ estatics3(par, xmat),
+                                                  data = list(xmat = xmat),
+                                                  start = list(par = th),
+                                                  algorithm="port",
+                                                  control = list(maxiter = 200,
+                                                                 warnOnly = TRUE),
+                                                  lower=lower, upper=upper))
+              else try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
+                           data = list(xmat = xmat,
+                                       CL = CL,
+                                       sig = sig,
+                                       L = L),
+                           start = list(par = th),
+                           algorithm="port",
+                           control = list(maxiter = 200,
+                                          warnOnly = TRUE),
+                           lower=lower, upper=upper))
+            }
           } else if (mpmdata$model == 1) {
             res <- if (method == "NLR") try(nls(ivec ~ estatics2(par, xmat),
                                                 data = list(xmat = xmat),
@@ -488,6 +511,27 @@ estimateESTATICS <- function (mpmdata,
                          start = list(par = th),
                          control = list(maxiter = 200,
                                         warnOnly = TRUE)))
+            if (class(res) == "try-error"){
+             # retry with port algorithm and bounds
+                  th <- pmin(upper,pmax(lower,th))
+                  res <- if (method == "NLR") try(nls(ivec ~ estatics2(par, xmat),
+                                                      data = list(xmat = xmat),
+                                                      start = list(par = th),
+                                                      algorithm="port",
+                                                      control = list(maxiter = 200,
+                                                                     warnOnly = TRUE),
+                                                      lower=lower, upper=upper))
+                  else try(nls(ivec ~ estatics2QL(par, xmat, CL, sig, L),
+                               data = list(xmat = xmat,
+                                           CL = CL,
+                                           sig = sig,
+                                           L = L),
+                               start = list(par = th),
+                               algorithm="port",
+                               control = list(maxiter = 200,
+                                              warnOnly = TRUE),
+                               lower=lower, upper=upper))
+            }
           } else if (mpmdata$model == 0) {
             res <- if (method == "NLR") try(nls(ivec ~ estatics1(par, xmat),
                                                 data = list(xmat = xmat),
@@ -502,6 +546,28 @@ estimateESTATICS <- function (mpmdata,
                          start = list(par = th),
                          control = list(maxiter = 200,
                                         warnOnly = TRUE)))
+             if (class(res) == "try-error"){
+# retry with port algorithm and bounds
+                 th <- pmin(upper,pmax(lower,th))
+                 res <- if (method == "NLR") try(nls(ivec ~ estatics1(par, xmat),
+                                                     data = list(xmat = xmat),
+                                                     start = list(par = th),
+                                                     algorithm="port",
+                                                     control = list(maxiter = 200,
+                                                                    warnOnly = TRUE),
+                                                     lower=lower, upper=upper))
+                 else try(nls(ivec ~ estatics1QL(par, xmat, CL, sig, L),
+                              data = list(xmat = xmat,
+                                          CL = CL,
+                                          sig = sig,
+                                          L = L),
+                              start = list(par = th),
+                              algorithm = "port",
+                              control = list(maxiter = 200,
+                                             warnOnly = TRUE),
+                              lower=lower, upper=upper))
+
+              }
           }
 
           if (class(res) != "try-error") {
@@ -543,26 +609,32 @@ estimateESTATICS <- function (mpmdata,
                                            sig = sig,
                                            L = L),
                                start = list(par = th),
+                               algorithm ="port",
                                control = list(maxiter = 200,
-                                              warnOnly = TRUE)))
+                                              warnOnly = TRUE),
+                               lower=lower[1:3], upper=upper[1:3]))
               else if (mpmdata$model == 1)
                 res <- try(nls(ivec ~ estatics2QLfixedR2(par, xmat, CL, sig, L),
-                               data = list(xmat0 = xmat,
+                               data = list(xmat = xmat0,
                                            CL = CL,
                                            sig = sig,
                                            L = L),
                                start = list(par = th),
+                               algorithm ="port",
                                control = list(maxiter = 200,
-                                              warnOnly = TRUE)))
+                                              warnOnly = TRUE),
+                               lower=lower[1:2], upper=upper[1:2]))
               else if (mpmdata$model == 0)
                 res <- try(nls(ivec ~ estatics1QLfixedR2(par, xmat, CL, sig, L),
-                               data = list(xmat0 = xmat,
+                               data = list(xmat = xmat0,
                                            CL = CL,
                                            sig = sig,
                                            L = L),
                                start = list(par = th),
+                               algorithm ="port",
                                control = list(maxiter = 200,
-                                              warnOnly = TRUE)))
+                                              warnOnly = TRUE),
+                               lower=lower[1], upper=upper[1]))
               if (class(res) != "try-error") {
                 isConv[xyz] <- as.integer(res$convInfo$isConv)
                 sres <- getnlspars(res)

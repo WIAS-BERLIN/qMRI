@@ -9,7 +9,7 @@ The function reads data generated in Multimodal Parameter Mapping (MPM) experime
 }
 \usage{
 readMPMData(t1Files = NULL, pdFiles = NULL, mtFiles = NULL, maskFile = NULL,
-            TR = NULL, TE = NULL, FA = NULL, verbose = TRUE)
+            TR = NULL, TE = NULL, FA = NULL, wghts = NULL, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -35,6 +35,10 @@ readMPMData(t1Files = NULL, pdFiles = NULL, mtFiles = NULL, maskFile = NULL,
   \item{FA}{
    optional numeric FA (flip-angle) vector, if omitted information is extracted from .nii files if possible
 }
+  \item{wghts}{
+   optional weights for MPM data volumes. Only needed is volumes have different data variance, e.g.,
+    in case of averages of multiple acquisitions.
+  }
   \item{verbose}{
   logical - provide information on progress
 }

@@ -378,13 +378,13 @@ initth <- function(mpmdata, TEScale=100, dataScale=100){
   th
 }
 
-linearizedESTATICS <- function(ivec, xmat, maxR2star){
+linearizedESTATICS <- function(ivec, xmat, maxR2star, wghts){
     dimx <- dim(xmat)
     npar <- dimx[2]
     invcov <- matrix(0,npar,npar)
-    z <- lm.fit(xmat,log(ivec))
+    z <- lm.wfit(xmat,log(ivec),wghts)
     R2star <- -z$coefficients[npar]
-    sigma2R2s <- sum(z$residuals^2)/(-diff(dimx))
+    sigma2R2s <- sum(z$residuals^2*wghts)/(-diff(dimx))/mean(wghts)
     invcov[npar,npar] <- sum(xmat[,npar]^2)/sigma2R2s
     if (R2star < 0.001){
       R2star <- 0.001
@@ -400,20 +400,20 @@ linearizedESTATICS <- function(ivec, xmat, maxR2star){
     z <- lm.fit(xmat0,ivec)
     theta <- z$coefficients
     sigma2 <- sum(z$residuals^2)/(-diff(dimx)+1)
-    invcov[-npar,-npar] <- t(xmat0)%*%xmat0/sigma2
+    invcov[-npar,-npar] <- t(xmat0)%*%diag(wghts)%*%xmat0/sigma2
     list(theta=theta, R2star=R2star, invCov=invcov, sigma2 = sigma2, xmat=xmat0)
 }
 
-linearizedESTATICS2 <- function(ivec, xmat, maxR2star, sigma, ind){
+linearizedESTATICS2 <- function(ivec, xmat, maxR2star, sigma, ind, wghts){
   #
   #   using variance estimates from data instead of RSS
   #
     dimx <- dim(xmat)
     npar <- dimx[2]
     invcov <- matrix(0,npar,npar)
-    z <- lm.fit(xmat,log(ivec))
+    z <- lm.wfit(xmat,log(ivec),wghts)
     R2star <- -z$coefficients[npar]
-    XtXR2s <- sum(xmat[,npar]^2)
+    XtXR2s <- sum(wghts*xmat[,npar]^2)
     invcov[npar,npar] <- XtXR2s^2/sum(xmat[,npar]^2*sigma[ind]^2)
     if (R2star < 0.001){
       R2star <- 0.001
@@ -430,6 +430,6 @@ linearizedESTATICS2 <- function(ivec, xmat, maxR2star, sigma, ind){
     theta <- z$coefficients
     sigma2 <- sum(z$residuals^2)/(-diff(dimx)+1)
     XtX0 <- t(xmat0)%*%xmat0
-    invcov[-npar,-npar] <- XtX0%*%solve(t(xmat0)%*%diag(sigma[ind]^2)%*%xmat0)%*%XtX0
+    invcov[-npar,-npar] <- XtX0%*%solve(t(xmat0)%*%diag(sigma[ind]^2/wghts)%*%xmat0)%*%XtX0
     list(theta=theta, R2star=R2star, invCov=invcov, sigma2 = sigma2, xmat=xmat0)
 }

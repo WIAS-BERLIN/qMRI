@@ -6,6 +6,7 @@ readMPMData  <-  function(t1Files  = NULL,
                           TR       = NULL,
                           TE       = NULL,
                           FA       = NULL,
+                          wghts    = NULL,
                           verbose  = TRUE) {
 
   ## we need at least T1w and PDw files
@@ -43,7 +44,7 @@ readMPMData  <-  function(t1Files  = NULL,
 
   ## count the number of data volumes (if (is.null(mtFiles)) length(mtFiles) == 0)
   nFiles <- length(t1Files) + length(mtFiles) + length(pdFiles)
-
+  if(is.null(wghts)) wghts <- rep(1, nFiles)
   # the array for the data itself, will only contain data for voxel within mask
   ddata <- array(0, c(nFiles, nvoxel))
 
@@ -145,7 +146,8 @@ readMPMData  <-  function(t1Files  = NULL,
               mask = mask,
               TR = TR,
               TE = TE,
-              FA = FA)
+              FA = FA,
+              weights = wghts)
   class(obj) <- "MPMData"
   invisible(obj)
 }
@@ -384,6 +386,8 @@ estimateESTATICS <- function (mpmdata,
 
   if (verbose) cat(" done\n")
   modelp1 <- mpmdata$model+1
+  wghts <- mpmdata$wghts
+  if(is.null(wghts)) wghts <- rep(1, mpmdata$nFiles)
   if(varest=="data"){
      if(verbose) cat("estimating variance maps from data\n")
      ind <- switch(modelp1,1,c(1,1+nT1),c(1,1+nT1,1+nT1+nMT))
@@ -466,6 +470,7 @@ estimateESTATICS <- function (mpmdata,
             res <- if (method == "NLR") try(nls(ivec ~ estatics3(par, xmat),
                                                 data = list(xmat = xmat),
                                                 start = list(par = th),
+                                                weights = wghts,
                                                 control = list(maxiter = 200,
                                                                warnOnly = TRUE)))
             else try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
@@ -474,6 +479,7 @@ estimateESTATICS <- function (mpmdata,
                                      sig = sig,
                                      L = L),
                          start = list(par = th),
+                         weights = wghts,
                          control = list(maxiter = 200,
                                         warnOnly = TRUE)))
             if (class(res) == "try-error"){
@@ -483,6 +489,7 @@ estimateESTATICS <- function (mpmdata,
                                                   data = list(xmat = xmat),
                                                   start = list(par = th),
                                                   algorithm="port",
+                                                  weights = wghts,
                                                   control = list(maxiter = 200,
                                                                  warnOnly = TRUE),
                                                   lower=lower, upper=upper))
@@ -493,6 +500,7 @@ estimateESTATICS <- function (mpmdata,
                                        L = L),
                            start = list(par = th),
                            algorithm="port",
+                           weights = wghts,
                            control = list(maxiter = 200,
                                           warnOnly = TRUE),
                            lower=lower, upper=upper))
@@ -501,6 +509,7 @@ estimateESTATICS <- function (mpmdata,
             res <- if (method == "NLR") try(nls(ivec ~ estatics2(par, xmat),
                                                 data = list(xmat = xmat),
                                                 start = list(par = th),
+                                                weights = wghts,
                                                 control = list(maxiter = 200,
                                                                warnOnly = TRUE)))
             else try(nls(ivec ~ estatics2QL(par, xmat, CL, sig, L),
@@ -509,6 +518,7 @@ estimateESTATICS <- function (mpmdata,
                                      sig = sig,
                                      L = L),
                          start = list(par = th),
+                         weights = wghts,
                          control = list(maxiter = 200,
                                         warnOnly = TRUE)))
             if (class(res) == "try-error"){
@@ -518,6 +528,7 @@ estimateESTATICS <- function (mpmdata,
                                                       data = list(xmat = xmat),
                                                       start = list(par = th),
                                                       algorithm="port",
+                                                      weights = wghts,
                                                       control = list(maxiter = 200,
                                                                      warnOnly = TRUE),
                                                       lower=lower, upper=upper))
@@ -528,6 +539,7 @@ estimateESTATICS <- function (mpmdata,
                                            L = L),
                                start = list(par = th),
                                algorithm="port",
+                               weights = wghts,
                                control = list(maxiter = 200,
                                               warnOnly = TRUE),
                                lower=lower, upper=upper))
@@ -536,6 +548,7 @@ estimateESTATICS <- function (mpmdata,
             res <- if (method == "NLR") try(nls(ivec ~ estatics1(par, xmat),
                                                 data = list(xmat = xmat),
                                                 start = list(par = th),
+                                                weights = wghts,
                                                 control = list(maxiter = 200,
                                                                warnOnly = TRUE)))
             else try(nls(ivec ~ estatics1QL(par, xmat, CL, sig, L),
@@ -544,6 +557,7 @@ estimateESTATICS <- function (mpmdata,
                                      sig = sig,
                                      L = L),
                          start = list(par = th),
+                         weights = wghts,
                          control = list(maxiter = 200,
                                         warnOnly = TRUE)))
              if (class(res) == "try-error"){
@@ -553,6 +567,7 @@ estimateESTATICS <- function (mpmdata,
                                                      data = list(xmat = xmat),
                                                      start = list(par = th),
                                                      algorithm="port",
+                                                     weights = wghts,
                                                      control = list(maxiter = 200,
                                                                     warnOnly = TRUE),
                                                      lower=lower, upper=upper))
@@ -563,6 +578,7 @@ estimateESTATICS <- function (mpmdata,
                                           L = L),
                               start = list(par = th),
                               algorithm = "port",
+                              weights = wghts,
                               control = list(maxiter = 200,
                                              warnOnly = TRUE),
                               lower=lower, upper=upper))
@@ -584,8 +600,8 @@ estimateESTATICS <- function (mpmdata,
           if (class(res) == "try-error" || coef(res)[npar] > maxR2star || coef(res)[npar] < 0) {
 
             ## fallback for not converged or R2star out of range
-            sres <- if(varest=="RSS") linearizedESTATICS(ivec, xmat, maxR2star) else
-                                        linearizedESTATICS2(ivec, xmat, maxR2star, shat[, xyz], sind )
+            sres <- if(varest=="RSS") linearizedESTATICS(ivec, xmat, maxR2star, wghts) else
+                                        linearizedESTATICS2(ivec, xmat, maxR2star, shat[, xyz], sind ,wghts)
             ## thats already the solution for NLR if R2star is fixed
             isThresh[xyz] <- sres$invCov[npar, npar] == 0
             isConv[xyz] <- 255 ## partially linearized NLR model
@@ -610,6 +626,7 @@ estimateESTATICS <- function (mpmdata,
                                            L = L),
                                start = list(par = th),
                                algorithm ="port",
+                               weights = wghts,
                                control = list(maxiter = 200,
                                               warnOnly = TRUE),
                                lower=lower[1:3], upper=upper[1:3]))
@@ -621,6 +638,7 @@ estimateESTATICS <- function (mpmdata,
                                            L = L),
                                start = list(par = th),
                                algorithm ="port",
+                               weights = wghts,
                                control = list(maxiter = 200,
                                               warnOnly = TRUE),
                                lower=lower[1:2], upper=upper[1:2]))
@@ -632,6 +650,7 @@ estimateESTATICS <- function (mpmdata,
                                            L = L),
                                start = list(par = th),
                                algorithm ="port",
+                               weights = wghts,
                                control = list(maxiter = 200,
                                               warnOnly = TRUE),
                                lower=lower[1], upper=upper[1]))

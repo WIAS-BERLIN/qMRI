@@ -5,7 +5,8 @@ import(oro.nifti, stringr)
 
 importFrom(awsMethods,extract,setCores)
 importFrom("stats", "qchisq", "qf", "qnorm", "qt", "nls", "coef", "quantile",
-           "dnorm","median","sd","deviance","lm.fit","pchisq","formula")
+           "dnorm", "median", "sd", "deviance", "lm.fit", "pchisq",
+           "formula", "rnorm", "lm.wfit")
 importFrom("graphics","par")
 importFrom("adimpro", "rimage","rimage.options")
 importFrom("utils", "data", "setTxtProgressBar", "txtProgressBar")

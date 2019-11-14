@@ -98,11 +98,11 @@ calculating MT ... done
 +     sqrt(mean((qm$R1-qms$R1)[mask]^2)), sqrt(mean((qm$R2star-qms$R2star)[mask]^2)),
 +     sqrt(mean((qm$MT-qms$MT)[mask]^2)), sqrt(mean((qm$PD-qms$PD)[mask]^2)),"\n")
 mean of estimated quantitative maps
- 0.7799036 18.03812 0.8917513 5740.889 
+ 0.7799036 18.0383 0.891752 5740.898 
  mean of smoothed quantitative maps
- 0.7754809 17.91206 0.8803852 5695.775 
+ 0.7754808 17.91227 0.8803859 5695.786 
  Root mean squared difference between estimated and smoothed quantitative maps
- 0.09521402 5.61277 0.2369349 504.4161 
+ 0.0952147 5.612629 0.2369349 504.4215 
 > # set mask to y==11 only yo save time
 > # reduce mask to save time, need also to adapt storage of data
 > mask <- extract(mpm,"mask")
@@ -112,6 +112,7 @@ mean of estimated quantitative maps
 > sigma <- 50
 > modelMPMQL <- estimateESTATICS(mpm, method = "QL",
 +                 sigma = array(sigma, mpm$sdim), L = 1, verbose=FALSE)
+There were 28 warnings (use warnings() to see them)
 > qMRIMapsQL <- calculateQI(modelMPMQL,
 +                 b1File = B1File,
 +                 TR2 = 3.4)
@@ -126,8 +127,8 @@ calculating MT ... done
 > cat("mean of estimated quantitative maps using QL\n",
 +     mean(qmQL$R1[mask]), mean(qmQL$R2star[mask]), mean(qmQL$MT[mask]), mean(qmQL$PD[mask]),"\n")
 mean of estimated quantitative maps using QL
- 0.7726782 18.74322 0.9159376 5774.662 
+ 0.7726782 18.74334 0.9159381 5774.669 
 > 
 > proc.time()
    user  system elapsed 
- 15.184   0.208  14.055 
+ 16.713   0.334  15.670 

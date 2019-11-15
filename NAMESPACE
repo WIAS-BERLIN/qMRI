@@ -1,7 +1,7 @@
 useDynLib(qMRI, .registration = TRUE, .fixes = "C_")
 #exportPattern("^[[:alpha:]]+")
 
-import(oro.nifti, stringr)
+import(oro.nifti, stringr, aws)
 
 importFrom(awsMethods,extract,setCores)
 importFrom("stats", "qchisq", "qf", "qnorm", "qt", "nls", "coef", "quantile",
@@ -11,7 +11,7 @@ importFrom("graphics","par")
 importFrom("adimpro", "rimage","rimage.options")
 importFrom("utils", "data", "setTxtProgressBar", "txtProgressBar")
 importFrom("methods","setOldClass")
-importFrom("aws","kernsm")
+#importFrom("aws","kernsm")
 importFrom("dti","awslsigmc")
 export(readMPMData,estimateESTATICS,calculateQI,smoothESTATICS)
 export("extract.MPMData","extract.ESTATICSModel","extract.sESTATICSModel","extract.qMaps")

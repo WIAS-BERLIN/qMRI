@@ -182,7 +182,7 @@ medianFilterSigma <- function(obj,hsig=10,mask=NULL){
   } else {
     sigma2 <- obj^2
   }
-  sigma2hat <- aws::medianFilter3D(sigma2, hsig=hsig, mask=mask)
+  sigma2hat <- aws::medianFilter3D(sigma2, h=hsig, mask=mask)
   if(class(obj)=="sigmaEstSENSE"){
     obj$sigma <- sqrt(sigma2hat)
     obj$hsig <- hsig

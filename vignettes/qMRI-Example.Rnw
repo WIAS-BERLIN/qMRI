@@ -95,6 +95,14 @@
 	Bdsk-Url-2 = {https://doi.org/10.20347/WIAS.PREPRINT.2520},
 	Bdsk-Url-3 = {http://www.wias-berlin.de/preprint/2432/wias%5C_preprints_2432.pdf}}
 
+	@Book{MRBIbook2019,
+	  title =     {Magnetic Resonance Brain Imaging: Modeling and Data Analysis Using R},
+	  publisher = {Springer},
+	  year =      {2019},
+	  author =    {J\"org Polzehl and Karsten Tabelow},
+	  series =    {Use R!},
+	  doi =       {10.1007/978-3-030-29184-6}
+	}
 \end{filecontents}
 
 \usepackage[style=authoryear,backend=bibtex,url=false]{biblatex} %backend tells biblatex what you will be using to process the bibliography file
@@ -134,6 +142,8 @@ and flip angle, that equal those of the original experiment. The quantitative ma
 suffer from a $B_1$ transmit (and receive) bias, that can be corrected for, if the smooth
 $B_1$ correction field that affects the local flip angle is known~\parencite{Tabelow2019}.
 An estimate for this field is supplied with the package, too.
+
+For an more extended introduction we refer to \cite{MRBIbook} Chapter 6.
 
 \section{Reading the MPM data}
 <<0,echo=FALSE>>=

@@ -66,9 +66,12 @@ list with components
 and class-attribute 'sESTATICSModel'
 }
 \references{
-Joerg Polzehl, Vladimir Spokoiny,  Propagation-separation approach for local likelihood estimation,  Probab. Theory Related Fields  135 (3),  (2006)  , pp. 335--362.
+J. Polzehl, V. Spokoiny,  Propagation-separation approach for local likelihood estimation,  Probab. Theory Related Fields  135 (3),  (2006)  , pp. 335--362.
 
-Joerg Polzehl, Kostas Papafitsorus, Karsten Tabelow (2018). Patch-wise adaptive weights smoothing. WIAS-Preprint 2520.
+J. Polzehl, K. Papafitsorus, K. Tabelow (2018). Patch-wise adaptive weights smoothing. WIAS-Preprint 2520.
+
+J. Polzehl, K. Tabelow (2019). Magnetic Resonance Brain Imaging:
+Modeling and Data Analysis Using R. Springer, Use R! series. Doi:10.1007/978-3-030-29184-6.
 }
 \author{
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr

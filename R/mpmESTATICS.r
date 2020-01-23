@@ -69,7 +69,7 @@ readMPMData  <-  function(t1Files  = NULL,
     ddata[ii, ] <- ds[mask]
     if(readParameterFlag) {
       ## IMPORTANT: This is special to Siawoosh data
-      res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
+      res <- stringr::str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
       for (nn in 1:dim(res[[1]])[1]) {
         if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
         if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
@@ -89,7 +89,7 @@ readMPMData  <-  function(t1Files  = NULL,
       ddata[ii, ] <- ds[mask]
       if(readParameterFlag) {
         ## IMPORTANT: This is special to Siawoosh data
-        res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
+        res <- stringr::str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
         for (nn in 1:dim(res[[1]])[1]) {
           if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
           if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
@@ -110,7 +110,7 @@ readMPMData  <-  function(t1Files  = NULL,
       ddata[ii, ] <- ds[mask]
       if(readParameterFlag) {
         ## IMPORTANT: This is special to Siawoosh data
-        res <- str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
+        res <- stringr::str_match_all(ds@descrip, "([[:alpha:]]{2})=([.0123456789]+)([[:alpha:]]{2,})")
         for (nn in 1:dim(res[[1]])[1]) {
           if (res[[1]][nn, 2] == "TR") TR[ii] <- as.numeric(res[[1]][nn, 3])
           if (res[[1]][nn, 2] == "TE") TE[ii] <- as.numeric(res[[1]][nn, 3])
@@ -270,8 +270,9 @@ estimateESTATICS <- function (mpmdata,
      ddata <- extract(mpmdata,"ddata")[ind,,,,drop=FALSE]
      shat <- ddata
      for( i in 1:modelp1){
-        shat[i,,,] <- awslsigmc(ddata[i,,,],steps=16,hsig=2.5,lambda=6,
-            mask=extract(mpmdata,"mask"),family="Gauss")$sigma
+        shat[i,,,] <- aws::awsLocalSigma(ddata[i,,,], steps=16,
+            mask=extract(mpmdata,"mask"), ncoils=1, hsig=2.5,
+            lambda=6,family="Gauss")$sigma
      }
      dim(shat) <- c(modelp1,prod(mpmdata$sdim))
      shat <- shat[,mpmdata$mask]

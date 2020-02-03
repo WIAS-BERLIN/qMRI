@@ -45,7 +45,7 @@ estimateESTATICS(mpmdata, TEScale = 100, dataScale = 1000, method = c("NLR", "QL
 \item{varest}{
   For parameter covariance estimation use either residual sum of squares (RSS)
   or estimate variances for T1, MT (is available) and PD from higest intensity
-  images using function \code{awslsigmc}from package \pkg{dti}.
+  images using function \code{awsLocalSigma}from package \pkg{aws}.
 }
   \item{verbose}{
    logical: Monitor process.
@@ -94,7 +94,7 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \seealso{
 \code{\link{readMPMData}}, \code{\link{calculateQI}},
 \code{\link{smoothESTATICS}}, \code{\link{writeESTATICS}},
-\code{\link[dti]{awslsigmc}}
+\code{\link[aws]{awsLocalSigma}}
 }
 \examples{
 \donttest{

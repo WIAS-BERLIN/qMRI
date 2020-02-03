@@ -69,7 +69,7 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \seealso{
 \code{\link{readMPMData}}, \code{\link{estimateESTATICS}},
 \code{\link{smoothESTATICS}}, \code{\link{writeESTATICS}},
-\code{\link[dti]{awslsigmc}}
+\code{\link[aws]{awsLocalSigma}}
 }
 \keyword{ models }% use one of  RShowDoc("KEYWORDS")
 

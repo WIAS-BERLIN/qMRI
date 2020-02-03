@@ -79,7 +79,7 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \seealso{
 \code{\link{estimateESTATICS}}, \code{\link{calculateQI}},
 \code{\link{smoothESTATICS}}, \code{\link{writeESTATICS}},
-\code{\link[dti]{awslsigmc}}
+\code{\link[aws]{awsLocalSigma}}
 }
 \examples{
 dataDir <- system.file("extdata",package="qMRI")

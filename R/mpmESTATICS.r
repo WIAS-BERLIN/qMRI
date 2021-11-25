@@ -277,8 +277,9 @@ estimateESTATICS <- function (mpmdata,
      dim(shat) <- c(modelp1,prod(mpmdata$sdim))
      shat <- shat[,mpmdata$mask]
      shat[shat==0] <- quantile(shat,.8)
+     if(is.null(sigma)) sigma <- median(shat)
      shat <- shat/dataScale
-  } else shat <- NULL
+   } else shat <- NULL
 
   ## obbtain initial estimates from linearized model
   thetas <- initth(mpmdata, TEScale, dataScale)

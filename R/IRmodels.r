@@ -5,7 +5,7 @@ IRhomogen <- function(par, InvTimes){
   ## S_{InvTime} = par[1] * abs( 1 - 2 * exp(-InvTime*par[2]) )
   ##
   n <- length(InvTimes)
-  z <- .Fortran(C_IRfluid,
+  z <- .Fortran(C_irfluid,
                 as.double(par),
                 as.double(InvTimes),
                 as.integer(n),
@@ -23,8 +23,8 @@ IRmix2 <- function(par, InvTimes, S0f, Rf){
   ## S_{InvTime} = S0f * abs( par[1] * (1-2*exp(-InvTime*Rf)) +
   ##                        (1-par[1])*par[3]* (1-2*exp(-InvTime*par[2])) )
   ##
-  n <- dim(design)[1]
-  z <- .Fortran(C_IRmix,
+  n <- length(InvTimes)
+  z <- .Fortran(C_irmix,
                 as.double(par),
                 as.double(InvTimes),
                 as.double(S0f),
@@ -45,8 +45,8 @@ IRmix2fix <- function(par, InvTimes, S0f, S0s, Rf, Rs){
   ## S_{InvTime} = S0f * abs( par[1] * (1-2*exp(-InvTime*Rf)) +
   ##                        (1-par[1])*par[3]* (1-2*exp(-InvTime*par[2])) )
   ##
-  n <- dim(design)[1]
-  z <- .Fortran(C_IRmix0,
+  n <- length(InvTimes)
+  z <- .Fortran(C_irmix0,
                 as.double(par),
                 as.double(InvTimes),
                 as.double(Rs),
@@ -68,7 +68,7 @@ IRhomogenQL <- function(par, InvTimes, CL, sig, L){
   ## S_{InvTime} = par[1] * abs( 1 - 2 * exp(-InvTime*par[2]) )
   ##
   n <- length(InvTimes)
-  z <- .Fortran(C_IRfluid,
+  z <- .Fortran(C_irfluid,
                 as.double(par),
                 as.double(InvTimes),
                 as.integer(n),
@@ -86,7 +86,7 @@ IRhomogenQL <- function(par, InvTimes, CL, sig, L){
   if(any(ind)){
     # use LS if there is no real difference, factor to keep monotonicity
     fval[ind] <- z$fval[ind]*1.0001
-    grad[ind,] <- matrix(z$grad, n, 4)[ind, ]*1.0001
+    grad[ind,] <- matrix(z$grad, n, 2)[ind, ]*1.0001
   }
   if(any(is.na(grad))){
     warning(paste("IRhomogenQL/grad\n","par",par,"sigma",sig,
@@ -103,8 +103,8 @@ IRmix2QL <- function(par, InvTimes, S0f, Rf, CL, sig, L){
   ## S_{InvTime} = S0f * abs( par[1] * (1-2*exp(-InvTime*Rf)) +
   ##                        (1-par[1])*par[3]* (1-2*exp(-InvTime*par[2])) )
   ##
-  n <- dim(design)[1]
-  z <- .Fortran(C_IRmix,
+  n <- length(InvTimes)
+  z <- .Fortran(C_irmix,
                 as.double(par),
                 as.double(InvTimes),
                 as.double(S0f),
@@ -124,7 +124,7 @@ IRmix2QL <- function(par, InvTimes, S0f, Rf, CL, sig, L){
   if(any(ind)){
     # use LS if there is no real difference, factor to keep monotonicity
     fval[ind] <- z$fval[ind]*1.0001
-    grad[ind,] <- matrix(z$grad, n, 4)[ind, ]*1.0001
+    grad[ind,] <- matrix(z$grad, n, 2)[ind, ]*1.0001
   }
   if(any(is.na(grad))){
     warning(paste("IRmix2QL/grad\n","par",par,"sigma",sig,
@@ -145,8 +145,8 @@ IRmix2fixQL <- function(par, InvTimes, S0f, S0s, Rf, Rs, CL, sig, L){
   ## S_{InvTime} = S0f * abs( par[1] * (1-2*exp(-InvTime*Rf)) +
   ##                        (1-par[1])*par[3]* (1-2*exp(-InvTime*par[2])) )
   ##
-  n <- dim(design)[1]
-  z <- .Fortran(C_IRmix0,
+  n <- length(InvTimes)
+  z <- .Fortran(C_irmix0,
                 as.double(par),
                 as.double(InvTimes),
                 as.double(Rs),

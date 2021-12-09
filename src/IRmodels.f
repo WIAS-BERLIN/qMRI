@@ -8,7 +8,7 @@ C
       integer n
       double precision th(2),invtime(n),fval(n),grad(n,2)
       integer i
-      double precision z1,z2,fv,th1,th2
+      double precision z1,z2,th1,th2
       th1=th(1)
       th2=th(2)
       DO i=1,n

@@ -125,8 +125,8 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                             maxR2star=50,
                             varest = c("RSS","data"),
                             verbose = TRUE,
-                            lower=c(0,0),
-                            upper=c(1,1)){
+                            lower=c(.05,0,0),
+                            upper=c(.95,1,1)){
    mask <- segments>1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
@@ -181,13 +181,13 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                                              data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid),
                                              start = list(par = th),
                                              control = list(maxiter = 200,
-                                                            warnOnly = TRUE)))
+                                                            warnOnly = TRUE)),silent=TRUE)
          else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, CL, sig, L),
                       data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid,
                                   CL = CL, sig = sig, L = L),
                       start = list(par = th),
                       control = list(maxiter = 200,
-                                     warnOnly = TRUE)))
+                                     warnOnly = TRUE)),silent=TRUE)
          if (class(res) == "try-error"){
             # retry with port algorithm and bounds
             th <- pmin(upper,pmax(lower,th))
@@ -197,7 +197,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                                                 algorithm="port",
                                                 control = list(maxiter = 200,
                                                                warnOnly = TRUE),
-                                                lower=lower, upper=upper))
+                                                lower=lower, upper=upper),silent=TRUE)
             else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, CL, sig, L),
                                      data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid,
                                      CL = CL, sig = sig, L = L),
@@ -205,7 +205,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                          algorithm="port",
                          control = list(maxiter = 200,
                                         warnOnly = TRUE),
-                         lower=lower, upper=upper))
+                         lower=lower, upper=upper),silent=TRUE)
          }
          if (class(res) != "try-error") {
             sres <- if(varest[1]=="RSS") getnlspars(res) else
@@ -217,10 +217,11 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                rsigma[xyz] <- sres$sigma
             }
          }
-         if (verbose){
-           close(pb)
-           cat("Finished estimation", format(Sys.time()), "\n")
-         }
+         if (verbose) if(xyz%/%1000*1000==xyz) setTxtProgressBar(pb, xyz)
+      }
+      if (verbose){
+        close(pb)
+        cat("Finished estimation", format(Sys.time()), "\n")
       }
       fx[mask] <- modelCoeff[1,]
       Rx[mask] <- modelCoeff[2,]
@@ -244,8 +245,8 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
                                  maxR2star=50,
                                  varest = c("RSS","data"),
                                  verbose = TRUE,
-                                 lower=c(0,0),
-                                 upper=c(1,1)){
+                                 lower=c(0.05),
+                                 upper=c(0.95)){
    mask <- segments>1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
@@ -299,13 +300,13 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
                                           data = list(ITS=InvTimesScaled, Sf=Sfluid, Ss=Ss, Rf=Rfluid, Rs=Rs),
                                           start = list(par = th),
                                           control = list(maxiter = 200,
-                                                         warnOnly = TRUE)))
+                                                         warnOnly = TRUE)),silent=TRUE)
       else try(nls(ivec ~ IRmix2fixQL(par, ITS, Sf, Ss, Rf, Rs, CL, sig, L),
                    data = list(ITS=InvTimesScaled, Sf=Sfluid, Ss=Ss, Rf=Rfluid, Rs=Rs,
                                CL = CL, sig = sig, L = L),
                    start = list(par = th),
                    control = list(maxiter = 200,
-                                  warnOnly = TRUE)))
+                                  warnOnly = TRUE)),silent=TRUE)
       if (class(res) == "try-error"){
          # retry with port algorithm and bounds
          th <- pmin(upper,pmax(lower,th))
@@ -314,7 +315,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
                                              algorithm="port",
                                              control = list(maxiter = 200,
                                                             warnOnly = TRUE),
-                                             lower=lower, upper=upper))
+                                             lower=lower, upper=upper),silent=TRUE)
          else try(nls(ivec ~ IRmix2fixQL(par, ITS, Sf, Ss, Rf, Rs, CL, sig, L),
                       data = list(ITS=InvTimesScaled, Sf=Sfluid, Ss=Ss, Rf=Rfluid, Rs=Rs,
                                   CL = CL, sig = sig, L = L),
@@ -322,7 +323,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
                       algorithm="port",
                       control = list(maxiter = 200,
                                      warnOnly = TRUE),
-                      lower=lower, upper=upper))
+                      lower=lower, upper=upper),silent=TRUE)
       }
       if (class(res) != "try-error") {
          sres <- if(varest=="RSS") getnlspars(res) else

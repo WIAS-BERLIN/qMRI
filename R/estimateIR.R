@@ -19,11 +19,11 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
    InvTimesScaled <- InvTimes/TEScale
    ## create necessary arrays
    npar <- 2 #  th2 for R, th1 for S
-   Rx <- Sx <- array(0,dim(mask))
-   isConv <- array(FALSE, nvoxel)
+   Rx <- Sx <- Conv <- array(0,dim(mask))
+   isConv <- array(-1, nvoxel)
    isThresh <- array(FALSE, nvoxel)
    modelCoeff <- array(0, c(npar, nvoxel))
-   if(varest=="data"){
+   if(varest[1]=="data"){
      if(verbose) cat("estimating variance maps from data\n")
      ind <- (InvTimes == max(InvTimes))[1]
      ddata <- IRdata[ind,,,]
@@ -36,7 +36,7 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
      shat <- shat
      if(is.null(sigma)) sigma <- median(shat) else shat <- NULL
    }
-   if (method == "QL") {
+   if (method[1] == "QL") {
    if(is.null(sigma)){ 
       method <- "NLR"
       warning("estimateIRfluid: method QL needs sigma estimated or supplied")
@@ -59,11 +59,11 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
      ivec <- IRdataFluid[, xyz]/dataScale
      th <- thetas[, xyz]
      
-       res <- if (method == "NLR") try(nls(ivec ~ IRhomogen(par, InvTimesScaled),
+       res <- if (method[1] == "NLR") try(nls(ivec ~ IRhomogen(par, InvTimesScaled),
                                            data = list(InvTimesScaled),
                                            start = list(par = th),
                                            control = list(maxiter = 200,
-                                                          warnOnly = TRUE)))
+                                                          warnOnly = TRUE)),silent=TRUE)
        else try(nls(ivec ~ IRhomogenQL(par, InvTimesScaled, CL, sig, L),
                     data = list(InvTimesScaled,
                                 CL = CL,
@@ -71,17 +71,17 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
                                 L = L),
                     start = list(par = th),
                     control = list(maxiter = 200,
-                                   warnOnly = TRUE)))
+                                   warnOnly = TRUE)),silent=TRUE)
        if (class(res) == "try-error"){
          # retry with port algorithm and bounds
          th <- pmin(upper,pmax(lower,th))
-         res <- if (method == "NLR") try(nls(ivec ~ IRhomogen(par, InvTimesScaled),
+         res <- if (method[1] == "NLR") try(nls(ivec ~ IRhomogen(par, InvTimesScaled),
                                              data = list(InvTimes=InvTimesScaled),
                                              start = list(par = th),
                                                algorithm="port",
                                              control = list(maxiter = 200,
                                                             warnOnly = TRUE),
-                                             lower=lower, upper=upper))
+                                             lower=lower, upper=upper),silent=TRUE)
          else try(nls(ivec ~ IRhomogenQL(par, InvTimesScaled, CL, sig, L),
                       data = list(InvTimesScaled=InvTimesScaled,
                                   CL = CL,
@@ -91,22 +91,27 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
                       algorithm="port",
                       control = list(maxiter = 200,
                                      warnOnly = TRUE),
-                      lower=lower, upper=upper))
+                      lower=lower, upper=upper),silent=TRUE)
        }
        if (class(res) != "try-error") {
-         sres <- if(varest=="RSS") getnlspars(res) else
+         sres <- if(varest[1]=="RSS") getnlspars(res) else
            getnlspars2(res, shat[, xyz], sind )
          isConv[xyz] <- as.integer(res$convInfo$isConv)
          modelCoeff[, xyz] <- sres$coefficients
        }
+       if (verbose) if(xyz%/%1000*1000==xyz) setTxtProgressBar(pb, xyz)
      }
   Rx[mask] <- modelCoeff[2,]
   Sx[mask] <- modelCoeff[1,]
-  
-  Sf <- median(modelCoeff[1,isConv==0])
-  Rf <- median(modelCoeff[2,isConv==0])
+  Conv[mask] <- isConv
+  Sf <- median(modelCoeff[1,isConv==1])
+  Rf <- median(modelCoeff[2,isConv==1])
+  if (verbose){
+    close(pb)
+    cat("Finished estimation", format(Sys.time()), "\n","Sf",Sf,"Rf",Rf,"\n")
+  }
   # Results are currently scaled by TEscale (R) and Datascale (S)
-  list(Sf=Sf,Rf=Rf,Sx=Sx,Rx=Rx,sigma=sigma)
+  list(Sf=Sf,Rf=Rf,Sx=Sx,Rx=Rx,sigma=sigma,Conv=Conv)
 }
    
 
@@ -138,7 +143,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
    fx[segments==1] <- 1
    Rx[segments==1] <- Rfluid
    Sx[segments==1] <- Sfluid
-   Convx[segments==1] <- 0
+   Convx[segments==1] <- 1
    # set ICovx for fluid as (numerically) diag(rep(Inf),3)
    ICovx[1,1,segments==1] <- 1e20
    ICovx[2,2,segments==1] <- 1e20
@@ -148,7 +153,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
    modelCoeff <- array(0, c(npar, nvoxel))
    invCov <- array(0, c(npar, npar, nvoxel))
    rsigma <- array(0, nvoxel)
-   if (method == "QL") {
+   if (method[1] == "QL") {
       if(is.null(sigma)){ 
          method <- "NLR"
          warning("estimateIRsolid: method QL needs sigma estimated from fluid or supplied")
@@ -172,7 +177,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
          ivec <- IRdataSolid[, xyz]/dataScale
          th <- thetas[, xyz]
          
-         res <- if (method == "NLR") try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid),
+         res <- if (method[1] == "NLR") try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid),
                                              data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid),
                                              start = list(par = th),
                                              control = list(maxiter = 200,
@@ -186,7 +191,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
          if (class(res) == "try-error"){
             # retry with port algorithm and bounds
             th <- pmin(upper,pmax(lower,th))
-            res <- if (method == "NLR") try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid),
+            res <- if (method[1] == "NLR") try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid),
                                                 data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid),
                                                 start = list(par = th),
                                                 algorithm="port",
@@ -203,7 +208,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                          lower=lower, upper=upper))
          }
          if (class(res) != "try-error") {
-            sres <- if(varest=="RSS") getnlspars(res) else
+            sres <- if(varest[1]=="RSS") getnlspars(res) else
                getnlspars2(res, shat[, xyz], sind )
             isConv[xyz] <- as.integer(res$convInfo$isConv)
             modelCoeff[, xyz] <- sres$coefficients
@@ -211,6 +216,10 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                invCov[, , xyz] <- sres$invCov
                rsigma[xyz] <- sres$sigma
             }
+         }
+         if (verbose){
+           close(pb)
+           cat("Finished estimation", format(Sys.time()), "\n")
          }
       }
       fx[mask] <- modelCoeff[1,]

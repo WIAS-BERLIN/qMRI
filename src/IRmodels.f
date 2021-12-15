@@ -16,12 +16,12 @@ C
          z2=1.d0-2.d0*z1
          fval(i)=th1*abs(z2)
          grad(i,1)=abs(z2)
-         grad(i,2)=-dsign(2.d0*z1*invtime(i),z2)
+         grad(i,2)=2.d0*z1*invtime(i)*dsign(1.d0,z2)
       END DO
       RETURN
       END
 
-      subroutine IRmix(th, invtime, s0, t1, n, fval, grad)
+      subroutine IRmix(th, invtime, s0, r1, n, fval, grad)
 C
 C  function values and gradients (3 parameters, S_s, R_s, f)
 C
@@ -29,21 +29,23 @@ C  fval = abs(s0*th(1)*(1-2*exp(-invtime*t1))+(1-th(1))*th(3)*(1-2*exp(-invtime*
 C
       implicit logical (a-z)
       integer n
-      double precision th(3),invtime(n),s0,t1,fval(n),grad(n,3)
+      double precision th(3),invtime(n),s0,r1,fval(n),grad(n,3)
       integer i
-      double precision z1,z2,z3,th1,th2,th3,th13
+      double precision z1,z2,z3,th1,th2,th3,th13,fv,vz
       th1=th(1)
       th2=th(2)
       th3=th(3)
       th13=th3*(1.d0-th1)
       DO i=1,n
-         z1=s0*(1.d0-2.d0*exp(-invtime(i)*t1))
+         z1=s0*(1.d0-2.d0*exp(-invtime(i)*r1))
          z2=exp(-invtime(i)*th2)
          z3=1.d0-2.d0*z2
-         fval(i)=abs(s0*th1*z1+th13*z3)
-         grad(i,1)=dsign((z1-th3*z3),th1*z1+th13*z3)
-         grad(i,2)=-dsign(th13*2.d0*z2*invtime(i),th1*z1+th13*z3)
-         grad(i,3)=dsign((1.d0-th1)*z3,th1*z1+th13*z3)
+         fv=th1*z1+th13*z3
+         vz=dsign(1.d0,fv)
+         fval(i)=abs(fv)
+         grad(i,1)=(z1-th3*z3)*vz
+         grad(i,2)=(th13*2.d0*z2*invtime(i))*vz
+         grad(i,3)=(1.d0-th1)*z3*vz
       END DO
       RETURN
       END
@@ -58,14 +60,14 @@ C
       integer n
       double precision th1,invtime(n),s0,t1,fval(n),grad(n),th2,th3
       integer i
-      double precision z1,z2,z3,th13
+      double precision z1,z3,th13,fv
       th13=th3*(1.d0-th1)
       DO i=1,n
-         z1=1.d0-2.d0*exp(-invtime(i)*t1)
-         z2=exp(-invtime(i)*th2)
-         z3=1.d0-2.d0*z2
-         fval(i)=s0*abs(th1*z1+(1.d0-th1)*th3*z3)
-         grad(i)=dsign(s0*(z1-th3*z3),th1*z1*th13*z3)
+         z1=s0*(1.d0-2.d0*exp(-invtime(i)*t1))
+         z3=(1.d0-2.d0*exp(-invtime(i)*th2))
+         fv=th1*z1+th13*z3
+         fval(i)=abs(fv)
+         grad(i)=(z1-th3*z3)*dsign(1.d0,fv)
       END DO
       RETURN
       END

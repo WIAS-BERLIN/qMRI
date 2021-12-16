@@ -8,10 +8,12 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
                             varest = c("RSS","data"),
                             verbose = TRUE,
                             lower=c(0,0),
-                            upper=c(1,1)){
+                            upper=c(2,2)){
    mask <- segments==1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
+   itmin <- order(InvTimes)[1]
+   itmax <- order(InvTimes)[ntimes]
    InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
    dimdata <- dim(IRdata)
    if(dimdata[1]!=ntimes) stop("estimateIRfluid: incompatible length of InvTimes")
@@ -20,7 +22,7 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
    ## create necessary arrays
    npar <- 2 #  th2 for R, th1 for S
    Rx <- Sx <- Conv <- array(0,dim(mask))
-   isConv <- array(-1, nvoxel)
+   isConv <- array(0, nvoxel)
    isThresh <- array(FALSE, nvoxel)
    modelCoeff <- array(0, c(npar, nvoxel))
    if(varest[1]=="data"){
@@ -48,8 +50,8 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
      dim(IRdata) <- c(dimdata[1],prod(dim(segments)))
      IRdataFluid <- IRdata[,segments==1]
      thetas <- matrix(0,2,nvoxel)
-     thetas[1,] <- IRdataFluid[(1:ntimes)[InvTimes == max(InvTimes)][1],]/dataScale
-     thetas[2,] <- 1/median(InvTimesScaled)
+     thetas[1,] <- IRdataFluid[itmax,]/dataScale
+     thetas[2,] <- -log((IRdataFluid[itmin]/dataScale+thetas[1,])/2)/InvTimes[itmin]*TEScale
      if (verbose){
         cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
         pb <- txtProgressBar(0, nvoxel, style = 3)
@@ -72,7 +74,11 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
                     start = list(par = th),
                     control = list(maxiter = 200,
                                    warnOnly = TRUE)),silent=TRUE)
-       if (class(res) == "try-error"){
+       if (class(res) != "try-error"){
+          thhat <- coef(res)
+          outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
+       }
+       if (class(res) == "try-error" || outofrange){
          # retry with port algorithm and bounds
          th <- pmin(upper,pmax(lower,th))
          res <- if (method[1] == "NLR") try(nls(ivec ~ IRhomogen(par, InvTimesScaled),
@@ -104,8 +110,8 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
   Rx[mask] <- modelCoeff[2,]
   Sx[mask] <- modelCoeff[1,]
   Conv[mask] <- isConv
-  Sf <- median(modelCoeff[1,isConv==1])
-  Rf <- median(modelCoeff[2,isConv==1])
+  Sf <- median(modelCoeff[1,],na.rm=TRUE)
+  Rf <- median(modelCoeff[2,],na.rm=TRUE)
   if (verbose){
     close(pb)
     cat("Finished estimation", format(Sys.time()), "\n","Sf",Sf,"Rf",Rf,"\n")
@@ -125,8 +131,8 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                             maxR2star=50,
                             varest = c("RSS","data"),
                             verbose = TRUE,
-                            lower=c(.05,0,0),
-                            upper=c(.95,1,1)){
+                            lower=c(0,0,0),
+                            upper=c(.95,2,2)){
    mask <- segments>1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
@@ -188,7 +194,11 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                       start = list(par = th),
                       control = list(maxiter = 200,
                                      warnOnly = TRUE)),silent=TRUE)
-         if (class(res) == "try-error"){
+         if (class(res) != "try-error"){
+           thhat <- coef(res)
+           outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
+         }
+         if (class(res) == "try-error" || outofrange){
             # retry with port algorithm and bounds
             th <- pmin(upper,pmax(lower,th))
             res <- if (method[1] == "NLR") try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid),

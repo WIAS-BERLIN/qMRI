@@ -16,6 +16,8 @@ void F77_NAME(estatics3fixedr2)(double* th, double* r2star, double* des, int* n,
 void F77_NAME(irfluid)(double* th, double* invtime, int* n, double* fval, double* grad);
 void F77_NAME(irmix)(double* th, double* invtime, double* s0, double* t1, int* n, 
               double* fval, double* grad);
+void F77_NAME(irmixfv)(double* th, double* invtime, double* s0, double* t1, int* n, 
+              double* fval);
 void F77_NAME(irmix0)(double* th1, double* invtime, double* th2, double* th3, double* s0, 
               double*t1, int* n, double* fval, double* grad);
 
@@ -37,6 +39,8 @@ static R_NativePrimitiveArgType irfluid_t[]={REALSXP, REALSXP, INTSXP, REALSXP,
                                              REALSXP};
 static R_NativePrimitiveArgType irmix_t[]={REALSXP, REALSXP, REALSXP, REALSXP, 
                                              INTSXP, REALSXP, REALSXP};
+static R_NativePrimitiveArgType irmixfv_t[]={REALSXP, REALSXP, REALSXP, REALSXP, 
+                                           INTSXP, REALSXP};
 static R_NativePrimitiveArgType irmix0_t[]={REALSXP, REALSXP, REALSXP, REALSXP, 
                                              REALSXP, REALSXP, INTSXP, REALSXP, REALSXP};
 
@@ -50,6 +54,7 @@ static const R_FortranMethodDef fmethods[] = {
             {"estatics3fixedr2", (DL_FUNC) &estatics3fixedr2_ , 6, estatics3fixedr2_t},
             {"irfluid", (DL_FUNC) &irfluid_ , 5, irfluid_t},
             {"irmix", (DL_FUNC) &irmix_ , 7, irmix_t},
+            {"irmixfv", (DL_FUNC) &irmixfv_ , 6, irmixfv_t},
             {"irmix0", (DL_FUNC) &irmix0_ , 9, irmix0_t},
             {NULL, NULL, 0,NULL}
 };

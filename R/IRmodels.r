@@ -37,6 +37,40 @@ IRmix2 <- function(par, InvTimes, S0f, Rf){
   fval
 }
 
+IRmix2fv <- function(par, InvTimes, S0f, Rf){
+  ##
+  ## Inversion Recovery MRI 2 compartments (fluid/solid) with fixed fluid parameters
+  ##
+  ## S_{InvTime} = S0f * abs( par[1] * (1-2*exp(-InvTime*Rf)) +
+  ##                        (1-par[1])*par[3]* (1-2*exp(-InvTime*par[2])) )
+  ##
+  n <- length(InvTimes)
+  z <- .Fortran(C_irmixfv,
+                as.double(par),
+                as.double(InvTimes),
+                as.double(S0f),
+                as.double(Rf),
+                as.integer(n),
+                fval = double(n))[c("fval")]
+  fval <- z$fval
+  fval
+}
+
+LSIRmix2 <- function(par, Y, InvTimes, S0f, Rf){
+   fval <- IRmix2fv(par, InvTimes, S0f, Rf)
+   kval <- (Y - fval) 
+   value <- sum(kval^2)
+   value
+}
+
+LSIRmix2grad <- function(par, Y, InvTimes, S0f, Rf){
+  fval <- IRmix2(par, InvTimes, S0f, Rf)
+  grad <- attr(fval,"gradient")
+  kval <- (Y - fval) 
+  gradient <- -2 * kval %*% grad
+  gradient
+}
+
 IRmix2fix <- function(par, InvTimes, S0f, S0s, Rf, Rs){
   ##
   ## Inversion Recovery MRI 2 compartments (fluid/solid) with fixed fluid and solid parameters
@@ -135,6 +169,22 @@ IRmix2QL <- function(par, InvTimes, S0f, Rf, CL, sig, L){
   fval <- z$fval
   attr(fval, "gradient") <- matrix(z$grad, n, 3)
   fval
+}
+
+LSIRmix2QL <- function(par, Y, InvTimes, S0f, Rf, CL, sig, L){
+  fval <- IRmix2fvQL(par, InvTimes, S0f, Rf, CL, sig, L)
+  kval <- (Y - fval) 
+  value <- sum(kval^2)
+  value
+}
+
+LSIRmix2QLgrad <- function(par, Y, InvTimes, S0f, Rf, CL, sig, L){
+  fval <- IRmix2QL(par, InvTimes, S0f, Rf, CL, sig, L)
+  grad <- attr(fval,"gradient")
+  kval <- (Y - fval) 
+  value <- sum(kval^2)
+  gradient <- -2 * kval %*% grad
+  gradient
 }
 
 IRmix2fixQL <- function(par, InvTimes, S0f, S0s, Rf, Rs, CL, sig, L){

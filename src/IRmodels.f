@@ -50,6 +50,31 @@ C
       RETURN
       END
 
+      subroutine IRmixfv(th, invtime, s0, r1, n, fval)
+C
+C  function values  (3 parameters, S_s, R_s, f)
+C
+C  fval = abs(s0*th(1)*(1-2*exp(-invtime*t1))+(1-th(1))*th(3)*(1-2*exp(-invtime*th2)))
+C
+      implicit logical (a-z)
+      integer n
+      double precision th(3),invtime(n),s0,r1,fval(n),grad(n,3)
+      integer i
+      double precision z1,z2,z3,th1,th2,th3,th13,fv,vz
+      th1=th(1)
+      th2=th(2)
+      th3=th(3)
+      th13=th3*(1.d0-th1)
+      DO i=1,n
+         z1=s0*(1.d0-2.d0*exp(-invtime(i)*r1))
+         z2=exp(-invtime(i)*th2)
+         z3=1.d0-2.d0*z2
+         fv=th1*z1+th13*z3
+         fval(i)=abs(fv)
+      END DO
+      RETURN
+      END
+
       subroutine IRmix0(th1, invtime, th2, th3, s0, t1, n, fval, grad)
 C
 C  function values and gradients (1 parameters, f)

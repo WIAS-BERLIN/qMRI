@@ -4,7 +4,6 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
                             method = c("NLR", "QL"),
                             sigma = NULL,
                             L = 1,
-                            maxR2star=50,
                             varest = c("RSS","data"),
                             verbose = TRUE,
                             lower=c(0,0),
@@ -128,7 +127,6 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                             method = c("NLR", "QL"),
                             sigma = NULL,
                             L = 1,
-                            maxR2star=50,
                             varest = c("RSS","data"),
                             verbose = TRUE,
                             lower=c(0,0,0),
@@ -172,7 +170,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
       IRdataSolid <- IRdata[,mask]
       thetas <- matrix(0,3,nvoxel)
       thetas[3,] <- IRdataSolid[(1:ntimes)[InvTimes == max(InvTimes)][1],]/dataScale
-      thetas[2,] <- 1/median(InvTimesScaled)
+      thetas[2,] <- pmin(upper[2],pmax(lower[2],10/median(InvTimesScaled)))
       thetas[1,] <- 0.3
       if (verbose){
          cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
@@ -182,6 +180,19 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
          
          ivec <- IRdataSolid[, xyz]/dataScale
          th <- thetas[, xyz]
+##
+##   initialize using optim
+##
+         res <- if (method[1] == "NLR") try(optim(par, LSIRmix2, LSIRmix2grad, 
+                                  Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid,
+                                  method="L-BFGS-B",lower=lower,upper=upper))
+         else try(optim(par, LSIRmix2QL, LSIRmix2QLgrad, 
+                        Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid, 
+                        CL = CL, sig = sig, L = L,
+                        method="L-BFGS-B",lower=lower,upper=upper))
+         if (class(res) != "try-error"){
+           th <- coef(res)
+         }
          
          res <- if (method[1] == "NLR") try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid),
                                              data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid),
@@ -252,7 +263,6 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
                                  method = c("NLR", "QL"),
                                  sigma = NULL,
                                  L = 1,
-                                 maxR2star=50,
                                  varest = c("RSS","data"),
                                  verbose = TRUE,
                                  lower=c(0.05),
@@ -360,7 +370,6 @@ estimateIR <- function(IRdata, InvTimes, segments, fixed=TRUE, smoothMethod=c("D
                        method = c("NLR", "QL"),
                        sigma = NULL,
                        L = 1,
-                       maxR2star=50,
                        varest = c("RSS","data"),
                        verbose = TRUE){
   

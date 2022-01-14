@@ -6,67 +6,71 @@ Estimate parameters in Inversion Recovery MRI experiments mixture model for non-
 }
 \description{
 %%  ~~ A concise (1-5 lines) description of what the function does. ~~
+The Inversion Recovery MRI signal in non-fluid voxel  follows is modeled as a mixture of a fluid and a solid compartment. 
 }
 \usage{
 estimateIRsolid(IRdata, InvTimes, segments, Sfluid, Rfluid, TEScale = 100, dataScale = 1000, method = c("NLR", "QL"), sigma = NULL, L = 1, maxR2star = 50, varest = c("RSS", "data"), verbose = TRUE, lower = c(0, 0, 0), upper = c(0.95, 2, 2))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{IRdata}{
-%%     ~~Describe \code{IRdata} here~~
+  \item{IRdata}{ 4D array of IRMRI signals. First dimension corresponds to Inversion times (InvTime).
 }
   \item{InvTimes}{
-%%     ~~Describe \code{InvTimes} here~~
-}
+  Inversion Times used in the experiments
+}d
   \item{segments}{
-%%     ~~Describe \code{segments} here~~
+  Results of tissue segmentation using, e.g., function \code{\link{fast}} from package \code{fslr}. The array is assumed to contain values 1 for CSF voxel, 2 for GM and 3 for WM. 
 }
   \item{Sfluid}{
-%%     ~~Describe \code{Sfluid} here~~
+  maximal signal for fluid compartment
 }
   \item{Rfluid}{
-%%     ~~Describe \code{Rfluid} here~~
+  Recovery rate for fluid compartments
 }
   \item{TEScale}{
-%%     ~~Describe \code{TEScale} here~~
+Internal scale factor for Echo Times. This influences parameter scales in numerical calculations.
 }
   \item{dataScale}{
-%%     ~~Describe \code{dataScale} here~~
+Internal scale factor for MR signals. This influences parameter scales in numerical calculations.
 }
   \item{method}{
-%%     ~~Describe \code{method} here~~
+  Either \code{"NLS"} for nonlinear least squares (ignores Rician bias) or \code{"QL"} for Quasi-Likelihood. The second option is more accurate but requires additional information and is computationally more expensive.  
 }
   \item{sigma}{
-%%     ~~Describe \code{sigma} here~~
-}
+Noise standard deviation of (unprocessed) MRI signals. This needs to be accessed from minimally processed data or directly calculated from the scanner protocol. Only needed in case of \code{method=="QL"}. 
+}d
   \item{L}{
-%%     ~~Describe \code{L} here~~
-}
-  \item{maxR2star}{
-%%     ~~Describe \code{maxR2star} here~~
+Number of effective coils. Depends on the reconstruction method on multi-coil MR systems. Should be 1 in case of SENSE ceconstructions. In case of GRAPPA this varies spatially and needs to be calculated.  
 }
   \item{varest}{
-%%     ~~Describe \code{varest} here~~
+  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{\link{varest}} gtom package {\code{aws}}. Only to be used in case that no image registration was needed as preprocessing.
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+Logical. Provide some runtime diagnostics.
 }
   \item{lower}{
-%%     ~~Describe \code{lower} here~~
+Lower bounds for parameter values.
 }
   \item{upper}{
-%%     ~~Describe \code{upper} here~~
+Upper bounds for parameter values.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+The Inversion Recovery MRI signal in non-fluid voxel  follows is modeled as a mixture of a fluid and a solid compartment. Parameters \code{Sfluid} and \code{Rfluid} correspond to the fluid compartment and need to be estimated as global parameters from pure CSF voxel using function \code{\link{estimateIRfluid}}. The function calculates estimates of the maximum signal and recovery rate for the solid compartment and a mixture coefficient (proportion of fluid) for all voxel with \code{segment\%in\%2:3}. 
 }
+
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
+List of components
+\item{fx}{Array of fluid proportions}
+\item{Sx}{Array of maximal signals}
+\item{Rx}{Array of relaxation rates}
+\item{Sf}{Global estimate of maximal fluid signal}
+\item{Rf}{Global estimate of fluid relaxation rate}
+\item{ICovx}{Covariance matrix of estimates \code{fx}, \code{Sx} and \code{Rx}.}
+\item{sigma}{Array of provided or estimated noise standard deviations }
+\item{Convx}{Array of convergence indicators}
+\item{rsdx}{Residual standard deviations}
+The arrays contain entries for all voxel with \code{segments\%in\%1:3}.
 }
 \references{
 %% ~put references to the literature/web site here ~
@@ -207,10 +211,10 @@ function (IRdata, InvTimes, segments, Sfluid, Rfluid, TEScale = 100,
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }
+ \keyword{ models}
+ \keyword{ regression }
 % Use only one keyword per line.
 % For non-standard keywords, use \concept instead of \keyword:
-% \concept{ ~cpt1 }
+ \concept{ IRMRI }
 % \concept{ ~cpt2 }
 % Use only one concept per line.

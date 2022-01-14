@@ -183,27 +183,28 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
 ##
 ##   initialize using optim
 ##
-         res <- if (method[1] == "NLR") try(optim(par, LSIRmix2, LSIRmix2grad, 
+         res <- if (method[1] == "NLR") try(optim(th, LSIRmix2, LSIRmix2grad, 
                                   Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid,
                                   method="L-BFGS-B",lower=lower,upper=upper))
-         else try(optim(par, LSIRmix2QL, LSIRmix2QLgrad, 
+         else try(optim(th, LSIRmix2QL, LSIRmix2QLgrad, 
                         Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid, 
                         CL = CL, sig = sig, L = L,
                         method="L-BFGS-B",lower=lower,upper=upper))
          if (class(res) != "try-error"){
-           th <- coef(res)
+           modelCoeff[,xyz] <- th <- res$par
+           rsigma[xyz] <- sqrt(res$value)
+           isConv[xyz] <- -res$convergence
          }
-         
          res <- if (method[1] == "NLR") try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid),
                                              data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid),
                                              start = list(par = th),
-                                             control = list(maxiter = 200,
+                                             control = list(maxiter = 500,
                                                             warnOnly = TRUE)),silent=TRUE)
          else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, CL, sig, L),
                       data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid,
                                   CL = CL, sig = sig, L = L),
                       start = list(par = th),
-                      control = list(maxiter = 200,
+                      control = list(maxiter = 500,
                                      warnOnly = TRUE)),silent=TRUE)
          if (class(res) != "try-error"){
            thhat <- coef(res)
@@ -216,7 +217,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                                                 data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid),
                                                 start = list(par = th),
                                                 algorithm="port",
-                                                control = list(maxiter = 200,
+                                                control = list(maxiter = 500,
                                                                warnOnly = TRUE),
                                                 lower=lower, upper=upper),silent=TRUE)
             else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, CL, sig, L),
@@ -224,7 +225,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                                      CL = CL, sig = sig, L = L),
                          start = list(par = th),
                          algorithm="port",
-                         control = list(maxiter = 200,
+                         control = list(maxiter = 500,
                                         warnOnly = TRUE),
                          lower=lower, upper=upper),silent=TRUE)
          }

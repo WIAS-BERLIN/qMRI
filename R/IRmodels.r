@@ -149,7 +149,7 @@ IRmix2QL <- function(par, InvTimes, S0f, Rf, CL, sig, L){
   sfval <- z$fval/sig
   fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
   CC <- CL * hg1f1(.5, L+1, -sfval*sfval/2) * sfval/2/L/sig
-  grad <- matrix(CC*z$grad, n, 2)
+  grad <- matrix(CC*z$grad, n, 3)
   ind <- sfval>100
   if(any(is.na(ind))){
     warning(paste("IRmix2QL\n","par",par,"sigma",sig,
@@ -158,7 +158,7 @@ IRmix2QL <- function(par, InvTimes, S0f, Rf, CL, sig, L){
   if(any(ind)){
     # use LS if there is no real difference, factor to keep monotonicity
     fval[ind] <- z$fval[ind]*1.0001
-    grad[ind,] <- matrix(z$grad, n, 2)[ind, ]*1.0001
+    grad[ind,] <- matrix(z$grad, n, 3)[ind, ]*1.0001
   }
   if(any(is.na(grad))){
     warning(paste("IRmix2QL/grad\n","par",par,"sigma",sig,
@@ -166,8 +166,34 @@ IRmix2QL <- function(par, InvTimes, S0f, Rf, CL, sig, L){
   }
   attr(fval, "gradient") <- grad
   fval
-  fval <- z$fval
-  attr(fval, "gradient") <- matrix(z$grad, n, 3)
+}
+
+IRmix2fvQL <- function(par, InvTimes, S0f, Rf, CL, sig, L){
+  ##
+  ## Inversion Recovery MRI 2 compartments (fluid/solid) with fixed fluid parameters
+  ##
+  ## S_{InvTime} = S0f * abs( par[1] * (1-2*exp(-InvTime*Rf)) +
+  ##                        (1-par[1])*par[3]* (1-2*exp(-InvTime*par[2])) )
+  ##
+  n <- length(InvTimes)
+  z <- .Fortran(C_irmixfv,
+                as.double(par),
+                as.double(InvTimes),
+                as.double(S0f),
+                as.double(Rf),
+                as.integer(n),
+                fval = double(n))[c("fval")]
+  sfval <- z$fval/sig
+  fval <- CL * hg1f1(-.5, L, -sfval*sfval/2)
+  ind <- sfval>100
+  if(any(is.na(ind))){
+    warning(paste("IRmix2QL\n","par",par,"sigma",sig,
+                  "\n fv",z$fval,"\n CC",CC,"ind",ind),call.=FALSE)
+  }
+  if(any(ind)){
+    # use LS if there is no real difference, factor to keep monotonicity
+    fval[ind] <- z$fval[ind]*1.0001
+  }
   fval
 }
 

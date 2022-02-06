@@ -11,7 +11,6 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
    mask <- segments==1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
-   itmin <- order(InvTimes)[1]
    itmax <- order(InvTimes)[ntimes]
    InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
    dimdata <- dim(IRdata)
@@ -49,8 +48,10 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
      dim(IRdata) <- c(dimdata[1],prod(dim(segments)))
      IRdataFluid <- IRdata[,segments==1]
      thetas <- matrix(0,2,nvoxel)
+     order1 <- function(x) order(x)[1]
+     itmin <- apply(IRdataFluid,2,order1)
      thetas[1,] <- IRdataFluid[itmax,]/dataScale
-     thetas[2,] <- -log((IRdataFluid[itmin]/dataScale+thetas[1,])/2)/InvTimes[itmin]*TEScale
+     thetas[2,] <- log(2)/InvTimes[itmin]*TEScale
      if (verbose){
         cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
         pb <- txtProgressBar(0, nvoxel, style = 3)
@@ -176,21 +177,34 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
          cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
          pb <- txtProgressBar(0, nvoxel, style = 3)
       }
+      th1 <- (1:8)/10
+      th2 <- Rfluid*c(.5,.6,.7,.8,.9,1.1,1.2)
+      th3 <- Sfluid*(1:9)/10
       for(xyz in 1:nvoxel){
          
          ivec <- IRdataSolid[, xyz]/dataScale
          th <- thetas[, xyz]
 ##
-##   initialize using optim
+##   initialize using grid search and optim
 ##
-         res <- if (method[1] == "NLR") try(optim(th, LSIRmix2, LSIRmix2grad, 
-                                  Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid,
-                                  method="L-BFGS-B",lower=lower,upper=upper))
-         else try(optim(th, LSIRmix2QL, LSIRmix2QLgrad, 
-                        Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid, 
-                        CL = CL, sig = sig, L = L,
-                        method="L-BFGS-B",lower=lower,upper=upper))
-         if (class(res) != "try-error"){
+         best <- LSIRmix2(th,ivec,InvTimesScaled,Sfluid,Rfluid)
+         for(i in 1:8) for(j in 1:7) for(k in 1:9){
+            z <- LSIRmix2(c(th1[i],th2[j],th3[k]),ivec,InvTimesScaled,Sfluid,Rfluid)
+            if(z < best){
+               best <- z 
+               th <- c(th1[i],th2[j],th3[k])
+            }
+         }                
+         th <- pmin(upper,pmax(lower,th))
+                           res <- if (method[1] == "NLR") try(optim(th, LSIRmix2, LSIRmix2grad, 
+                                                    Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid,
+                                                    method="L-BFGS-B",lower=lower,upper=upper))
+                           else try(optim(th, LSIRmix2QL, LSIRmix2QLgrad, 
+                                          Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid, 
+                                          CL = CL, sig = sig, L = L,
+                                          method="L-BFGS-B",lower=lower,upper=upper))
+                  
+                  if (class(res) != "try-error"){
            modelCoeff[,xyz] <- th <- res$par
            rsigma[xyz] <- sqrt(res$value)
            isConv[xyz] <- -res$convergence
@@ -232,7 +246,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
          if (class(res) != "try-error") {
             sres <- if(varest[1]=="RSS") getnlspars(res) else
                getnlspars2(res, shat[, xyz], sind )
-            isConv[xyz] <- as.integer(res$convInfo$isConv)
+            isConv[xyz] <- as.integer(res$convInfo$stopCode)
             modelCoeff[, xyz] <- sres$coefficients
             if (sres$sigma != 0) {
                invCov[, , xyz] <- sres$invCov
@@ -305,7 +319,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
    IRdataSolid <- IRdata[,mask]
    Rsm <- Rsolid[mask]
    Ssm <- Ssolid[mask]
-   thetas <- rep(0.1,nvoxel)
+   thetas <- rep(0.3,nvoxel)
    if (verbose){
       cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
       pb <- txtProgressBar(0, nvoxel, style = 3)
@@ -313,7 +327,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
    for(xyz in 1:nvoxel){
       
       ivec <- IRdataSolid[, xyz]/dataScale
-      th <- thetas[, xyz]
+      th <- thetas[xyz]
       Rs <- Rsm[xyz]
       Ss <- Ssm[xyz]
       
@@ -352,26 +366,53 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
          isConv[xyz] <- as.integer(res$convInfo$isConv)
          modelCoeff[xyz] <- sres$coefficients
          if (sres$sigma != 0) {
-            invCov[, , xyz] <- sres$invCov
+            invCov[ xyz] <- sres$invCov
             rsigma[xyz] <- sres$sigma
          }
       }
+      if (verbose) if(xyz%/%1000*1000==xyz) setTxtProgressBar(pb, xyz)
+   }
+   if (verbose){
+      close(pb)
+      cat("Finished estimation", format(Sys.time()), "\n")
    }
 fx[mask] <- modelCoeff
 ICovx[mask] <- invCov
 Convx[mask] <- isConv
 rsdx[mask] <- rsigma
 # Results are currently scaled by TEscale (R) and Datascale (S)
-list(fx=fx,Rx=Rx,Sx=Sx,Sf=Sfluid,Rf=Rfluid,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+list(fx=fx,Rx=Rsolid,Sx=Ssolid,Sf=Sfluid,Rf=Rfluid,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
 }
 
-estimateIR <- function(IRdata, InvTimes, segments, fixed=TRUE, smoothMethod=c("Depth","PAWS"),bw=5,
+smoothIRSolid <- function(ergs,segm,kstar=24,ladjust=1){
+   mask <- segm>1
+   nvoxel <- sum(mask)
+   bpars <- array(0,c(2,nvoxel))
+   icovbpars <- array(0,c(2,2,nvoxel))
+   bpars[1,] <- ergs$Rx[mask]
+   bpars[2,] <- ergs$Sx[mask]
+   ICovx <- ergs$ICovx
+   dim(ICovx) <- c(3,3,prod(dim(mask)))
+   icovbpars <- ICovx[-1,-1,mask]
+   z <- vpawscov2(bpars, kstar, icovbpars/ladjust, segm>1)
+   ergs$Rx[mask] <- z$theta[1,]
+   ergs$Sx[mask] <- z$theta[2,]
+   bi <- array(0,dim(mask))
+   bi[mask] <- z$bi 
+   ergs$bi <- bi
+   ergs
+   
+}
+
+estimateIR <- function(IRdata, InvTimes, segments, fixed=TRUE, smoothMethod=c("PAWS","Depth"),bw=5,
                        TEScale = 100,
                        dataScale = 1000,
                        method = c("NLR", "QL"),
                        sigma = NULL,
                        L = 1,
                        varest = c("RSS","data"),
+                       kstar = 24,
+                       ladjust = 1,
                        verbose = TRUE){
   
    ergsFluid <- estimateIRfluid(IRdata, InvTimes, segments)
@@ -379,8 +420,8 @@ estimateIR <- function(IRdata, InvTimes, segments, fixed=TRUE, smoothMethod=c("D
    Rfluid <- median(ergsFluid$Rfluid)
    ergsBrain <- erstimateIRsolid(IRdata, InvTimes, segments, Sfluid, Rfluid)
    if(fixed) {
-      if(smmothMethod=="Depth") ergsSmooth <- SdepthSmooth(ergsBrain, segments)
-      if(smmothMethod=="PAWS") ergsSmooth <- vpawsaws::vpawscov2(ergsBrain, segments)
+      if(smmothMethod[1]=="Depth") ergsSmooth <- SdepthSmooth(ergsBrain, segments)
+      if(smmothMethod[1]=="PAWS") ergsSmooth <- smoothIRSolid(ergsBrain, segments, kstar, ladjust)
    }
    ergsSmooth
 }

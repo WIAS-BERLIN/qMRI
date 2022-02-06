@@ -23,7 +23,7 @@ C
 
       subroutine IRmix(th, invtime, s0, r1, n, fval, grad)
 C
-C  function values and gradients (3 parameters, S_s, R_s, f)
+C  function values and gradients (3 parameters, f, R_s, S_s)
 C
 C  fval = abs(s0*th(1)*(1-2*exp(-invtime*t1))+(1-th(1))*th(3)*(1-2*exp(-invtime*th2)))
 C
@@ -52,7 +52,7 @@ C
 
       subroutine IRmixfv(th, invtime, s0, r1, n, fval)
 C
-C  function values  (3 parameters, S_s, R_s, f)
+C  function values  (3 parameters, f, R_s, S_s)
 C
 C  fval = abs(s0*th(1)*(1-2*exp(-invtime*t1))+(1-th(1))*th(3)*(1-2*exp(-invtime*th2)))
 C

@@ -31,7 +31,7 @@ getnlspars <- function (object) {
     NaN
   else deviance(object)/rdf
   Rmat <- object$m$Rmat()
-  XtX <- t(Rmat)%*%Rmat
+  XtX <- t(Rmat)%*%Rmat/n
   dimnames(XtX) <- list(pnames, pnames)
   ans <- list(formula = formula(object), residuals = r, sigma = sqrt(resvar),
               df = c(p, rdf), XtX = XtX, invCov = XtX/resvar, call = object$call,

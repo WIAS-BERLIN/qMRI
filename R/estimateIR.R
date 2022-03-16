@@ -271,6 +271,113 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
    }
 
 
+estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
+                            TEScale = 100,
+                            dataScale = 1000,
+                            method = c("NLR", "QL"),
+                            sigma = NULL,
+                            L = 1,
+                            varest = c("RSS","data"),
+                            verbose = TRUE,
+                            lower=c(0,0,0),
+                            upper=c(.95,2,2)){
+   mask <- segments>1
+   nvoxel <- sum(mask)
+   ntimes <- length(InvTimes)
+   InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
+   dimdata <- dim(IRdata)
+   if(dimdata[1]!=ntimes) stop("estimateIRsolid: incompatible length of InvTimes")
+   if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segments")
+   InvTimesScaled <- InvTimes/TEScale
+   ## create necessary arrays
+   npar <- 3 # th1 for f, th2 for R, th3 for S
+   df <- length(InvTimes)-npar
+   fx <- Rx <- Sx <- rsdx <- array(0,dim(mask))
+   ICovx <- array(0,c(3,3,prod(dim(mask))))
+   Convx <- array(0,dim(mask))
+   fx[segments==1] <- 1
+   Rx[segments==1] <- Rfluid
+   Sx[segments==1] <- Sfluid
+   Convx[segments==1] <- 1
+   # set ICovx for fluid as (numerically) diag(rep(Inf),3)
+   ICovx[1,1,segments==1] <- 1e20
+   ICovx[2,2,segments==1] <- 1e20
+   ICovx[3,3,segments==1] <- 1e20
+   isConv <- array(FALSE, nvoxel)
+   isThresh <- array(FALSE, nvoxel)
+   modelCoeff <- array(0, c(npar, nvoxel))
+   invCov <- array(0, c(npar, npar, nvoxel))
+   rsigma <- array(0, nvoxel)
+   if (method[1] == "QL") {
+      if(is.null(sigma)){ 
+         method <- "NLR"
+         warning("estimateIRsolid: method QL needs sigma estimated from fluid or supplied")
+      }
+      sig <- sigma/dataScale
+      CL <- sig * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
+   }
+   # initial parameters
+   dim(IRdata) <- c(dimdata[1],prod(dim(segments)))
+   IRdataSolid <- IRdata[,mask]
+   thetas <- matrix(0,3,nvoxel)
+   thetas[3,] <- IRdataSolid[(1:ntimes)[InvTimes == max(InvTimes)][1],]/dataScale
+   thetas[2,] <- pmin(upper[2],pmax(lower[2],10/median(InvTimesScaled)))
+   thetas[1,] <- 0.3
+   if (verbose){
+      cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
+      pb <- txtProgressBar(0, nvoxel, style = 3)
+   }
+   th1 <- (1:8)/10
+   th2 <- Rfluid*c(.5,.6,.7,.8,.9,1.1,1.2)
+   th3 <- Sfluid*(1:9)/10
+   for(xyz in 1:nvoxel){
+      
+      ivec <- IRdataSolid[, xyz]/dataScale
+      th <- thetas[, xyz]
+      ##
+      ##   initialize using grid search and optim
+      ##
+      best <- LSIRmix2(th,ivec,InvTimesScaled,Sfluid,Rfluid)
+      for(i in 1:8) for(j in 1:7) for(k in 1:9){
+         z <- LSIRmix2(c(th1[i],th2[j],th3[k]),ivec,InvTimesScaled,Sfluid,Rfluid)
+         if(z < best){
+            best <- z 
+            th <- c(th1[i],th2[j],th3[k])
+         }
+      }                
+      th <- pmin(upper,pmax(lower,th))
+      res <- if (method[1] == "NLR") try(optim(th, LSIRmix2, LSIRmix2grad, 
+                                               Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid,
+                                               method="L-BFGS-B",lower=lower,upper=upper,hessian=TRUE))
+      else try(optim(th, LSIRmix2QL, LSIRmix2QLgrad, 
+                     Y=ivec, InvTimes=InvTimesScaled, S0f=Sfluid, Rf=Rfluid, 
+                     CL = CL, sig = sig, L = L,
+                     method="L-BFGS-B",lower=lower,upper=upper,hessian=TRUE))
+      
+      if (class(res) != "try-error"){
+         modelCoeff[,xyz] <- th <- res$par
+         rsigma[xyz] <- sqrt(res$value/df)
+         isConv[xyz] <- res$convergence
+         invCov[,,xyz] <- res$hessian/res$value*df
+      }
+      if (verbose) if(xyz%/%1000*1000==xyz) setTxtProgressBar(pb, xyz)
+   }
+   if (verbose){
+      close(pb)
+      cat("Finished estimation", format(Sys.time()), "\n")
+   }
+   fx[mask] <- modelCoeff[1,]
+   Rx[mask] <- modelCoeff[2,]
+   Sx[mask] <- modelCoeff[3,]
+   ICovx[,,mask] <- invCov
+   dim(ICovx) <- c(3,3,dim(mask))
+   Convx[mask] <- isConv
+   rsdx[mask] <- rsigma
+   # Results are currently scaled by TEscale (R) and Datascale (S)
+   list(fx=fx,Rx=Rx,Sx=Sx,Sf=Sfluid,Rf=Rfluid,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+}
+
+
 
 estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Ssolid, Rsolid,
                                  TEScale = 100,
@@ -306,7 +413,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
    modelCoeff <- numeric(nvoxel)
    invCov <- numeric(nvoxel)
    rsigma <- numeric(nvoxel)
-   if (method == "QL") {
+   if (method[1] == "QL") {
       if(is.null(sigma)){ 
          method <- "NLR"
          warning("estimateIRsolid: method QL needs sigma estimated from fluid or supplied")
@@ -331,7 +438,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
       Rs <- Rsm[xyz]
       Ss <- Ssm[xyz]
       
-      res <- if (method == "NLR") try(nls(ivec ~ IRmix2fix(par, ITS, Sf, Ss, Rf, Rs),
+      res <- if (method[1] == "NLR") try(nls(ivec ~ IRmix2fix(par, ITS, Sf, Ss, Rf, Rs),
                                           data = list(ITS=InvTimesScaled, Sf=Sfluid, Ss=Ss, Rf=Rfluid, Rs=Rs),
                                           start = list(par = th),
                                           control = list(maxiter = 200,
@@ -345,7 +452,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
       if (class(res) == "try-error"){
          # retry with port algorithm and bounds
          th <- pmin(upper,pmax(lower,th))
-         res <- if (method == "NLR") try(nls(ivec ~ IRmix2fix(par, ITS, Sf, Ss, Rf, Rs),
+         res <- if (method[1] == "NLR") try(nls(ivec ~ IRmix2fix(par, ITS, Sf, Ss, Rf, Rs),
                                              data = list(ITS=InvTimesScaled, Sf=Sfluid, Ss=Ss, Rf=Rfluid, Rs=Rs),                                             start = list(par = th),
                                              algorithm="port",
                                              control = list(maxiter = 200,
@@ -361,7 +468,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
                       lower=lower, upper=upper),silent=TRUE)
       }
       if (class(res) != "try-error") {
-         sres <- if(varest=="RSS") getnlspars(res) else
+         sres <- if(varest[1]=="RSS") getnlspars(res) else
             getnlspars2(res, shat[, xyz], sind )
          isConv[xyz] <- as.integer(res$convInfo$isConv)
          modelCoeff[xyz] <- sres$coefficients
@@ -376,7 +483,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
       close(pb)
       cat("Finished estimation", format(Sys.time()), "\n")
    }
-fx[mask] <- modelCoeff
+fx[mask] <- pmin(upper,pmax(lower,modelCoeff))
 ICovx[mask] <- invCov
 Convx[mask] <- isConv
 rsdx[mask] <- rsigma

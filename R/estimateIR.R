@@ -117,7 +117,7 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
     cat("Finished estimation", format(Sys.time()), "\n","Sf",Sf,"Rf",Rf,"\n")
   }
   # Results are currently scaled by TEscale (R) and Datascale (S)
-  list(Sf=Sf,Rf=Rf,Sx=Sx,Rx=Rx,sigma=sigma,Conv=Conv)
+  list(Sf=Sf*dataScale,Rf=Rf/TEScale,Sx=Sx,Rx=Rx,sigma=sigma,Conv=Conv)
 }
    
 
@@ -132,6 +132,8 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                             verbose = TRUE,
                             lower=c(0,0,0),
                             upper=c(.95,2,2)){
+   Sfluid <- Sfluid/dataScale
+   Rfluid <- Rfluid*TEScale
    mask <- segments>1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
@@ -263,11 +265,17 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
       Rx[mask] <- modelCoeff[2,]
       Sx[mask] <- modelCoeff[3,]
       ICovx[,,mask] <- invCov
-      dim(ICovx) <- c(3,3,dim(mask))
       Convx[mask] <- isConv
       rsdx[mask] <- rsigma
-# Results are currently scaled by TEscale (R) and Datascale (S)
-      list(fx=fx,Rx=Rx,Sx=Sx,Sf=Sfluid,Rf=Rfluid,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      ICovx[1,2,] <- ICovx[2,1,] <- ICovx[1,2,]*TEScale
+      ICovx[1,3,] <- ICovx[3,1,] <- ICovx[1,3,]/dataScale
+      ICovx[2,2,] <- ICovx[2,2,]*TEScale*TEScale
+      ICovx[2,3,] <- ICovx[3,2,] <- ICovx[2,3,]/dataScale*TEScale
+      ICovx[3,3,] <- ICovx[3,3,]/dataScale/dataScale
+      dim(ICovx) <- c(3,3,dim(mask))
+     
+# Results are currently scaled by TEScale (R) and dataScale (S)
+      list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
    }
 
 
@@ -281,6 +289,8 @@ estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                             verbose = TRUE,
                             lower=c(0,0,0),
                             upper=c(.95,2,2)){
+   Sfluid <- Sfluid/dataScale
+   Rfluid <- Rfluid*TEScale
    mask <- segments>1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
@@ -370,11 +380,17 @@ estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
    Rx[mask] <- modelCoeff[2,]
    Sx[mask] <- modelCoeff[3,]
    ICovx[,,mask] <- invCov
-   dim(ICovx) <- c(3,3,dim(mask))
    Convx[mask] <- isConv
    rsdx[mask] <- rsigma
-   # Results are currently scaled by TEscale (R) and Datascale (S)
-   list(fx=fx,Rx=Rx,Sx=Sx,Sf=Sfluid,Rf=Rfluid,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      ICovx[1,2,] <- ICovx[2,1,] <- ICovx[1,2,]*TEScale
+      ICovx[1,3,] <- ICovx[3,1,] <- ICovx[1,3,]/dataScale
+      ICovx[2,2,] <- ICovx[2,2,]*TEScale*TEScale
+      ICovx[2,3,] <- ICovx[3,2,] <- ICovx[2,3,]/dataScale*TEScale
+      ICovx[3,3,] <- ICovx[3,3,]/dataScale/dataScale
+   dim(ICovx) <- c(3,3,dim(mask))
+      
+# Results are currently scaled by TEScale (R) and dataScale (S)
+      list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
 }
 
 
@@ -387,8 +403,12 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
                                  L = 1,
                                  varest = c("RSS","data"),
                                  verbose = TRUE,
-                                 lower=c(0.05),
+                                 lower=c(0.0),
                                  upper=c(0.95)){
+   Sfluid <- Sfluid/dataScale
+   Rfluid <- Rfluid*TEScale
+   Ssolid <- Ssolid/dataScale
+   Rsolid <- Rsolid*TEScale
    mask <- segments>1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
@@ -488,7 +508,7 @@ ICovx[mask] <- invCov
 Convx[mask] <- isConv
 rsdx[mask] <- rsigma
 # Results are currently scaled by TEscale (R) and Datascale (S)
-list(fx=fx,Rx=Rsolid,Sx=Ssolid,Sf=Sfluid,Rf=Rfluid,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
 }
 
 smoothIRSolid <- function(ergs,segm,kstar=24,ladjust=1){

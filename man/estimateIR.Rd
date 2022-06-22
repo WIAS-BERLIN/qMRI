@@ -5,79 +5,89 @@
 Estimate IRMRI parameters
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+Parameter estimation ( intensity, relaxation rate, proportion of fluid) in Inversion Recovery MRI data.
 }
 \usage{
-estimateIR(IRdata, InvTimes, segments, fixed = TRUE, smoothMethod = c("Depth", "PAWS"), bw = 5, TEScale = 100, dataScale = 1000, method = c("NLR", "QL"), sigma = NULL, L = 1, maxR2star = 50, varest = c("RSS", "data"), verbose = TRUE)
+estimateIR(IRdata, InvTimes, segments, fixed = TRUE,
+smoothMethod = c("PAWS", "Depth"), bw = 5, TEScale = 100,
+dataScale = 1000, method = c("NLR", "QL"), sigma = NULL, L = 1,
+varest = c("RSS", "data"), kstar = 24, ladjust = 1, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{IRdata}{
-%%     ~~Describe \code{IRdata} here~~
+4D array of IRMRI signals. First dimension corresponds to Inversion times (InvTime).
 }
   \item{InvTimes}{
-%%     ~~Describe \code{InvTimes} here~~
+Inversion Times used in the experiments
 }
   \item{segments}{
-%%     ~~Describe \code{segments} here~~
+ Results of tissue segmentation using, e.g., function \code{fast} from package \code{fslr}. The array is assumed to contain values 1 for CSF voxel, 2 for GM and 3 for WM.
 }
   \item{fixed}{
-%%     ~~Describe \code{fixed} here~~
+ Should adaptive smoothing performed for Sx and Rx maps and fx maps reestimated afterwards ?
 }
   \item{smoothMethod}{
-%%     ~~Describe \code{smoothMethod} here~~
+ Either "PAWS" or "Depth". the second option is not yet implemented.
 }
   \item{bw}{
-%%     ~~Describe \code{bw} here~~
+ Bandwidth for "Depth" smoothing
 }
   \item{TEScale}{
-%%     ~~Describe \code{TEScale} here~~
+ Internal scale factor for Echo Times. This influences parameter scales in numerical calculations.
+
 }
   \item{dataScale}{
-%%     ~~Describe \code{dataScale} here~~
+ Internal scale factor for MR signals. This influences parameter scales in numerical calculations.
 }
   \item{method}{
-%%     ~~Describe \code{method} here~~
+  Either \code{"NLS"} for nonlinear least squares (ignores Rician bias) or \code{"QL"} for Quasi-Likelihood. The second option is more accurate but requires additional information and is computationally more expensive.
 }
   \item{sigma}{
-%%     ~~Describe \code{sigma} here~~
+Noise standard deviation of (unprocessed) MRI signals. This needs to be accessed from minimally processed data or directly calculated from the scanner protocol. Only needed in case of \code{method=="QL"}.
 }
   \item{L}{
-%%     ~~Describe \code{L} here~~
-}
-  \item{maxR2star}{
-%%     ~~Describe \code{maxR2star} here~~
+Number of effective coils. Depends on the reconstruction method on multi-coil MR systems. Should be 1 in case of SENSE ceconstructions. In case of GRAPPA this varies spatially and needs to be calculated.
 }
   \item{varest}{
-%%     ~~Describe \code{varest} here~~
+  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package {\code{aws}}. Only to be used in case that no image registration was needed as preprocessing.
+}
+  \item{kstar}{
+  number of steps used in PAWS
+}
+  \item{ladjust}{
+  adjustment factor for critical value in PAWS
 }
   \item{verbose}{
-%%     ~~Describe \code{verbose} here~~
+Logical. Provide some runtime diagnostics.
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+This function implements the complete pipeline of IRMRI anlysis.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
+List of components
+\item{fx}{Array of fluid proportions}
+\item{Sx}{Array of maximal signals}
+\item{Rx}{Array of relaxation rates}
+\item{Sf}{Global estimate of maximal fluid signal}
+\item{Rf}{Global estimate of fluid relaxation rate}
+\item{ICovx}{Covariance matrix of estimates \code{fx}, \code{Sx} and \code{Rx}.}
+\item{sigma}{Array of provided or estimated noise standard deviations }
+\item{Convx}{Array of convergence indicators}
+\item{rsdx}{Residual standard deviations}
+The arrays contain entries for all voxel with \code{segments\%in\%1:3}.
 }
 \author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
+J\"org Polzehl \email{polzehl@wias-berlin.de}
+
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
+ \code{\link{estimateIRfluid}}, \code{\link{estimateIRsolid}}, \code{\link{estimateIRsolidfixed}},\code{\link{smoothIRSolid}}
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
@@ -97,10 +107,10 @@ function (IRdata, InvTimes, segments, fixed = TRUE, smoothMethod = c("Depth",
     ergsBrain <- erstimateIRsolid(IRdata, InvTimes, segments, 
         Sfluid, Rfluid)
     if (fixed) {
-        if (smmothMethod == "Depth") 
-            ergsSmooth <- SdepthSmooth(ergsBrain, segments)
+        if (smmothMethod == "Depth") stop("not yet implemented")
+#            ergsSmooth <- SdepthSmooth(ergsBrain, segments)
         if (smmothMethod == "PAWS") 
-            ergsSmooth <- vpawsaws::vpawscov2(ergsBrain, segments)
+            ergsSmooth <- vpawscov2(ergsBrain, segments)
     }
     ergsSmooth
   }

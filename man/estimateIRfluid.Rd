@@ -7,7 +7,9 @@
 The Inversion Recovery MRI signal in voxel containing only CSF follows is modeled as  $S_{InvTime} = par[1] * abs( 1 - 2 * exp(-InvTime*par[2]) )$ dependings on two parameters. These parameters are assumed to be tissue (and scanner) dependent. 
 }
 \usage{
-estimateIRfluid(IRdata, InvTimes, segments, TEScale = 100, dataScale = 1000, method = c("NLR", "QL"), sigma = NULL, L = 1, maxR2star = 50, varest = c("RSS", "data"), verbose = TRUE, lower = c(0, 0), upper = c(2, 2))
+estimateIRfluid(IRdata, InvTimes, segments, TEScale = 100, dataScale = 1000,
+method = c("NLR", "QL"), sigma = NULL, L = 1,
+varest = c("RSS", "data"), verbose = TRUE, lower = c(0, 0), upper = c(2, 2))
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -15,9 +17,9 @@ estimateIRfluid(IRdata, InvTimes, segments, TEScale = 100, dataScale = 1000, met
 }
   \item{InvTimes}{
   Inversion Times used in the experiments
-}d
+}
   \item{segments}{
-  Results of tissue segmentation using, e.g., function \code{\link{fast}} from package \code{fslr}. The array is assumed to contain values 1 for CSF voxel, 2 for GM and 3 for WM. 
+  Results of tissue segmentation using, e.g., function \code{fast} from package \code{fslr}. The array is assumed to contain values 1 for CSF voxel, 2 for GM and 3 for WM.
 }
   \item{TEScale}{
 Internal scale factor for Echo Times. This influences parameter scales in numerical calculations.
@@ -30,12 +32,12 @@ Internal scale factor for MR signals. This influences parameter scales in numeri
 }
   \item{sigma}{
 Noise standard deviation of (unprocessed) MRI signals. This needs to be accessed from minimally processed data or directly calculated from the scanner protocol. Only needed in case of \code{method=="QL"}. 
-}d
+}
   \item{L}{
 Number of effective coils. Depends on the reconstruction method on multi-coil MR systems. Should be 1 in case of SENSE ceconstructions. In case of GRAPPA this varies spatially and needs to be calculated.  
 }
   \item{varest}{
-  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{\link{varest}} gtom package {\code{aws}}. Only to be used in case that no image registration was needed as preprocessing.
+  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package {\code{aws}}. Only to be used in case that no image registration was needed as preprocessing.
 }
   \item{verbose}{
 Logical. Provide some runtime diagnostics.
@@ -65,19 +67,16 @@ The arrays only contain entries for fluid voxel.
 %%  \item{comp2 }{Description of 'comp2'}
 %% ...
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
+Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
+J\"org Polzehl \email{polzehl@wias-berlin.de}
 %%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
 }
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
+ \code{\link{estimateIR}}, \code{\link{estimateIRsolid}}, \code{\link{estimateIRsolidfixed}},\code{\link{smoothIRSolid}}
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{

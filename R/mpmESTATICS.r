@@ -176,14 +176,14 @@ estimateSigma <- function(magnitude,phase,mask,kstar=20,kmin=8,hsig=5,lambda=12,
 }
 
 medianFilterSigma <- function(obj,hsig=10,mask=NULL){
-  if(class(obj)=="sigmaEstSENSE"){
+  if(inherits(obj, "sigmaEstSENSE")){
     sigma2 <- obj$sigmal^2
     mask <- obj$mask
   } else {
     sigma2 <- obj^2
   }
   sigma2hat <- aws::medianFilter3D(sigma2, h=hsig, mask=mask)/0.6931
-  if(class(obj)=="sigmaEstSENSE"){
+  if(inherits(obj, "sigmaEstSENSE")){
     obj$sigma <- sqrt(sigma2hat)
     obj$hsig <- hsig
   } else {
@@ -358,7 +358,7 @@ estimateESTATICS <- function (mpmdata,
                          weights = wghts,
                          control = list(maxiter = 200,
                                         warnOnly = TRUE)))
-            if (class(res) == "try-error"){
+            if (inherits(res, "try-error")){
 # retry with port algorithm and bounds
               th <- pmin(upper,pmax(lower,th))
               res <- if (method == "NLR") try(nls(ivec ~ estatics3(par, xmat),
@@ -397,7 +397,7 @@ estimateESTATICS <- function (mpmdata,
                          weights = wghts,
                          control = list(maxiter = 200,
                                         warnOnly = TRUE)))
-            if (class(res) == "try-error"){
+            if (inherits(res, "try-error")){
              # retry with port algorithm and bounds
                   th <- pmin(upper,pmax(lower,th))
                   res <- if (method == "NLR") try(nls(ivec ~ estatics2(par, xmat),
@@ -436,7 +436,7 @@ estimateESTATICS <- function (mpmdata,
                          weights = wghts,
                          control = list(maxiter = 200,
                                         warnOnly = TRUE)))
-             if (class(res) == "try-error"){
+             if (inherits(res, "try-error")){
 # retry with port algorithm and bounds
                  th <- pmin(upper,pmax(lower,th))
                  res <- if (method == "NLR") try(nls(ivec ~ estatics1(par, xmat),
@@ -473,7 +473,7 @@ estimateESTATICS <- function (mpmdata,
             }
           }
 
-          if (class(res) == "try-error" || coef(res)[npar] > maxR2star || coef(res)[npar] < 0) {
+          if (inherits(res, "try-error") || coef(res)[npar] > maxR2star || coef(res)[npar] < 0) {
 
             ## fallback for not converged or R2star out of range
             sres <- if(varest=="RSS") linearizedESTATICS(ivec, xmat, maxR2star, wghts) else

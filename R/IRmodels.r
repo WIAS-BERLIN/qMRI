@@ -188,7 +188,7 @@ IRmix2fvQL <- function(par, InvTimes, S0f, Rf, CL, sig, L){
   ind <- sfval>100
   if(any(is.na(ind))){
     warning(paste("IRmix2QL\n","par",par,"sigma",sig,
-                  "\n fv",z$fval,"\n CC",CC,"ind",ind),call.=FALSE)
+                  "\n fv",z$fval,"\n CC",fval,"ind",ind),call.=FALSE)
   }
   if(any(ind)){
     # use LS if there is no real difference, factor to keep monotonicity

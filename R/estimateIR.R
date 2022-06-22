@@ -11,6 +11,7 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
    mask <- segments==1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
+   sind <- rep(1,ntimes)
    itmax <- order(InvTimes)[ntimes]
    InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
    dimdata <- dim(IRdata)
@@ -27,13 +28,12 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
      if(verbose) cat("estimating variance maps from data\n")
      ind <- (InvTimes == max(InvTimes))[1]
      ddata <- IRdata[ind,,,]
-     shat <- aws::awsLocalSigma(ddata, steps=16,
+     shat <- awsLocalSigma(ddata, steps=16,
                                         mask=(segments==1), ncoils=1, hsig=2.5,
                                         lambda=6,family="Gauss")$sigma
      dim(shat) <- dimdata[-1]
      shat <- shat[segments==1]
      shat[shat==0] <- quantile(shat,.8)
-     shat <- shat
      if(is.null(sigma)) sigma <- median(shat) else shat <- NULL
    }
    if (method[1] == "QL") {
@@ -78,7 +78,7 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
           thhat <- coef(res)
           outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
        }
-       if (class(res) == "try-error" || outofrange){
+       if (inherits(res, "try-error") || outofrange){
          # retry with port algorithm and bounds
          th <- pmin(upper,pmax(lower,th))
          res <- if (method[1] == "NLR") try(nls(ivec ~ IRhomogen(par, InvTimesScaled),
@@ -101,7 +101,7 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
        }
        if (class(res) != "try-error") {
          sres <- if(varest[1]=="RSS") getnlspars(res) else
-           getnlspars2(res, shat[, xyz], sind )
+           getnlspars2(res, sigma, sind )
          isConv[xyz] <- as.integer(res$convInfo$isConv)
          modelCoeff[, xyz] <- sres$coefficients
        }
@@ -138,6 +138,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
    InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
+   sind <- rep(1,ntimes)
    dimdata <- dim(IRdata)
    if(dimdata[1]!=ntimes) stop("estimateIRsolid: incompatible length of InvTimes")
    if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segments")
@@ -226,7 +227,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
            thhat <- coef(res)
            outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
          }
-         if (class(res) == "try-error" || outofrange){
+         if (inherits(res, "try-error") || outofrange){
             # retry with port algorithm and bounds
             th <- pmin(upper,pmax(lower,th))
             res <- if (method[1] == "NLR") try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid),
@@ -247,7 +248,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
          }
          if (class(res) != "try-error") {
             sres <- if(varest[1]=="RSS") getnlspars(res) else
-               getnlspars2(res, shat[, xyz], sind )
+               getnlspars2(res, sigma, sind )
             isConv[xyz] <- as.integer(res$convInfo$stopCode)
             modelCoeff[, xyz] <- sres$coefficients
             if (sres$sigma != 0) {
@@ -295,6 +296,7 @@ estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
    InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
+   sind <- rep(1,ntimes)
    dimdata <- dim(IRdata)
    if(dimdata[1]!=ntimes) stop("estimateIRsolid: incompatible length of InvTimes")
    if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segments")
@@ -413,6 +415,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
    InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
+   sind <- rep(1,ntimes)
    dimdata <- dim(IRdata)
    if(dimdata[1]!=ntimes) stop("estimateIRsolid: incompatible length of InvTimes")
    if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segments")
@@ -469,7 +472,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
                    start = list(par = th),
                    control = list(maxiter = 200,
                                   warnOnly = TRUE)),silent=TRUE)
-      if (class(res) == "try-error"){
+      if (inherits(res, "try-error")){
          # retry with port algorithm and bounds
          th <- pmin(upper,pmax(lower,th))
          res <- if (method[1] == "NLR") try(nls(ivec ~ IRmix2fix(par, ITS, Sf, Ss, Rf, Rs),
@@ -489,7 +492,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
       }
       if (class(res) != "try-error") {
          sres <- if(varest[1]=="RSS") getnlspars(res) else
-            getnlspars2(res, shat[, xyz], sind )
+            getnlspars2(res, sigma, sind )
          isConv[xyz] <- as.integer(res$convInfo$isConv)
          modelCoeff[xyz] <- sres$coefficients
          if (sres$sigma != 0) {
@@ -545,10 +548,11 @@ estimateIR <- function(IRdata, InvTimes, segments, fixed=TRUE, smoothMethod=c("P
    ergsFluid <- estimateIRfluid(IRdata, InvTimes, segments)
    Sfluid <- median(ergsFluid$Sfluid)
    Rfluid <- median(ergsFluid$Rfluid)
-   ergsBrain <- erstimateIRsolid(IRdata, InvTimes, segments, Sfluid, Rfluid)
+   ergsBrain <- estimateIRsolid(IRdata, InvTimes, segments, Sfluid, Rfluid)
    if(fixed) {
-      if(smmothMethod[1]=="Depth") ergsSmooth <- SdepthSmooth(ergsBrain, segments)
-      if(smmothMethod[1]=="PAWS") ergsSmooth <- smoothIRSolid(ergsBrain, segments, kstar, ladjust)
+      if(smoothMethod[1]=="Depth") stop("not yet implemented")
+# ergsSmooth <- SdepthSmooth(ergsBrain, segments)
+      if(smoothMethod[1]=="PAWS") ergsSmooth <- smoothIRSolid(ergsBrain, segments, kstar, ladjust)
    }
    ergsSmooth
 }

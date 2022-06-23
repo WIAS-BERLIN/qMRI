@@ -62,7 +62,7 @@ The Inversion Recovery MRI signal in non-fluid voxel  follows is modeled as a mi
 }
 
 \value{
-List of components
+List of class \code{IRmixed} with components
 \item{fx}{Array of fluid proportions}
 \item{Sx}{Array of maximal signals}
 \item{Rx}{Array of relaxation rates}

@@ -66,7 +66,7 @@ Logical. Provide some runtime diagnostics.
 This function implements the complete pipeline of IRMRI anlysis.
 }
 \value{
-List of components
+List of class \code{"IRmixed"} with components
 \item{fx}{Array of fluid proportions}
 \item{Sx}{Array of maximal signals}
 \item{Rx}{Array of relaxation rates}
@@ -117,10 +117,9 @@ function (IRdata, InvTimes, segments, fixed = TRUE, smoothMethod = c("Depth",
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }
+ \keyword{ models }
+ \keyword{ regression }
 % Use only one keyword per line.
 % For non-standard keywords, use \concept instead of \keyword:
-% \concept{ ~cpt1 }
-% \concept{ ~cpt2 }
+ \concept{ IRMRI }
 % Use only one concept per line.

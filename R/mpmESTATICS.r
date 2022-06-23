@@ -462,7 +462,7 @@ estimateESTATICS <- function (mpmdata,
               }
           }
 
-          if (class(res) != "try-error") {
+          if (!inherits(res, "try-error")) {
             sres <- if(varest=="RSS") getnlspars(res) else
                  getnlspars2(res, shat[, xyz], sind )
             isConv[xyz] <- as.integer(res$convInfo$isConv)
@@ -530,7 +530,7 @@ estimateESTATICS <- function (mpmdata,
                                control = list(maxiter = 200,
                                               warnOnly = TRUE),
                                lower=lower[1], upper=upper[1]))
-              if (class(res) != "try-error") {
+              if (!inherits(res,"try-error")) {
                 isConv[xyz] <- as.integer(res$convInfo$isConv)
                 sres <- getnlspars(res)
                 modelCoeff[-npar, xyz] <- sres$coefficients

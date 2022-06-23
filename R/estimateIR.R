@@ -74,7 +74,7 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
                     start = list(par = th),
                     control = list(maxiter = 200,
                                    warnOnly = TRUE)),silent=TRUE)
-       if (class(res) != "try-error"){
+       if (!inherits(res, "try-error")){
           thhat <- coef(res)
           outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
        }
@@ -99,7 +99,7 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
                                      warnOnly = TRUE),
                       lower=lower, upper=upper),silent=TRUE)
        }
-       if (class(res) != "try-error") {
+       if (!inherits(res, "try-error")) {
          sres <- if(varest[1]=="RSS") getnlspars(res) else
            getnlspars2(res, sigma, sind )
          isConv[xyz] <- as.integer(res$convInfo$isConv)
@@ -117,7 +117,9 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
     cat("Finished estimation", format(Sys.time()), "\n","Sf",Sf,"Rf",Rf,"\n")
   }
   # Results are currently scaled by TEscale (R) and Datascale (S)
-  list(Sf=Sf*dataScale,Rf=Rf/TEScale,Sx=Sx,Rx=Rx,sigma=sigma,Conv=Conv)
+  z <- list(Sf=Sf*dataScale,Rf=Rf/TEScale,Sx=Sx,Rx=Rx,sigma=sigma,Conv=Conv)
+  class(z) <- "IRfluid"
+  z
 }
    
 
@@ -207,7 +209,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                                           CL = CL, sig = sig, L = L,
                                           method="L-BFGS-B",lower=lower,upper=upper))
                   
-                  if (class(res) != "try-error"){
+                  if (!inherits(res, "try-error")){
            modelCoeff[,xyz] <- th <- res$par
            rsigma[xyz] <- sqrt(res$value)
            isConv[xyz] <- -res$convergence
@@ -223,7 +225,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                       start = list(par = th),
                       control = list(maxiter = 500,
                                      warnOnly = TRUE)),silent=TRUE)
-         if (class(res) != "try-error"){
+         if (!inherits(res, "try-error")){
            thhat <- coef(res)
            outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
          }
@@ -246,7 +248,7 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                                         warnOnly = TRUE),
                          lower=lower, upper=upper),silent=TRUE)
          }
-         if (class(res) != "try-error") {
+         if (!inherits(res, "try-error")) {
             sres <- if(varest[1]=="RSS") getnlspars(res) else
                getnlspars2(res, sigma, sind )
             isConv[xyz] <- as.integer(res$convInfo$stopCode)
@@ -276,8 +278,10 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
       dim(ICovx) <- c(3,3,dim(mask))
      
 # Results are currently scaled by TEScale (R) and dataScale (S)
-      list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
-   }
+      z <- list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      class(z) <- "IRmixed"
+      z
+}
 
 
 estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
@@ -366,7 +370,7 @@ estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                      CL = CL, sig = sig, L = L,
                      method="L-BFGS-B",lower=lower,upper=upper,hessian=TRUE))
       
-      if (class(res) != "try-error"){
+      if (!inherits(res, "try-error")){
          modelCoeff[,xyz] <- th <- res$par
          rsigma[xyz] <- sqrt(res$value/df)
          isConv[xyz] <- res$convergence
@@ -392,7 +396,9 @@ estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
    dim(ICovx) <- c(3,3,dim(mask))
       
 # Results are currently scaled by TEScale (R) and dataScale (S)
-      list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      z <- list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      class(z) <- "IRmixed"
+      z
 }
 
 
@@ -490,7 +496,7 @@ estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Sso
                                      warnOnly = TRUE),
                       lower=lower, upper=upper),silent=TRUE)
       }
-      if (class(res) != "try-error") {
+      if (!inherits(res, "try-error")) {
          sres <- if(varest[1]=="RSS") getnlspars(res) else
             getnlspars2(res, sigma, sind )
          isConv[xyz] <- as.integer(res$convInfo$isConv)
@@ -511,7 +517,9 @@ ICovx[mask] <- invCov
 Convx[mask] <- isConv
 rsdx[mask] <- rsigma
 # Results are currently scaled by TEscale (R) and Datascale (S)
-      list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      z <- list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      class(z) <- "IRmixed"
+      z
 }
 
 smoothIRSolid <- function(ergs,segm,kstar=24,ladjust=1){
@@ -531,7 +539,6 @@ smoothIRSolid <- function(ergs,segm,kstar=24,ladjust=1){
    bi[mask] <- z$bi 
    ergs$bi <- bi
    ergs
-   
 }
 
 estimateIR <- function(IRdata, InvTimes, segments, fixed=TRUE, smoothMethod=c("PAWS","Depth"),bw=5,
@@ -552,8 +559,8 @@ estimateIR <- function(IRdata, InvTimes, segments, fixed=TRUE, smoothMethod=c("P
    if(fixed) {
       if(smoothMethod[1]=="Depth") stop("not yet implemented")
 # ergsSmooth <- SdepthSmooth(ergsBrain, segments)
-      if(smoothMethod[1]=="PAWS") ergsSmooth <- smoothIRSolid(ergsBrain, segments, kstar, ladjust)
+      if(smoothMethod[1]=="PAWS") ergsBrain <- smoothIRSolid(ergsBrain, segments, kstar, ladjust)
    }
-   ergsSmooth
+   ergsBrain
 }
 

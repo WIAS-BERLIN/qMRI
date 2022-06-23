@@ -64,7 +64,7 @@ Logical. Provide some runtime diagnostics.
 }
 }
 \value{
-List of components
+List of class \code{"IRmixed"} components
 \item{fx}{Array of fluid proportions}
 \item{Sx}{Array of maximal signals}
 \item{Rx}{Array of relaxation rates}
@@ -196,10 +196,10 @@ function (IRdata, InvTimes, segments, Sfluid, Rfluid, Ssolid,
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }
+ \keyword{ models}
+ \keyword{ regression }
 % Use only one keyword per line.
 % For non-standard keywords, use \concept instead of \keyword:
-% \concept{ ~cpt1 }
+\concept{ IRMRI }
 % \concept{ ~cpt2 }
 % Use only one concept per line.

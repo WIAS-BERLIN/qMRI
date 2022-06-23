@@ -53,7 +53,7 @@ Upper bounds for parameter values.
 The Inversion Recovery MRI signal in voxel containing only CSF follows is modeled as  $S_{InvTime} = par[1] * abs( 1 - 2 * exp(-InvTime*par[2]) )$ dependings on two parameters. These parameters are assumed to be tissue (and scanner) dependent.
 }
 \value{
-List of components
+List of class \code{IRfluid} with components
 \item{Sf}{Global estimate of maximal fluid signal}
 \item{Rf}{Global estimate of fluid relaxation rate}
 \item{Sx}{Array of maximal signals}

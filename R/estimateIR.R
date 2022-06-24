@@ -1,22 +1,67 @@
-estimateIRfluid <- function(IRdata, InvTimes, segments,
+readIRData <- function(t1Files,InvTimes,segmFile,sigma=NULL,L=1,
+       segmCodes=c("GM","WM","CSF")){
+   if (is.null(t1Files)) stop("vector of T1 files required")
+   nFiles <- length(t1Files)
+   if(length(InvTimes) != nFiles)
+    stop("readIRData: t1Files and InvTimes have different lengths")
+   sdim <- dim(readNIfTI(t1Files[1], read_data = FALSE))
+   s1 <- (1:3)[segmCodes=="CSF"]
+   s2 <- (1:3)[segmCodes=="GM"]
+   s3 <- (1:3)[segmCodes=="WM"]
+   segm <- c1 <- readNIfTI(segmFile[1])@.Data
+   if(length(segmFile) == 1){
+# reorder tissue codes such that "CSF", "GM" and "WM" are coded as 1:3
+      segm[c1==s1] <- 1
+      segm[c1==s2] <- 2
+      segm[c1==s3] <- 3
+   } else if(length(segmFile) == 3){
+# segmFiles contain probability maps for CSF, GM, WM as specified in segmCodes
+      c2 <- readNIfTI(segmFile[2],reorient=FALSE)
+      c3 <- readNIfTI(segmFile[3],reorient=FALSE)
+      segm[c1 >= pmax(1/3,c1,c2,c3)] <- s2
+      segm[c2 >= pmax(1/3,c1,c2,c3)] <- s3
+      segm[c3 >= pmax(1/3,c1,c2,c3)] <- s1
+   }
+   if(any(dim(segm)!=sdim)) stop("readIRData: dimensions of t1Files and segmFiles are incompatible")
+# in segm 1 codes CSF, 2 codes GM, 3 codes WM
+   IRdata <- array(0,c(nFiles,sdim))
+   for(i in 1:nFiles) IRdata[i,,,] <- readNIfTI(t1Files[i],reorient=FALSE)
+   InvTimes[is.infinite(InvTimes)] <- 10 * max(InvTimes[is.finite(InvTimes)])
+   if(is.null(sigma)){
+      ind <- (InvTimes == max(InvTimes))[1]
+      ddata <- IRdata[ind,,,]
+      shat <- awsLocalSigma(ddata, steps=16,
+                           mask=(segm==1), ncoils=L, hsig=2.5,
+                           lambda=6,family="Gauss")$sigma
+      dim(shat) <- sdim
+      shat <- shat[segm==1]
+      sigma <- median(shat)
+   }
+   data <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L)
+   class(data) <- "IRdata"
+   data
+}
+
+
+estimateIRfluid <- function(IRdataobj,
                             TEScale = 100,
                             dataScale = 1000,
                             method = c("NLR", "QL"),
-                            sigma = NULL,
-                            L = 1,
                             varest = c("RSS","data"),
                             verbose = TRUE,
                             lower=c(0,0),
                             upper=c(2,2)){
-   mask <- segments==1
+   IRdata <- IRdataobj$IRdata
+   InvTimes <- IRdataobj$InvTimes
+   segm <- IRdataobj$segm
+   sigma <- IRdataobj$sigma
+   L <- IRdataobj$L
+   mask <- segm==1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
    sind <- rep(1,ntimes)
    itmax <- order(InvTimes)[ntimes]
-   InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
    dimdata <- dim(IRdata)
-   if(dimdata[1]!=ntimes) stop("estimateIRfluid: incompatible length of InvTimes")
-   if(any(dimdata[-1]!=dim(mask))) stop("estimateIRfluid: incompatible dimension of segments")
    InvTimesScaled <- InvTimes/TEScale
    ## create necessary arrays
    npar <- 2 #  th2 for R, th1 for S
@@ -29,24 +74,19 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
      ind <- (InvTimes == max(InvTimes))[1]
      ddata <- IRdata[ind,,,]
      shat <- awsLocalSigma(ddata, steps=16,
-                                        mask=(segments==1), ncoils=1, hsig=2.5,
+                                        mask=(segm==1), ncoils=1, hsig=2.5,
                                         lambda=6,family="Gauss")$sigma
      dim(shat) <- dimdata[-1]
-     shat <- shat[segments==1]
+     shat <- shat[segm==1]
      shat[shat==0] <- quantile(shat,.8)
-     if(is.null(sigma)) sigma <- median(shat) else shat <- NULL
    }
    if (method[1] == "QL") {
-   if(is.null(sigma)){ 
-      method <- "NLR"
-      warning("estimateIRfluid: method QL needs sigma estimated or supplied")
-   }
      sig <- sigma/dataScale
      CL <- sig * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
    }
    # initial parameters
-     dim(IRdata) <- c(dimdata[1],prod(dim(segments)))
-     IRdataFluid <- IRdata[,segments==1]
+     dim(IRdata) <- c(dimdata[1],prod(dim(segm)))
+     IRdataFluid <- IRdata[,segm==1]
      thetas <- matrix(0,2,nvoxel)
      order1 <- function(x) order(x)[1]
      itmin <- apply(IRdataFluid,2,order1)
@@ -117,62 +157,62 @@ estimateIRfluid <- function(IRdata, InvTimes, segments,
     cat("Finished estimation", format(Sys.time()), "\n","Sf",Sf,"Rf",Rf,"\n")
   }
   # Results are currently scaled by TEscale (R) and Datascale (S)
-  z <- list(Sf=Sf*dataScale,Rf=Rf/TEScale,Sx=Sx,Rx=Rx,sigma=sigma,Conv=Conv)
+  z <- list(Sf=Sf*dataScale,Rf=Rf/TEScale,Sx=Sx,Rx=Rx,
+  sigma=sigma,Conv=Conv,method=method,varest=varest)
   class(z) <- "IRfluid"
   z
 }
    
 
 
-estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
+estimateIRsolid <- function(IRfluidobj,
                             TEScale = 100,
                             dataScale = 1000,
-                            method = c("NLR", "QL"),
-                            sigma = NULL,
-                            L = 1,
-                            varest = c("RSS","data"),
                             verbose = TRUE,
                             lower=c(0,0,0),
                             upper=c(.95,2,2)){
-   Sfluid <- Sfluid/dataScale
-   Rfluid <- Rfluid*TEScale
-   mask <- segments>1
+   IRdata <- IRfluidobj$IRdata
+   InvTimes <- IRfluidobj$InvTimes
+   segm <- IRfluidobj$segm
+   sigma <- IRfluidobj$sigma
+   L <- IRfluidobj$L
+   Sfluid <- IRfluidobj$Sf/dataScale
+   Rfluid <- IRfluidobj$Rf*TEScale
+   method <- IRfluidobj$method
+   varest <- IRfluidobj$varest
+   mask <- segm>1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
    InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
    sind <- rep(1,ntimes)
    dimdata <- dim(IRdata)
    if(dimdata[1]!=ntimes) stop("estimateIRsolid: incompatible length of InvTimes")
-   if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segments")
+   if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segm")
    InvTimesScaled <- InvTimes/TEScale
    ## create necessary arrays
    npar <- 3 # th1 for f, th2 for R, th3 for S
    fx <- Rx <- Sx <- rsdx <- array(0,dim(mask))
    ICovx <- array(0,c(3,3,prod(dim(mask))))
    Convx <- array(0,dim(mask))
-   fx[segments==1] <- 1
-   Rx[segments==1] <- Rfluid
-   Sx[segments==1] <- Sfluid
-   Convx[segments==1] <- 1
+   fx[segm==1] <- 1
+   Rx[segm==1] <- Rfluid
+   Sx[segm==1] <- Sfluid
+   Convx[segm==1] <- 1
    # set ICovx for fluid as (numerically) diag(rep(Inf),3)
-   ICovx[1,1,segments==1] <- 1e20
-   ICovx[2,2,segments==1] <- 1e20
-   ICovx[3,3,segments==1] <- 1e20
+   ICovx[1,1,segm==1] <- 1e20
+   ICovx[2,2,segm==1] <- 1e20
+   ICovx[3,3,segm==1] <- 1e20
    isConv <- array(FALSE, nvoxel)
    isThresh <- array(FALSE, nvoxel)
    modelCoeff <- array(0, c(npar, nvoxel))
    invCov <- array(0, c(npar, npar, nvoxel))
    rsigma <- array(0, nvoxel)
    if (method[1] == "QL") {
-      if(is.null(sigma)){ 
-         method <- "NLR"
-         warning("estimateIRsolid: method QL needs sigma estimated from fluid or supplied")
-      }
          sig <- sigma/dataScale
          CL <- sig * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
       }
       # initial parameters
-      dim(IRdata) <- c(dimdata[1],prod(dim(segments)))
+      dim(IRdata) <- c(dimdata[1],prod(dim(segm)))
       IRdataSolid <- IRdata[,mask]
       thetas <- matrix(0,3,nvoxel)
       thetas[3,] <- IRdataSolid[(1:ntimes)[InvTimes == max(InvTimes)][1],]/dataScale
@@ -278,13 +318,13 @@ estimateIRsolid <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
       dim(ICovx) <- c(3,3,dim(mask))
      
 # Results are currently scaled by TEScale (R) and dataScale (S)
-      z <- list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx,method=method,varest=varest)
       class(z) <- "IRmixed"
       z
 }
 
 
-estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
+estimateIRsolid2 <- function(IRfluidobj, InvTimes, segm, Sfluid, Rfluid,
                             TEScale = 100,
                             dataScale = 1000,
                             method = c("NLR", "QL"),
@@ -294,16 +334,23 @@ estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
                             verbose = TRUE,
                             lower=c(0,0,0),
                             upper=c(.95,2,2)){
-   Sfluid <- Sfluid/dataScale
-   Rfluid <- Rfluid*TEScale
-   mask <- segments>1
+   IRdata <- IRfluidobj$IRdata
+   InvTimes <- IRfluidobj$InvTimes
+   segm <- IRfluidobj$segm
+   sigma <- IRfluidobj$sigma
+   L <- IRfluidobj$L
+   Sfluid <- IRfluidobj$Sf/dataScale
+   Rfluid <- IRfluidobj$Rf*TEScale
+   method <- IRfluidobj$method
+   varest <- IRfluidobj$varest
+   mask <- segm>1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
    InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
    sind <- rep(1,ntimes)
    dimdata <- dim(IRdata)
    if(dimdata[1]!=ntimes) stop("estimateIRsolid: incompatible length of InvTimes")
-   if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segments")
+   if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segm")
    InvTimesScaled <- InvTimes/TEScale
    ## create necessary arrays
    npar <- 3 # th1 for f, th2 for R, th3 for S
@@ -311,29 +358,25 @@ estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
    fx <- Rx <- Sx <- rsdx <- array(0,dim(mask))
    ICovx <- array(0,c(3,3,prod(dim(mask))))
    Convx <- array(0,dim(mask))
-   fx[segments==1] <- 1
-   Rx[segments==1] <- Rfluid
-   Sx[segments==1] <- Sfluid
-   Convx[segments==1] <- 1
+   fx[segm==1] <- 1
+   Rx[segm==1] <- Rfluid
+   Sx[segm==1] <- Sfluid
+   Convx[segm==1] <- 1
    # set ICovx for fluid as (numerically) diag(rep(Inf),3)
-   ICovx[1,1,segments==1] <- 1e20
-   ICovx[2,2,segments==1] <- 1e20
-   ICovx[3,3,segments==1] <- 1e20
+   ICovx[1,1,segm==1] <- 1e20
+   ICovx[2,2,segm==1] <- 1e20
+   ICovx[3,3,segm==1] <- 1e20
    isConv <- array(FALSE, nvoxel)
    isThresh <- array(FALSE, nvoxel)
    modelCoeff <- array(0, c(npar, nvoxel))
    invCov <- array(0, c(npar, npar, nvoxel))
    rsigma <- array(0, nvoxel)
    if (method[1] == "QL") {
-      if(is.null(sigma)){ 
-         method <- "NLR"
-         warning("estimateIRsolid: method QL needs sigma estimated from fluid or supplied")
-      }
       sig <- sigma/dataScale
       CL <- sig * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
    }
    # initial parameters
-   dim(IRdata) <- c(dimdata[1],prod(dim(segments)))
+   dim(IRdata) <- c(dimdata[1],prod(dim(segm)))
    IRdataSolid <- IRdata[,mask]
    thetas <- matrix(0,3,nvoxel)
    thetas[3,] <- IRdataSolid[(1:ntimes)[InvTimes == max(InvTimes)][1],]/dataScale
@@ -396,62 +439,60 @@ estimateIRsolid2 <- function(IRdata, InvTimes, segments, Sfluid, Rfluid,
    dim(ICovx) <- c(3,3,dim(mask))
       
 # Results are currently scaled by TEScale (R) and dataScale (S)
-      z <- list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx,method=method,varest=varest)
       class(z) <- "IRmixed"
       z
 }
 
 
 
-estimateIRsolidfixed <- function(IRdata, InvTimes, segments, Sfluid, Rfluid, Ssolid, Rsolid,
-                                 TEScale = 100,
+estimateIRsolidfixed <- function(IRmixedobj, TEScale = 100,
                                  dataScale = 1000,
-                                 method = c("NLR", "QL"),
-                                 sigma = NULL,
-                                 L = 1,
-                                 varest = c("RSS","data"),
                                  verbose = TRUE,
                                  lower=c(0.0),
                                  upper=c(0.95)){
-   Sfluid <- Sfluid/dataScale
-   Rfluid <- Rfluid*TEScale
-   Ssolid <- Ssolid/dataScale
-   Rsolid <- Rsolid*TEScale
-   mask <- segments>1
+   IRdata <- IRmixedobj$IRdata
+   InvTimes <- IRmixedobj$InvTimes
+   segm <- IRmixedobj$segm
+   sigma <- IRmixedobj$sigma
+   L <- IRmixedobj$L
+   Sfluid <- IRmixedobj$Sf/dataScale
+   Rfluid <- IRmixedobj$Rf*TEScale
+   Ssolid <- IRmixedobj$Sx/dataScale
+   Rsolid <- IRmixedobj$Rx*TEScale
+   method <- IRmixedobj$method
+   varest <- IRmixedobj$varest
+   mask <- segm>1
    nvoxel <- sum(mask)
    ntimes <- length(InvTimes)
    InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
    sind <- rep(1,ntimes)
    dimdata <- dim(IRdata)
    if(dimdata[1]!=ntimes) stop("estimateIRsolid: incompatible length of InvTimes")
-   if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segments")
+   if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segm")
    InvTimesScaled <- InvTimes/TEScale
    ## create necessary arrays
    npar <- 1 # th1 for f
    fx  <- rsdx <- array(0,dim(mask))
    ICovx <- array(0,prod(dim(mask)))
    Convx <- array(0,dim(mask))
-   fx[segments==1] <- 1
+   fx[segm==1] <- 1
    Rx <- Rsolid
    Sx <- Ssolid
-   Convx[segments==1] <- 0
+   Convx[segm==1] <- 0
    # set ICovx for fluid as (numerically) diag(rep(Inf),3)
-   ICovx[segments==1] <- 1e20
+   ICovx[segm==1] <- 1e20
    isConv <- array(FALSE, nvoxel)
    isThresh <- array(FALSE, nvoxel)
    modelCoeff <- numeric(nvoxel)
    invCov <- numeric(nvoxel)
    rsigma <- numeric(nvoxel)
    if (method[1] == "QL") {
-      if(is.null(sigma)){ 
-         method <- "NLR"
-         warning("estimateIRsolid: method QL needs sigma estimated from fluid or supplied")
-      }
       sig <- sigma/dataScale
       CL <- sig * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
    }
-   # initial parameters
-   dim(IRdata) <- c(dimdata[1],prod(dim(segments)))
+   # initial parametersIRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,
+   dim(IRdata) <- c(dimdata[1],prod(dim(segm)))
    IRdataSolid <- IRdata[,mask]
    Rsm <- Rsolid[mask]
    Ssm <- Ssolid[mask]
@@ -517,50 +558,49 @@ ICovx[mask] <- invCov
 Convx[mask] <- isConv
 rsdx[mask] <- rsigma
 # Results are currently scaled by TEscale (R) and Datascale (S)
-      z <- list(fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx)
+      z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx,method=method,varest=varest)
       class(z) <- "IRmixed"
       z
 }
 
-smoothIRSolid <- function(ergs,segm,kstar=24,ladjust=1){
+smoothIRSolid <- function(IRmixedobj,kstar=24,ladjust=1){
+   segm <- IRmixedobj$segm
    mask <- segm>1
    nvoxel <- sum(mask)
    bpars <- array(0,c(2,nvoxel))
    icovbpars <- array(0,c(2,2,nvoxel))
-   bpars[1,] <- ergs$Rx[mask]
-   bpars[2,] <- ergs$Sx[mask]
-   ICovx <- ergs$ICovx
+   bpars[1,] <- IRmixedobj$Rx[mask]
+   bpars[2,] <- IRmixedobj$Sx[mask]
+   ICovx <- IRmixedobj$ICovx
    dim(ICovx) <- c(3,3,prod(dim(mask)))
    icovbpars <- ICovx[-1,-1,mask]
    z <- vpawscov2(bpars, kstar, icovbpars/ladjust, segm>1)
-   ergs$Rx[mask] <- z$theta[1,]
-   ergs$Sx[mask] <- z$theta[2,]
+   IRmixedobj$Rx[mask] <- z$theta[1,]
+   IRmixedobj$Sx[mask] <- z$theta[2,]
    bi <- array(0,dim(mask))
    bi[mask] <- z$bi 
-   ergs$bi <- bi
-   ergs
+   IRmixedobj$bi <- bi
+   IRmixedobj
 }
 
-estimateIR <- function(IRdata, InvTimes, segments, fixed=TRUE, smoothMethod=c("PAWS","Depth"),bw=5,
+estimateIR <- function(IRdataobj, fixed=TRUE, smoothMethod=c("PAWS","Depth"),bw=5,
                        TEScale = 100,
                        dataScale = 1000,
                        method = c("NLR", "QL"),
-                       sigma = NULL,
-                       L = 1,
                        varest = c("RSS","data"),
                        kstar = 24,
                        ladjust = 1,
                        verbose = TRUE){
   
-   ergsFluid <- estimateIRfluid(IRdata, InvTimes, segments)
-   Sfluid <- median(ergsFluid$Sfluid)
-   Rfluid <- median(ergsFluid$Rfluid)
-   ergsBrain <- estimateIRsolid(IRdata, InvTimes, segments, Sfluid, Rfluid)
+   ergsFluid <- estimateIRfluid(IRdataobj, TEScale=TEScale,
+   dataScale=dataScale, method=method, varest=varest)
+   ergsBrain <- estimateIRsolid(ergsFluid, TEScale=TEScale, dataScale=dataScale)
    if(fixed) {
       if(smoothMethod[1]=="Depth") stop("not yet implemented")
-# ergsSmooth <- SdepthSmooth(ergsBrain, segments)
-      if(smoothMethod[1]=="PAWS") ergsBrain <- smoothIRSolid(ergsBrain, segments, kstar, ladjust)
+# ergsSmooth <- SdepthSmooth(ergsBrain, segm)
+      if(smoothMethod[1]=="PAWS") ergsBrain <- smoothIRSolid(ergsBrain, kstar, ladjust)
    }
+   ergsBrain <- estimateIRsolidfixed(ergsBrain, TEScale=TEScale, dataScale=dataScale)
    ergsBrain
 }
 

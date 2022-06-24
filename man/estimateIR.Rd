@@ -8,21 +8,15 @@ Estimate IRMRI parameters
 Parameter estimation ( intensity, relaxation rate, proportion of fluid) in Inversion Recovery MRI data.
 }
 \usage{
-estimateIR(IRdata, InvTimes, segments, fixed = TRUE,
+estimateIR(IRdataobj,  fixed = TRUE,
 smoothMethod = c("PAWS", "Depth"), bw = 5, TEScale = 100,
-dataScale = 1000, method = c("NLR", "QL"), sigma = NULL, L = 1,
+dataScale = 1000, method = c("NLR", "QL"),
 varest = c("RSS", "data"), kstar = 24, ladjust = 1, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{IRdata}{
+  \item{IRdataobj}{
 4D array of IRMRI signals. First dimension corresponds to Inversion times (InvTime).
-}
-  \item{InvTimes}{
-Inversion Times used in the experiments
-}
-  \item{segments}{
- Results of tissue segmentation using, e.g., function \code{fast} from package \code{fslr}. The array is assumed to contain values 1 for CSF voxel, 2 for GM and 3 for WM.
 }
   \item{fixed}{
  Should adaptive smoothing performed for Sx and Rx maps and fx maps reestimated afterwards ?
@@ -43,12 +37,6 @@ Inversion Times used in the experiments
   \item{method}{
   Either \code{"NLS"} for nonlinear least squares (ignores Rician bias) or \code{"QL"} for Quasi-Likelihood. The second option is more accurate but requires additional information and is computationally more expensive.
 }
-  \item{sigma}{
-Noise standard deviation of (unprocessed) MRI signals. This needs to be accessed from minimally processed data or directly calculated from the scanner protocol. Only needed in case of \code{method=="QL"}.
-}
-  \item{L}{
-Number of effective coils. Depends on the reconstruction method on multi-coil MR systems. Should be 1 in case of SENSE ceconstructions. In case of GRAPPA this varies spatially and needs to be calculated.
-}
   \item{varest}{
   Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package {\code{aws}}. Only to be used in case that no image registration was needed as preprocessing.
 }
@@ -67,6 +55,11 @@ This function implements the complete pipeline of IRMRI anlysis.
 }
 \value{
 List of class \code{"IRmixed"} with components
+\item{IRdata }{4D array containing the IRMRI data, first dimension refers to inversion times}
+\item{InvTimes }{vector of inversion times}
+\item{segm}{segmentation codes, 1 for CSF, 2 for GM, 3 for WM, 0 for out of brain}
+\item{sigma}{noise standard deviation, if not specified estimated fron CSF areas in image with largest inversion time}
+\item{L}{effective number of coils}
 \item{fx}{Array of fluid proportions}
 \item{Sx}{Array of maximal signals}
 \item{Rx}{Array of relaxation rates}

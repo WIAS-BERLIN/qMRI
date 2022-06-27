@@ -65,7 +65,7 @@ estimateIRfluid <- function(IRdataobj,
    InvTimesScaled <- InvTimes/TEScale
    ## create necessary arrays
    npar <- 2 #  th2 for R, th1 for S
-   Rx <- Sx <- Conv <- array(0,dim(mask))
+   Rx <- Sx <- Convx <- array(0,dim(mask))
    isConv <- array(0, nvoxel)
    isThresh <- array(FALSE, nvoxel)
    modelCoeff <- array(0, c(npar, nvoxel))
@@ -149,7 +149,7 @@ estimateIRfluid <- function(IRdataobj,
      }
   Rx[mask] <- modelCoeff[2,]
   Sx[mask] <- modelCoeff[1,]
-  Conv[mask] <- isConv
+  Convx[mask] <- isConv
   Sf <- median(modelCoeff[1,],na.rm=TRUE)
   Rf <- median(modelCoeff[2,],na.rm=TRUE)
   if (verbose){
@@ -157,8 +157,8 @@ estimateIRfluid <- function(IRdataobj,
     cat("Finished estimation", format(Sys.time()), "\n","Sf",Sf,"Rf",Rf,"\n")
   }
   # Results are currently scaled by TEscale (R) and Datascale (S)
-  z <- list(Sf=Sf*dataScale,Rf=Rf/TEScale,Sx=Sx,Rx=Rx,
-  sigma=sigma,Conv=Conv,method=method,varest=varest)
+  z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,Sf=Sf*dataScale,Rf=Rf/TEScale,Sx=Sx,Rx=Rx,
+  Convx=Convx,method=method,varest=varest)
   class(z) <- "IRfluid"
   z
 }
@@ -318,7 +318,7 @@ estimateIRsolid <- function(IRfluidobj,
       dim(ICovx) <- c(3,3,dim(mask))
      
 # Results are currently scaled by TEScale (R) and dataScale (S)
-      z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx,method=method,varest=varest)
+      z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,rsdx=rsdx,method=method,varest=varest)
       class(z) <- "IRmixed"
       z
 }
@@ -439,7 +439,7 @@ estimateIRsolid2 <- function(IRfluidobj, InvTimes, segm, Sfluid, Rfluid,
    dim(ICovx) <- c(3,3,dim(mask))
       
 # Results are currently scaled by TEScale (R) and dataScale (S)
-      z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx,method=method,varest=varest)
+      z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,rsdx=rsdx,method=method,varest=varest)
       class(z) <- "IRmixed"
       z
 }
@@ -558,7 +558,7 @@ ICovx[mask] <- invCov
 Convx[mask] <- isConv
 rsdx[mask] <- rsigma
 # Results are currently scaled by TEscale (R) and Datascale (S)
-      z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,sigma=sigma,rsdx=rsdx,method=method,varest=varest)
+      z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,rsdx=rsdx,method=method,varest=varest)
       class(z) <- "IRmixed"
       z
 }

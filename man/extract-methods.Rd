@@ -5,25 +5,31 @@
 \alias{extract.ESTATICSModel}
 \alias{extract.sESTATICSModel}
 \alias{extract.qMaps}
+\alias{extract.IRdata}
+\alias{extract.IRfluid}
+\alias{extract.IRmixed}
 \alias{[.ANY-method}
 \alias{[.MPMData}
 \alias{[.ESTATICSModel}
 \alias{[.sESTATICSModel}
 \alias{[.qMaps}
+\alias{[.IRdata}
+\alias{[.IRfluid}
+\alias{[.IRmixed}
 
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Methods to extract information from objects of class \code{"MPMData"},
-\code{"ESTATICSModel"}, \code{"sESTATICSModel"}
-and \code{"qMaps"}.
+\code{"ESTATICSModel"}, \code{"sESTATICSModel"}, \code{"qMaps"},
+\code{"IRdata"}, \code{"IRfluid"} and \code{"IRmixed"}.
 }
 \description{
 The extract-methods extract and/or compute specified statistics from object of class
-\code{"MPMData"}, \code{"ESTATICSModel"}, \code{"sESTATICSModel"}
-and \code{"qMaps"}.
+\code{"MPMData"}, \code{"ESTATICSModel"}, \code{"sESTATICSModel"}, \code{"qMaps"},
+\code{"IRdata"}, \code{"IRfluid"} and \code{"IRmixed"}.
 The [-methods can be used to reduce objects of class
-\code{"MPMData"}, \code{"ESTATICSModel"}, \code{"sESTATICSModel"}
-and \code{"qMaps"} such that they .
+\code{"MPMData"}, \code{"ESTATICSModel"}, \code{"sESTATICSModel"}, \code{"qMaps"},
+\code{"IRdata"}, \code{"IRfluid"} and \code{"IRmixed"} such that they contain a subcube of data and results.
 
 }
 \usage{
@@ -31,10 +37,16 @@ and \code{"qMaps"} such that they .
 \S3method{extract}{ESTATICSModel}(x, what, ...)
 \S3method{extract}{sESTATICSModel}(x, what, ...)
 \S3method{extract}{qMaps}(x, what, ...)
+\S3method{extract}{IRdata}(x, what, ...)
+\S3method{extract}{IRfluid}(x, what, ...)
+\S3method{extract}{IRmixed}(x, what, ...)
 \S3method{[}{MPMData}(x, i, j, k, ...)
 \S3method{[}{ESTATICSModel}(x, i, j, k, ...)
 \S3method{[}{sESTATICSModel}(x, i, j, k, ...)
 \S3method{[}{qMaps}(x, i, j, k, ...)
+\S3method{[}{IRdata}(x, i, j, k, tind, ...)
+\S3method{[}{IRfluid}(x, i, j, k, ...)
+\S3method{[}{IRmixed}(x, i, j, k, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -53,6 +65,9 @@ and \code{"qMaps"} such that they .
 }
   \item{k}{
    index vector for third spatial dimension
+}
+  \item{tind}{
+   index vector for inversion times
 }
   \item{\dots}{
   additional parameters, currently unused.

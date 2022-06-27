@@ -52,7 +52,7 @@ List of class \code{IRfluid} with components
 \item{Sx}{Array of maximal signals}
 \item{Rx}{Array of relaxation rates}
 \item{sigma}{Array of provided or estimated noise standard deviations }
-\item{Conv}{Array of convergence indicators}
+\item{Convx}{Array of convergence indicators}
 \item{method}{\code{"NLS"} for nonlinear regression or \code{"QL"} for quasi likelihood.}
 \item{varest}{Method used for variance estimation}
 The arrays only contain entries for fluid voxel.

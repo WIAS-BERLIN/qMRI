@@ -156,6 +156,7 @@ estimateIRfluid <- function(IRdataobj,
     close(pb)
     cat("Finished estimation", format(Sys.time()), "\n","Sf",Sf,"Rf",Rf,"\n")
   }
+  dim(IRdata) <- dimdata
   # Results are currently scaled by TEscale (R) and Datascale (S)
   z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,Sf=Sf*dataScale,Rf=Rf/TEScale,Sx=Sx,Rx=Rx,
   Convx=Convx,method=method,varest=varest)
@@ -316,7 +317,8 @@ estimateIRsolid <- function(IRfluidobj,
       ICovx[2,3,] <- ICovx[3,2,] <- ICovx[2,3,]/dataScale*TEScale
       ICovx[3,3,] <- ICovx[3,3,]/dataScale/dataScale
       dim(ICovx) <- c(3,3,dim(mask))
-     
+      dim(IRdata) <- dimdata
+      
 # Results are currently scaled by TEScale (R) and dataScale (S)
       z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,rsdx=rsdx,method=method,varest=varest)
       class(z) <- "IRmixed"
@@ -437,7 +439,8 @@ estimateIRsolid2 <- function(IRfluidobj, InvTimes, segm, Sfluid, Rfluid,
       ICovx[2,3,] <- ICovx[3,2,] <- ICovx[2,3,]/dataScale*TEScale
       ICovx[3,3,] <- ICovx[3,3,]/dataScale/dataScale
    dim(ICovx) <- c(3,3,dim(mask))
-      
+   dim(IRdata) <- dimdata
+   
 # Results are currently scaled by TEScale (R) and dataScale (S)
       z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,rsdx=rsdx,method=method,varest=varest)
       class(z) <- "IRmixed"
@@ -557,13 +560,14 @@ fx[mask] <- pmin(upper,pmax(lower,modelCoeff))
 ICovx[mask] <- invCov
 Convx[mask] <- isConv
 rsdx[mask] <- rsigma
+dim(IRdata) <- dimdata
 # Results are currently scaled by TEscale (R) and Datascale (S)
       z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,Rf=Rfluid/TEScale,ICovx=ICovx,Convx=Convx,rsdx=rsdx,method=method,varest=varest)
       class(z) <- "IRmixed"
       z
 }
 
-smoothIRSolid <- function(IRmixedobj,kstar=24,ladjust=1){
+smoothIRSolid <- function(IRmixedobj,kstar=24,ladjust=1,verbose=TRUE){
    segm <- IRmixedobj$segm
    mask <- segm>1
    nvoxel <- sum(mask)
@@ -574,7 +578,7 @@ smoothIRSolid <- function(IRmixedobj,kstar=24,ladjust=1){
    ICovx <- IRmixedobj$ICovx
    dim(ICovx) <- c(3,3,prod(dim(mask)))
    icovbpars <- ICovx[-1,-1,mask]
-   z <- vpawscov2(bpars, kstar, icovbpars/ladjust, segm>1)
+   z <- vpawscov2(bpars, kstar, icovbpars/ladjust, segm>1, verbose=verbose)
    IRmixedobj$Rx[mask] <- z$theta[1,]
    IRmixedobj$Sx[mask] <- z$theta[2,]
    bi <- array(0,dim(mask))

@@ -20,7 +20,7 @@ IRmix2 <- function(par, InvTimes, S0f, Rf){
   ##
   ## Inversion Recovery MRI 2 compartments (fluid/solid) with fixed fluid parameters
   ##
-  ## S_{InvTime} = S0f * abs( par[1] * (1-2*exp(-InvTime*Rf)) +
+  ## S_{InvTime} = abs(S0f *  par[1] * (1-2*exp(-InvTime*Rf)) +
   ##                        (1-par[1])*par[3]* (1-2*exp(-InvTime*par[2])) )
   ##
   n <- length(InvTimes)
@@ -41,7 +41,7 @@ IRmix2fv <- function(par, InvTimes, S0f, Rf){
   ##
   ## Inversion Recovery MRI 2 compartments (fluid/solid) with fixed fluid parameters
   ##
-  ## S_{InvTime} = S0f * abs( par[1] * (1-2*exp(-InvTime*Rf)) +
+  ## S_{InvTime} = abs(S0f *  par[1] * (1-2*exp(-InvTime*Rf)) +
   ##                        (1-par[1])*par[3]* (1-2*exp(-InvTime*par[2])) )
   ##
   n <- length(InvTimes)
@@ -76,7 +76,7 @@ IRmix2fix <- function(par, InvTimes, S0f, S0s, Rf, Rs){
   ## Inversion Recovery MRI 2 compartments (fluid/solid) with fixed fluid and solid parameters
   ##              mixture parameter only
   ##
-  ## S_{InvTime} = S0f * abs( par[1] * (1-2*exp(-InvTime*Rf)) +
+  ## S_{InvTime} = abs(S0f *  par[1] * (1-2*exp(-InvTime*Rf)) +
   ##                        (1-par[1])*par[3]* (1-2*exp(-InvTime*par[2])) )
   ##
   n <- length(InvTimes)

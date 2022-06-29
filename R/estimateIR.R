@@ -8,7 +8,7 @@ readIRData <- function(t1Files,InvTimes,segmFile,sigma=NULL,L=1,
    s1 <- (1:3)[segmCodes=="CSF"]
    s2 <- (1:3)[segmCodes=="GM"]
    s3 <- (1:3)[segmCodes=="WM"]
-   segm <- c1 <- readNIfTI(segmFile[1])@.Data
+   segm <- c1 <- readNIfTI(segmFile[1],reorient=FALSE)@.Data
    if(length(segmFile) == 1){
 # reorder tissue codes such that "CSF", "GM" and "WM" are coded as 1:3
       segm[c1==s1] <- 1

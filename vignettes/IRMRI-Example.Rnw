@@ -80,7 +80,6 @@ library(oro.nifti)
 We now generate IRMRI data following a model that assumes voxel to contain a mixture of a solid tissue (either DM or WM) and fluid. 
 <<1>>=
 library(qMRI)
-IRinf <- readNIfTI(file.path(dataDir0,"Brainweb_IRInf"))
 segm <- readNIfTI(file.path(dataDir0,"Brainweb_segm"))
 Sf <- 900
 Rf <- 0.000285

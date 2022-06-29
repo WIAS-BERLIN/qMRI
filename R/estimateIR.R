@@ -21,6 +21,7 @@ readIRData <- function(t1Files,InvTimes,segmFile,sigma=NULL,L=1,
 # segmFiles contain probability maps for CSF, GM, WM as specified in segmCodes
       c2 <- readNIfTI(segmFile[s2],reorient=FALSE) # GM
       c3 <- readNIfTI(segmFile[s3],reorient=FALSE) # WM
+      segm <- array(0,dim(c1))
       segm[c1 >= pmax(1/3,c1,c2,c3)] <- 1
       segm[c2 >= pmax(1/3,c1,c2,c3)] <- 2
       segm[c3 >= pmax(1/3,c1,c2,c3)] <- 3

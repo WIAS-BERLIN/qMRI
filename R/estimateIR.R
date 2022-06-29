@@ -8,19 +8,22 @@ readIRData <- function(t1Files,InvTimes,segmFile,sigma=NULL,L=1,
    s1 <- (1:3)[segmCodes=="CSF"]
    s2 <- (1:3)[segmCodes=="GM"]
    s3 <- (1:3)[segmCodes=="WM"]
-   segm <- c1 <- readNIfTI(segmFile[1],reorient=FALSE)@.Data
+   segm <- c1 <- readNIfTI(segmFile[s1],reorient=FALSE)@.Data # CSF
    if(length(segmFile) == 1){
 # reorder tissue codes such that "CSF", "GM" and "WM" are coded as 1:3
-      segm[c1==s1] <- 1
-      segm[c1==s2] <- 2
-      segm[c1==s3] <- 3
+      if(any(segmCodes!=c("CSF","GM","WM"))){
+         segm0 <- segm
+         segm[segm0==s1] <- 1
+         segm[segm0==s2] <- 2
+         segm[segm0==s3] <- 3
+      }
    } else if(length(segmFile) == 3){
 # segmFiles contain probability maps for CSF, GM, WM as specified in segmCodes
-      c2 <- readNIfTI(segmFile[2],reorient=FALSE)
-      c3 <- readNIfTI(segmFile[3],reorient=FALSE)
-      segm[c1 >= pmax(1/3,c1,c2,c3)] <- s2
-      segm[c2 >= pmax(1/3,c1,c2,c3)] <- s3
-      segm[c3 >= pmax(1/3,c1,c2,c3)] <- s1
+      c2 <- readNIfTI(segmFile[s2],reorient=FALSE) # GM
+      c3 <- readNIfTI(segmFile[s3],reorient=FALSE) # WM
+      segm[c1 >= pmax(1/3,c1,c2,c3)] <- 1
+      segm[c2 >= pmax(1/3,c1,c2,c3)] <- 2
+      segm[c3 >= pmax(1/3,c1,c2,c3)] <- 3
    }
    if(any(dim(segm)!=sdim)) stop("readIRData: dimensions of t1Files and segmFiles are incompatible")
 # in segm 1 codes CSF, 2 codes GM, 3 codes WM
@@ -28,8 +31,9 @@ readIRData <- function(t1Files,InvTimes,segmFile,sigma=NULL,L=1,
    for(i in 1:nFiles) IRdata[i,,,] <- readNIfTI(t1Files[i],reorient=FALSE)
    InvTimes[is.infinite(InvTimes)] <- 10 * max(InvTimes[is.finite(InvTimes)])
    if(is.null(sigma)){
-      ind <- (InvTimes == max(InvTimes))[1]
+      ind <- (InvTimes == max(InvTimes))
       ddata <- IRdata[ind,,,]
+      if(length(dim(ddata))==4) ddata<-ddata[1,,,] # multiple max(InvTimes)
       shat <- awsLocalSigma(ddata, steps=16,
                            mask=(segm==1), ncoils=L, hsig=2.5,
                            lambda=6,family="Gauss")$sigma

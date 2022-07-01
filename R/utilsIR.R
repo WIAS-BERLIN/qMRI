@@ -74,10 +74,9 @@ extract.IRmixed <- function(x,what, ...){
             x$Rx <- x$Rx[i,j,k]
             x$fx <- x$fx[i,j,k]
             x$Convx <- x$Convx[i,j,k]
-            if(length(x$ICovx)==3) 
-                x$ICovx <- x$ICovx[i,j,k]
-            else x$ICovx <- x$ICovx[,,i,j,k]
-            x$rsdx <- x$rsdx[,,i,j,k]
+            dICovx <- dim(x$ICovx)
+            x$ICovx <- if(length(dICovx)==3) x$ICovx[i,j,k] else x$ICovx[,,i,j,k]
+            x$rsdx <- x$rsdx[i,j,k]
             if(!is.null(x$bi)) x$bi <- x$bi[i,j,k]
             x
             }

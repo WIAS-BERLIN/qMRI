@@ -10,7 +10,7 @@ and a second inversion time \code{IT2} that nulls the fluid signal. Tissue param
 are extracted from an object of class \code{"IRmixed"} calculated from data of a related IRMRI experiment. }
 \usage{
 MREdisplacement(MagnFiles1, PhaseFiles1, MagnFiles2, PhaseFiles2, TI2 = 2400,
-                IRmixobj, method = c("full", "approx"))
+                IRmixobj, method = c("full", "approx"),rescale=FALSE,verbose=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -36,6 +36,12 @@ Object of class \code{"IRmixed"} obtained from a related IRMRI experiment.
 }
   \item{method}{
 Either \code{"full"} or \code{"approx"}
+}
+  \item{rescale}{
+Logical, do we need to rescale phase images ? 
+}
+  \item{verbose}{
+ Report scale range of phase images
 }
 }
 \details{

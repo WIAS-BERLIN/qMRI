@@ -562,6 +562,7 @@ estimateIRsolidfixed <- function(IRmixedobj, TEScale = 100,
       cat("Finished estimation", format(Sys.time()), "\n")
    }
 fx[mask] <- pmin(upper,pmax(lower,modelCoeff))
+dim(invCov) <- dim(mask)
 ICovx[mask] <- invCov
 Convx[mask] <- isConv
 rsdx[mask] <- rsigma

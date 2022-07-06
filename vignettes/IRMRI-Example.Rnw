@@ -174,13 +174,13 @@ Parameters $S^s$ and $R_1^s$ characterizing solid material in GM and WM can be a
 We therefor apply an adaptive smoothing procedure within segments characterizing GM and WM to reduce the variance of the estimates  of $S^s$ and $R_1^s$
 
 <<7>>=
-IRmix <- smoothIRSolid(IRmix, verbose=FALSE)
+sIRmix <- smoothIRSolid(IRmix, ladjust=10, verbose=FALSE)
 @
 
 and then re-estimate the fluid proportion $f$
 
 <<8>>=
-IRmix <- estimateIRsolidfixed(IRmix, verbose=FALSE)
+sIRmix <- estimateIRsolidfixed(sIRmix, verbose=FALSE)
 @
 
 We shortly illustrate the estimated maps (central slice) that we gain
@@ -190,18 +190,18 @@ par(mfrow=c(1,4),mar=c(3,3,3,.5),mgp=c(2,1,0))
 library(adimpro)
 rimage(segm[,,2])
 title("Segmentation")
-rimage(IRmix$Sx[,,2],zlim=c(250,500))
+rimage(sIRmix$Sx[,,2],zlim=c(250,500))
 title("solid intensity map")
-rimage(IRmix$Rx[,,2],zlim=c(0,.0015))
+rimage(sIRmix$Rx[,,2],zlim=c(0,.0015))
 title("solid relaxation rate map")
-rimage(IRmix$fx[,,2],zlim=c(0,.4))
+rimage(sIRmix$fx[,,2],zlim=c(0,.4))
 title("fluid proportion map")
 @
 
 All analysis steps can be combined, in this case using quasi-likelihood, simply calling
 
 <<10, eval=FALSE>>=
-IRmix <- estimateIR(IRdata, method="QL")
+sIRmix <- estimateIR(IRdata, method="QL")
 @
 
 \printbibliography

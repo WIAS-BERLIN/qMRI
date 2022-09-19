@@ -174,7 +174,7 @@ Parameters $S^s$ and $R_1^s$ characterizing solid material in GM and WM can be a
 We therefor apply an adaptive smoothing procedure within segments characterizing GM and WM to reduce the variance of the estimates  of $S^s$ and $R_1^s$
 
 <<7>>=
-sIRmix <- smoothIRSolid(IRmix, ladjust=10, verbose=FALSE)
+sIRmix <- smoothIRSolid(IRmix, alpha=1e-4, verbose=FALSE)
 @
 
 and then re-estimate the fluid proportion $f$

@@ -13,7 +13,7 @@ the estimated parameter maps and their covariances.
 }
 \usage{
 smoothESTATICS(mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.025,
-               patchsize = 0, wghts = NULL, verbose = TRUE)
+               patchsize = 0, mscbw =5, wghts = NULL, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -32,6 +32,9 @@ specifies the scale parameter for the adaptation criterion. smaller values are m
 }
   \item{patchsize}{
 Patchsize in PAWS, 0 corresponds to AWS, alternative values are 1 and 2.
+}
+  \item{mscbw}{
+   bandwidth for 3D median smoother used to stabilize the covariance estimates.
 }
   \item{wghts}{
  (optional) voxel size if measurments are not isotropic.

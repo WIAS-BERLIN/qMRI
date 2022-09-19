@@ -221,7 +221,9 @@ estimateESTATICS <- function (mpmdata,
                               verbose = TRUE) {
 
   # validate_MPMData(mpmdata)
-  nvoxel <- sum(mpmdata$mask)
+  mask <- mpmdata$mask
+  sdim <- mpmdata$sdim
+  nvoxel <- sum(mask)
   method <- method[1]
   varest <- varest[1]
   ## create the design matrix of the model
@@ -274,8 +276,8 @@ estimateESTATICS <- function (mpmdata,
             mask=extract(mpmdata,"mask"), ncoils=1, hsig=2.5,
             lambda=6,family="Gauss")$sigma
      }
-     dim(shat) <- c(modelp1,prod(mpmdata$sdim))
-     shat <- shat[,mpmdata$mask]
+     dim(shat) <- c(modelp1,prod(sdim))
+     shat <- shat[,mask]
      shat[shat==0] <- quantile(shat,.8)
      if(is.null(sigma)) sigma <- median(shat)
      shat <- shat/dataScale
@@ -295,13 +297,13 @@ estimateESTATICS <- function (mpmdata,
       homsigma <- TRUE
       sig <- sigma
       CL <- CLarray
-    } else if (all(dim(sigma) == mpmdata$sdim)) {
+    } else if (all(dim(sigma) == sdim)) {
       homsigma <- FALSE
     } else {
       stop("Dimension of argument sigma does not match the data")
     }
-    sigma <- sigma[mpmdata$mask]
-    CLarray <- CLarray[mpmdata$mask]
+    sigma <- sigma[mask]
+    CLarray <- CLarray[mask]
     ## only need values within mask
   }
 
@@ -540,7 +542,8 @@ estimateESTATICS <- function (mpmdata,
                   rsigma[xyz] <- sres$sigma
                 }
               } else {
-                mpmdata$mask[xyz] <- FALSE
+                posxyz <- ((1:prod(sdim))[mask])[xyz]
+                mask[posxyz] <- FALSE
               }
             }
           }#fallback
@@ -557,14 +560,14 @@ if (verbose) if(xyz%/%1000*1000==xyz) setTxtProgressBar(pb, xyz)
               rsigma = rsigma,
               isThresh = isThresh,
               isConv = isConv,
-              sdim = mpmdata$sdim,
+              sdim = sdim,
               nFiles = mpmdata$nFiles,
               t1Files = mpmdata$t1Files,
               pdFiles = mpmdata$pdFiles,
               mtFiles = mpmdata$mtFiles,
               model = mpmdata$model,
               maskFile = mpmdata$maskFile,
-              mask = mpmdata$mask,
+              mask = mask,
               sigma = sigma,
               shat = shat, ## sigma estimated from
               L = L,
@@ -583,6 +586,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
                            kstar = 16,
                            alpha = 0.025,
                            patchsize = 0,
+                           mscbw = 5,
                            wghts = NULL,
                            verbose = TRUE) {#1
   ##
@@ -612,10 +616,18 @@ smoothESTATICS <- function(mpmESTATICSModel,
   #  factor 2 (analog to 2 sigma in KL) to have more common values for alpha
   #  factor for patchsizes adjusted using simulated data
   if(verbose) cat("using lambda=", lambda, " patchsize=", patchsize,"\n")
-
-  zobj <- aws::vpawscov2(mpmESTATICSModel$modelCoeff,
+  invCov <- extract(mpmESTATICSModel,"invCov")
+  if(mscbw>0){
+     rsdx <- extract(mpmESTATICSModel,"rsigma")^2
+     rsdhat <- medianFilter3D(rsdx,mscbw,mask)
+     rsdhat[!mask] <- mean(rsdhat[mask])
+     invCov <- sweep(invCov,3:5,rsdx/rsdhat,"*")
+  }
+  dim(invCov) <- c(nv,nv,prod(sdim))
+  invCov <- invCov[,,mask]
+  zobj <- vpawscov2(mpmESTATICSModel$modelCoeff,
                    kstar,
-                   mpmESTATICSModel$invCov,
+                   invCov,
                    mask,
                    lambda = lambda,
                    wghts = wghts,
@@ -628,7 +640,7 @@ smoothESTATICS <- function(mpmESTATICSModel,
                  isConv = mpmESTATICSModel$isConv,
                  rsigma = mpmESTATICSModel$rsigma,
                  bi = zobj$bi,
-                 smoothPar = c(zobj$lambda, zobj$hakt, alpha, patchsize),
+                 smoothPar = c(zobj$lambda, zobj$hakt, alpha, patchsize, mscbw),
                  smoothedData = zobj$data,
                  sdim = mpmESTATICSModel$sdim,
                  nFiles = mpmESTATICSModel$nFiles,

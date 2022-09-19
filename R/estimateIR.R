@@ -223,7 +223,7 @@ estimateIRsolid <- function(IRfluidobj,
       IRdataSolid <- IRdata[,mask]
       thetas <- matrix(0,3,nvoxel)
       thetas[3,] <- IRdataSolid[(1:ntimes)[InvTimes == max(InvTimes)][1],]/dataScale
-      thetas[2,] <- pmin(upper[2],pmax(lower[2],10/median(InvTimesScaled)))
+      thetas[2,] <- min(upper[2],max(lower[2],10/median(InvTimesScaled)))
       thetas[1,] <- 0.3
       if (verbose){
          cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
@@ -391,7 +391,7 @@ estimateIRsolid2 <- function(IRfluidobj, InvTimes, segm, Sfluid, Rfluid,
    IRdataSolid <- IRdata[,mask]
    thetas <- matrix(0,3,nvoxel)
    thetas[3,] <- IRdataSolid[(1:ntimes)[InvTimes == max(InvTimes)][1],]/dataScale
-   thetas[2,] <- pmin(upper[2],pmax(lower[2],10/median(InvTimesScaled)))
+   thetas[2,] <- min(upper[2],max(lower[2],10/median(InvTimesScaled)))
    thetas[1,] <- 0.3
    if (verbose){
       cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
@@ -582,23 +582,34 @@ dim(IRdata) <- dimdata
       z
 }
 
-smoothIRSolid <- function(IRmixedobj,kstar=24,ladjust=1,verbose=TRUE){
+smoothIRSolid <- function(IRmixedobj,kstar=24,patchsize=1,alpha=0.025,mscbw=5,verbose=TRUE){
    segm <- IRmixedobj$segm
    mask <- segm>1
    nvoxel <- sum(mask)
+   nv <- 3
+   nFiles <- length(IRmixedobj$InvTimes)
    bpars <- array(0,c(2,nvoxel))
    icovbpars <- array(0,c(2,2,nvoxel))
    bpars[1,] <- IRmixedobj$Rx[mask]
    bpars[2,] <- IRmixedobj$Sx[mask]
    ICovx <- IRmixedobj$ICovx
+   rsdx <- IRmixedobj$rsdx
+   rsdhat <- medianFilter3D(rsdx,mscbw,mask)
+   rsdhat[!mask] <- mean(rsdhat[mask])
+   ICovx <- sweep(ICovx,3:5,rsdx/rsdhat,"*")
    dim(ICovx) <- c(3,3,prod(dim(mask)))
    icovbpars <- ICovx[-1,-1,mask]
-   z <- vpawscov2(bpars, kstar, icovbpars, segm>1, ladjust=ladjust, verbose=verbose)
+   lambda <- 2 * nv * qf(1 - alpha, nv, nFiles - nv)*
+     switch(patchsize+1,1,2.77,3.46)
+   if(verbose) cat("using lambda=", lambda, " patchsize=", patchsize,"\n")
+   z <- vpawscov2(bpars, kstar, icovbpars, mask, lambda=lambda, 
+                  patchsize=patchsize,verbose=verbose)
    IRmixedobj$Rx[mask] <- z$theta[1,]
    IRmixedobj$Sx[mask] <- z$theta[2,]
    bi <- array(0,dim(mask))
    bi[mask] <- z$bi 
    IRmixedobj$bi <- bi
+   IRmixedobj$smoothPar <- c(z$lambda, z$hakt, alpha, patchsize, mscbw)
    IRmixedobj
 }
 

@@ -60,7 +60,7 @@ C
       integer n
       double precision th(3),invtime(n),s0,r1,fval(n)
       integer i
-      double precision z1,z2,z3,th1,th2,th3,th13,fv,vz
+      double precision z1,z2,z3,th1,th2,th3,th13,fv
       th1=th(1)
       th2=th(2)
       th3=th(3)

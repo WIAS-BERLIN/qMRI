@@ -58,7 +58,7 @@ C  fval = abs(s0*th(1)*(1-2*exp(-invtime*t1))+(1-th(1))*th(3)*(1-2*exp(-invtime*
 C
       implicit logical (a-z)
       integer n
-      double precision th(3),invtime(n),s0,r1,fval(n),grad(n,3)
+      double precision th(3),invtime(n),s0,r1,fval(n)
       integer i
       double precision z1,z2,z3,th1,th2,th3,th13,fv,vz
       th1=th(1)

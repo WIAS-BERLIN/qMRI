@@ -8,24 +8,14 @@ Estimate IRMRI parameters
 Parameter estimation ( intensity, relaxation rate, proportion of fluid) in Inversion Recovery MRI data.
 }
 \usage{
-estimateIR(IRdataobj,  fixed = TRUE,
-smoothMethod = c("PAWS", "Depth"), bw = 5, TEScale = 100,
-dataScale = 1000, method = c("NLR", "QL"),
-varest = c("RSS", "data"), kstar = 24, ladjust = 1, verbose = TRUE)
+estimateIR(IRdataobj, TEScale = 100, dataScale = 1000, method = c("NLR", "QL"),
+           varest = c("RSS","data"), fixed = TRUE, smoothMethod=c("PAWS","Depth"),
+           kstar = 24, alpha = .025, bysegment = TRUE, verbose = TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{IRdataobj}{
 4D array of IRMRI signals. First dimension corresponds to Inversion times (InvTime).
-}
-  \item{fixed}{
- Should adaptive smoothing performed for Sx and Rx maps and fx maps reestimated afterwards ?
-}
-  \item{smoothMethod}{
- Either "PAWS" or "Depth". the second option is not yet implemented.
-}
-  \item{bw}{
- Bandwidth for "Depth" smoothing
 }
   \item{TEScale}{
  Internal scale factor for Echo Times. This influences parameter scales in numerical calculations.
@@ -40,11 +30,21 @@ varest = c("RSS", "data"), kstar = 24, ladjust = 1, verbose = TRUE)
   \item{varest}{
   Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package {\code{aws}}. Only to be used in case that no image registration was needed as preprocessing.
 }
+\item{fixed}{
+ Should adaptive smoothing performed for Sx and Rx maps and fx maps reestimated afterwards ?
+}
+  \item{smoothMethod}{
+ Either "PAWS" or "Depth". the second option is not yet implemented.
+}
+
   \item{kstar}{
   number of steps used in PAWS
 }
-  \item{ladjust}{
-  adjustment factor for critical value in PAWS
+  \item{alpha}{
+   significance level for decisions in aws algorithm (suggestion: between 1e-5 and 0.025)
+}
+   \item{bysegment}{
+   \code{TRUE}: restrict smoothing to segments from segmentation, \code{FALSE}: restrict smoothing to solid mask.
 }
   \item{verbose}{
 Logical. Provide some runtime diagnostics.

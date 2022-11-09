@@ -582,44 +582,68 @@ dim(IRdata) <- dimdata
       z
 }
 
-smoothIRSolid <- function(IRmixedobj,kstar=24,patchsize=1,alpha=0.025,mscbw=5,verbose=TRUE){
+smoothIRSolid <- function(IRmixedobj,kstar=24,patchsize=1,alpha=0.025,mscbw=5,
+      bysegment=TRUE,verbose=TRUE){
    segm <- IRmixedobj$segm
    mask <- segm>1
    nvoxel <- sum(mask)
    nv <- 3
    nFiles <- length(IRmixedobj$InvTimes)
-   bpars <- array(0,c(2,nvoxel))
-   icovbpars <- array(0,c(2,2,nvoxel))
-   bpars[1,] <- IRmixedobj$Rx[mask]
-   bpars[2,] <- IRmixedobj$Sx[mask]
    ICovx <- IRmixedobj$ICovx
    rsdx <- IRmixedobj$rsdx
    rsdhat <- medianFilter3D(rsdx,mscbw,mask)
    rsdhat[!mask] <- mean(rsdhat[mask])
    ICovx <- sweep(ICovx,3:5,rsdx/rsdhat,"*")
    dim(ICovx) <- c(3,3,prod(dim(mask)))
-   icovbpars <- ICovx[-1,-1,mask]
    lambda <- 2 * nv * qf(1 - alpha, nv, nFiles - nv)*
      switch(patchsize+1,1,2.77,3.46)
    if(verbose) cat("using lambda=", lambda, " patchsize=", patchsize,"\n")
-   z <- vpawscov2(bpars, kstar, icovbpars, mask, lambda=lambda, 
-                  patchsize=patchsize,verbose=verbose)
-   IRmixedobj$Rx[mask] <- z$theta[1,]
-   IRmixedobj$Sx[mask] <- z$theta[2,]
    bi <- array(0,dim(mask))
-   bi[mask] <- z$bi 
+   if(bysegment){
+      bpars <- array(0,c(2,sum(segm==2)))
+      bpars[1,] <- IRmixedobj$Rx[segm==2]
+      bpars[2,] <- IRmixedobj$Sx[segm==2]
+      icovbpars <- ICovx[-1,-1,segm==2]
+      z <- vpawscov2(bpars, kstar, icovbpars, segm==2, lambda=lambda,
+                  patchsize=patchsize,verbose=verbose)
+      IRmixedobj$Rx[segm==2] <- z$theta[1,]
+      IRmixedobj$Sx[segm==2] <- z$theta[2,]
+      bi[segm==2] <- z$bi
+      bpars <- array(0,c(2,sum(segm==3)))
+      bpars[1,] <- IRmixedobj$Rx[segm==3]
+      bpars[2,] <- IRmixedobj$Sx[segm==3]
+      icovbpars <- ICovx[-1,-1,segm==3]
+      z <- vpawscov2(bpars, kstar, icovbpars, segm==3, lambda=lambda,
+                  patchsize=patchsize,verbose=verbose)
+      IRmixedobj$Rx[segm==3] <- z$theta[1,]
+      IRmixedobj$Sx[segm==3] <- z$theta[2,]
+      bi[segm==3] <- z$bi
+   } else {
+      bpars <- array(0,c(2,nvoxel))
+      bpars[1,] <- IRmixedobj$Rx[mask]
+      bpars[2,] <- IRmixedobj$Sx[mask]
+      icovbpars <- ICovx[-1,-1,mask]
+      z <- vpawscov2(bpars, kstar, icovbpars, mask, lambda=lambda,
+                  patchsize=patchsize,verbose=verbose)
+      IRmixedobj$Rx[mask] <- z$theta[1,]
+      IRmixedobj$Sx[mask] <- z$theta[2,]
+      bi[mask] <- z$bi
+   }
    IRmixedobj$bi <- bi
    IRmixedobj$smoothPar <- c(z$lambda, z$hakt, alpha, patchsize, mscbw)
    IRmixedobj
 }
 
-estimateIR <- function(IRdataobj, fixed=TRUE, smoothMethod=c("PAWS","Depth"),bw=5,
+estimateIR <- function(IRdataobj,
                        TEScale = 100,
                        dataScale = 1000,
                        method = c("NLR", "QL"),
                        varest = c("RSS","data"),
+                       fixed = TRUE,
+                       smoothMethod=c("PAWS","Depth"),
                        kstar = 24,
-                       ladjust = 1,
+                       alpha = .025,
+                       bysegment = TRUE,
                        verbose = TRUE){
   
    ergsFluid <- estimateIRfluid(IRdataobj, TEScale=TEScale,
@@ -628,7 +652,7 @@ estimateIR <- function(IRdataobj, fixed=TRUE, smoothMethod=c("PAWS","Depth"),bw=
    if(fixed) {
       if(smoothMethod[1]=="Depth") stop("not yet implemented")
 # ergsSmooth <- SdepthSmooth(ergsBrain, segm)
-      if(smoothMethod[1]=="PAWS") ergsBrain <- smoothIRSolid(ergsBrain, kstar, ladjust)
+      if(smoothMethod[1]=="PAWS") ergsBrain <- smoothIRSolid(ergsBrain, kstar, alpha=alpha, bysegment=bysegment)
    }
    ergsBrain <- estimateIRsolidfixed(ergsBrain, TEScale=TEScale, dataScale=dataScale)
    ergsBrain

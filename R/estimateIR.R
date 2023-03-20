@@ -644,7 +644,7 @@ smoothIRSolid <- function(IRmixedobj, kstar=24, patchsize=1, alpha=0.025, mscbw=
        IRmixedobj$Sx[segm==2] <- z$theta[3,]
        bi[segm==2] <- z$bi
        bpars <- array(0,c(3,sum(segm==3)))
-       bpars[1,] <- IRmixedobj$fx[segm==2]
+       bpars[1,] <- IRmixedobj$fx[segm==3]
        bpars[2,] <- IRmixedobj$Rx[segm==3]
        bpars[3,] <- IRmixedobj$Sx[segm==3]
        icovbpars <- ICovx[,,segm==3]

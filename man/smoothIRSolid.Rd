@@ -9,7 +9,7 @@ Adaptive smoothing of Rx and Sx maps over WM and GM areas.
 }
 \usage{
 smoothIRSolid(IRmixedobj, kstar = 24, patchsize = 1, alpha = 0.025,
-                   mscbw = 5, bysegment=TRUE, verbose=TRUE)
+                   mscbw = 5, bysegment=TRUE, partial=TRUE, verbose=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -30,6 +30,9 @@ smoothIRSolid(IRmixedobj, kstar = 24, patchsize = 1, alpha = 0.025,
 }
    \item{bysegment}{
    \code{TRUE}: restrict smoothing to segments from segmentation, \code{FALSE}: restrict smoothing to solid mask.
+}
+   \item{partial}{
+   \code{TRUE}: ignore information concerning parameter \code{fx} when smoothing.  
 }
  \item{verbose}{
    logical: Monitor process.

@@ -582,8 +582,8 @@ dim(IRdata) <- dimdata
       z
 }
 
-smoothIRSolid <- function(IRmixedobj,kstar=24,patchsize=1,alpha=0.025,mscbw=5,
-      bysegment=TRUE,verbose=TRUE){
+smoothIRSolid <- function(IRmixedobj, kstar=24, patchsize=1, alpha=0.025, mscbw=5,
+      bysegment=TRUE, partial=TRUE, verbose=TRUE){
    segm <- IRmixedobj$segm
    mask <- segm>1
    nvoxel <- sum(mask)
@@ -599,36 +599,75 @@ smoothIRSolid <- function(IRmixedobj,kstar=24,patchsize=1,alpha=0.025,mscbw=5,
      switch(patchsize+1,1,2.77,3.46)
    if(verbose) cat("using lambda=", lambda, " patchsize=", patchsize,"\n")
    bi <- array(0,dim(mask))
-   if(bysegment){
-      bpars <- array(0,c(2,sum(segm==2)))
-      bpars[1,] <- IRmixedobj$Rx[segm==2]
-      bpars[2,] <- IRmixedobj$Sx[segm==2]
-      icovbpars <- ICovx[-1,-1,segm==2]
-      z <- vpawscov2(bpars, kstar, icovbpars, segm==2, lambda=lambda,
-                  patchsize=patchsize,verbose=verbose)
-      IRmixedobj$Rx[segm==2] <- z$theta[1,]
-      IRmixedobj$Sx[segm==2] <- z$theta[2,]
-      bi[segm==2] <- z$bi
-      bpars <- array(0,c(2,sum(segm==3)))
-      bpars[1,] <- IRmixedobj$Rx[segm==3]
-      bpars[2,] <- IRmixedobj$Sx[segm==3]
-      icovbpars <- ICovx[-1,-1,segm==3]
-      z <- vpawscov2(bpars, kstar, icovbpars, segm==3, lambda=lambda,
-                  patchsize=patchsize,verbose=verbose)
-      IRmixedobj$Rx[segm==3] <- z$theta[1,]
-      IRmixedobj$Sx[segm==3] <- z$theta[2,]
-      bi[segm==3] <- z$bi
-   } else {
-      bpars <- array(0,c(2,nvoxel))
-      bpars[1,] <- IRmixedobj$Rx[mask]
-      bpars[2,] <- IRmixedobj$Sx[mask]
-      icovbpars <- ICovx[-1,-1,mask]
-      z <- vpawscov2(bpars, kstar, icovbpars, mask, lambda=lambda,
-                  patchsize=patchsize,verbose=verbose)
-      IRmixedobj$Rx[mask] <- z$theta[1,]
-      IRmixedobj$Sx[mask] <- z$theta[2,]
-      bi[mask] <- z$bi
-   }
+   if(partial){
+      if(bysegment){
+         bpars <- array(0,c(2,sum(segm==2)))
+         bpars[1,] <- IRmixedobj$Rx[segm==2]
+         bpars[2,] <- IRmixedobj$Sx[segm==2]
+         icovbpars <- ICovx[-1,-1,segm==2]
+         z <- vpawscov2(bpars, kstar, icovbpars, segm==2, lambda=lambda,
+                        patchsize=patchsize,verbose=verbose)
+         IRmixedobj$Rx[segm==2] <- z$theta[1,]
+         IRmixedobj$Sx[segm==2] <- z$theta[2,]
+         bi[segm==2] <- z$bi
+         bpars <- array(0,c(2,sum(segm==3)))
+         bpars[1,] <- IRmixedobj$Rx[segm==3]
+         bpars[2,] <- IRmixedobj$Sx[segm==3]
+         icovbpars <- ICovx[-1,-1,segm==3]
+         z <- vpawscov2(bpars, kstar, icovbpars, segm==3, lambda=lambda,
+                        patchsize=patchsize,verbose=verbose)
+         IRmixedobj$Rx[segm==3] <- z$theta[1,]
+         IRmixedobj$Sx[segm==3] <- z$theta[2,]
+         bi[segm==3] <- z$bi
+      } else {
+         bpars <- array(0,c(2,nvoxel))
+         bpars[1,] <- IRmixedobj$Rx[mask]
+         bpars[2,] <- IRmixedobj$Sx[mask]
+         icovbpars <- ICovx[-1,-1,mask]
+         z <- vpawscov2(bpars, kstar, icovbpars, mask, lambda=lambda,
+                        patchsize=patchsize,verbose=verbose)
+         IRmixedobj$Rx[mask] <- z$theta[1,]
+         IRmixedobj$Sx[mask] <- z$theta[2,]
+         bi[mask] <- z$bi
+      } 
+   }  else {
+     if(bysegment){
+       bpars <- array(0,c(3,sum(segm==2)))
+       bpars[1,] <- IRmixedobj$fx[segm==2]
+       bpars[2,] <- IRmixedobj$Rx[segm==2]
+       bpars[3,] <- IRmixedobj$Sx[segm==2]
+       icovbpars <- ICovx[,,segm==2]
+       z <- vpawscov2(bpars, kstar, icovbpars, segm==2, lambda=lambda,
+                      patchsize=patchsize,verbose=verbose)
+       IRmixedobj$fx[segm==2] <- z$theta[1,]
+       IRmixedobj$Rx[segm==2] <- z$theta[2,]
+       IRmixedobj$Sx[segm==2] <- z$theta[3,]
+       bi[segm==2] <- z$bi
+       bpars <- array(0,c(3,sum(segm==3)))
+       bpars[1,] <- IRmixedobj$fx[segm==2]
+       bpars[2,] <- IRmixedobj$Rx[segm==3]
+       bpars[3,] <- IRmixedobj$Sx[segm==3]
+       icovbpars <- ICovx[,,segm==3]
+       z <- vpawscov2(bpars, kstar, icovbpars, segm==3, lambda=lambda,
+                      patchsize=patchsize,verbose=verbose)
+       IRmixedobj$fx[segm==3] <- z$theta[1,]
+       IRmixedobj$Rx[segm==3] <- z$theta[2,]
+       IRmixedobj$Sx[segm==3] <- z$theta[3,]
+       bi[segm==3] <- z$bi
+     } else {
+       bpars <- array(0,c(3,nvoxel))
+       bpars[1,] <- IRmixedobj$fx[mask]
+       bpars[2,] <- IRmixedobj$Rx[mask]
+       bpars[3,] <- IRmixedobj$Sx[mask]
+       icovbpars <- ICovx[,,mask]
+       z <- vpawscov2(bpars, kstar, icovbpars, mask, lambda=lambda,
+                      patchsize=patchsize,verbose=verbose)
+       IRmixedobj$fx[mask] <- z$theta[1,]
+       IRmixedobj$Rx[mask] <- z$theta[2,]
+       IRmixedobj$Sx[mask] <- z$theta[3,]
+       bi[mask] <- z$bi
+     } 
+   } 
    IRmixedobj$bi <- bi
    IRmixedobj$smoothPar <- c(z$lambda, z$hakt, alpha, patchsize, mscbw)
    IRmixedobj

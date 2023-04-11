@@ -451,7 +451,6 @@ estimateIRsolid2 <- function(IRfluidobj, InvTimes, segm, Sfluid, Rfluid,
       ICovx[3,3,] <- ICovx[3,3,]/dataScale/dataScale
    dim(ICovx) <- c(3,3,dim(mask))
    dim(IRdata) <- dimdata
-   
 # Results are currently scaled by TEScale (R) and dataScale (S)
       z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,
                 fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sfluid*dataScale,
@@ -461,6 +460,138 @@ estimateIRsolid2 <- function(IRfluidobj, InvTimes, segm, Sfluid, Rfluid,
       z
 }
 
+estimateIRfull2 <- function(IRsolidobj, InvTimes, segm,
+                             TEScale = 100,
+                             dataScale = 1000,
+                             method = c("NLR", "QL"),
+                             sigma = NULL,
+                             L = 1,
+                             varest = c("RSS","data"),
+                             verbose = TRUE,
+                             lower=c(0,0,0,0,0),
+                             upper=c(.95,2,2,2,2)){
+  IRdata <- IRsolidobj$IRdata
+  InvTimes <- IRsolidobj$InvTimes
+  segm <- IRsolidobj$segm
+  sigma <- IRsolidobj$sigma
+  L <- IRsolidobj$L
+  Sx <- IRsolidobj$Sx/dataScale
+  Rx <- IRsolidobj$Rx*TEScale
+  fx <- IRsolidobj$fx
+  Sfluid <- IRsolidobj$Sf/dataScale
+  Rfluid <- IRsolidobj$Rf*TEScale
+  Sf <- array(Sfluid,dim(Sx))
+  Rf <- array(Rfluid,dim(Sx))
+  Sf[segm==1] <- Sx[segm==1]
+  Rf[segm==1] <- Rx[segm==1]
+  method <- IRsolidobj$method
+  varest <- IRsolidobj$varest
+  mask <- segm>1
+  nvoxel <- sum(mask)
+  ntimes <- length(InvTimes)
+  InvTimes[InvTimes==Inf] <- 50*max(InvTimes[InvTimes!=Inf])
+  sind <- rep(1,ntimes)
+  dimdata <- dim(IRdata)
+  if(dimdata[1]!=ntimes) stop("estimateIRsolid: incompatible length of InvTimes")
+  if(any(dimdata[-1]!=dim(mask))) stop("estimateIRsolid: incompatible dimension of segm")
+  InvTimesScaled <- InvTimes/TEScale
+  ## create necessary arrays
+  npar <- 5 # th1 for f, th2 for R_s, th3 for S_s, , th4 for R_f, th5 for S_f
+  df <- length(InvTimes)-npar
+  rsdx <- array(0,dim(mask))
+  ICovx <- array(0,c(5,5,prod(dim(mask))))
+  Convx <- array(0,dim(mask))
+  Convx[segm==1] <- 1
+  # set ICovx for fluid as (numerically) diag(rep(Inf),3)
+  ICovx[1,1,segm==1] <- 1e20
+  ICovx[2,2,segm==1] <- 1e20
+  ICovx[3,3,segm==1] <- 1e20
+  ICovx[4,4,segm==1] <- 1e20
+  ICovx[5,5,segm==1] <- 1e20
+  isConv <- array(FALSE, nvoxel)
+  isThresh <- array(FALSE, nvoxel)
+  modelCoeff <- array(0, c(npar, nvoxel))
+  invCov <- array(0, c(npar, npar, nvoxel))
+  rsigma <- array(0, nvoxel)
+  if (method[1] == "QL") {
+    sig <- sigma/dataScale
+    CL <- sig * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
+  }
+  # initial parameters
+  dim(IRdata) <- c(dimdata[1],prod(dim(segm)))
+  IRdataSolid <- IRdata[,mask]
+  thetas <- matrix(0,3,nvoxel)
+  thetas[5,] <- Sf[mask]
+  thetas[4,] <- Rf[mask]
+  thetas[3,] <- Sx[mask]
+  thetas[2,] <- Rx[mask]
+  thetas[1,] <- fx[mask]
+  if (verbose){
+    cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
+    pb <- txtProgressBar(0, nvoxel, style = 3)
+  }
+  for(xyz in 1:nvoxel){
+    
+    ivec <- IRdataSolid[, xyz]/dataScale
+    th <- thetas[, xyz]
+    ##
+    ##   initialize using grid search and optim
+    ##
+    res <- if (method[1] == "NLR") try(optim(th, LSIRmix5, LSIRmix5grad, 
+                                             Y=ivec, InvTimes=InvTimesScaled,
+                                             method="L-BFGS-B",lower=lower,upper=upper))
+    else try(optim(th, LSIRmix5QL, LSIRmix5QLgrad, 
+                   Y=ivec, InvTimes=InvTimesScaled, 
+                   CL = CL, sig = sig, L = L,
+                   method="L-BFGS-B",lower=lower,upper=upper))
+    
+    if (!inherits(res, "try-error")){
+      modelCoeff[,xyz] <- th <- res$par
+      x <- attr(if(method[1]=="NLR") IRmix5(th,InvTimesScaled) 
+                else IRmix5QL(th,InvTimesScaled,CL,sig,L),"grad") 
+      rsigma[xyz] <- sqrt(res$value/df)
+      isConv[xyz] <- res$convergence
+      invCov[,,xyz] <- t(x)%*%x/res$value*df
+    }
+    if (verbose) if(xyz%/%1000*1000==xyz) setTxtProgressBar(pb, xyz)
+  }
+  if (verbose){
+    close(pb)
+    cat("Finished estimation", format(Sys.time()), "\n")
+  }
+  fx[mask] <- modelCoeff[1,]
+  Rx[mask] <- modelCoeff[2,]
+  Sx[mask] <- modelCoeff[3,]
+  Rf[mask] <- modelCoeff[4,]
+  Sf[mask] <- modelCoeff[5,]
+  ICovx[,,mask] <- invCov
+  Convx[mask] <- isConv
+  rsdx[mask] <- rsigma
+  ICovx[1,2,] <- ICovx[2,1,] <- ICovx[1,2,]*TEScale
+  ICovx[1,3,] <- ICovx[3,1,] <- ICovx[1,3,]/dataScale
+  ICovx[1,4,] <- ICovx[4,1,] <- ICovx[1,4,]*TEScale
+  ICovx[1,5,] <- ICovx[5,1,] <- ICovx[1,5,]/dataScale
+  ICovx[2,2,] <- ICovx[2,2,]*TEScale*TEScale
+  ICovx[2,3,] <- ICovx[3,2,] <- ICovx[2,3,]/dataScale*TEScale
+  ICovx[2,4,] <- ICovx[4,2,] <- ICovx[2,4,]*TEScale*TEScale
+  ICovx[2,5,] <- ICovx[5,2,] <- ICovx[2,5,]/dataScale*TEScale
+  ICovx[3,3,] <- ICovx[3,3,]/dataScale/dataScale
+  ICovx[3,4,] <- ICovx[4,3,] <- ICovx[3,4,]/dataScale*TEScale
+  ICovx[3,5,] <- ICovx[5,3,] <- ICovx[3,5,]/dataScale/dataScale
+  ICovx[4,4,] <- ICovx[4,4,]*TEScale*TEScale
+  ICovx[4,5,] <- ICovx[5,4,] <- ICovx[4,5,]/dataScale*TEScale
+  ICovx[5,5,] <- ICovx[5,5,]/dataScale/dataScale
+  dim(ICovx) <- c(5,5,dim(mask))
+  dim(IRdata) <- dimdata
+  
+  # Results are currently scaled by TEScale (R) and dataScale (S)
+  z <- list(IRdata=IRdata, InvTimes=InvTimes, segm=segm, sigma=sigma, L=L,
+            fx=fx,Rx=Rx/TEScale,Sx=Sx*dataScale,Sf=Sf*dataScale,
+            Rf=Rf/TEScale,ICovx=ICovx,Convx=Convx,rsdx=rsdx,
+            method=method,varest=varest)
+  class(z) <- "IRmixed"
+  z
+}
 
 
 estimateIRsolidfixed <- function(IRmixedobj, TEScale = 100,
@@ -600,11 +731,14 @@ smoothIRSolid <- function(IRmixedobj, kstar=24, patchsize=1, alpha=0.025, mscbw=
    if(verbose) cat("using lambda=", lambda, " patchsize=", patchsize,"\n")
    bi <- array(0,dim(mask))
    if(partial){
+      ind <- (1:dim(ICovx)[3])[mask]
+      ICovx2 <- ICovx[-1,-1,]
+      for(i in ind) ICovx2[,,i] <- solve(solve(ICovx[,,i])[-1,-1])
       if(bysegment){
          bpars <- array(0,c(2,sum(segm==2)))
          bpars[1,] <- IRmixedobj$Rx[segm==2]
          bpars[2,] <- IRmixedobj$Sx[segm==2]
-         icovbpars <- ICovx[-1,-1,segm==2]
+         icovbpars <- ICovx2[,,segm==2]
          z <- vpawscov2(bpars, kstar, icovbpars, segm==2, lambda=lambda,
                         patchsize=patchsize,verbose=verbose)
          IRmixedobj$Rx[segm==2] <- z$theta[1,]
@@ -613,7 +747,7 @@ smoothIRSolid <- function(IRmixedobj, kstar=24, patchsize=1, alpha=0.025, mscbw=
          bpars <- array(0,c(2,sum(segm==3)))
          bpars[1,] <- IRmixedobj$Rx[segm==3]
          bpars[2,] <- IRmixedobj$Sx[segm==3]
-         icovbpars <- ICovx[-1,-1,segm==3]
+         icovbpars <- ICovx2[,,segm==3]
          z <- vpawscov2(bpars, kstar, icovbpars, segm==3, lambda=lambda,
                         patchsize=patchsize,verbose=verbose)
          IRmixedobj$Rx[segm==3] <- z$theta[1,]
@@ -623,7 +757,7 @@ smoothIRSolid <- function(IRmixedobj, kstar=24, patchsize=1, alpha=0.025, mscbw=
          bpars <- array(0,c(2,nvoxel))
          bpars[1,] <- IRmixedobj$Rx[mask]
          bpars[2,] <- IRmixedobj$Sx[mask]
-         icovbpars <- ICovx[-1,-1,mask]
+         icovbpars <- ICovx2[,,mask]
          z <- vpawscov2(bpars, kstar, icovbpars, mask, lambda=lambda,
                         patchsize=patchsize,verbose=verbose)
          IRmixedobj$Rx[mask] <- z$theta[1,]

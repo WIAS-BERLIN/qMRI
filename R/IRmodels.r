@@ -69,9 +69,9 @@ IRmix5 <- function(par, InvTimes, S0f, Rf){
                 as.double(InvTimes),
                 as.integer(n),
                 fval = double(n),
-                grad = double(3*n))[c("fval", "grad")]
+                grad = double(5*n))[c("fval", "grad")]
   fval <- z$fval
-  attr(fval, "gradient") <- matrix(z$grad, n, 3)
+  attr(fval, "gradient") <- matrix(z$grad, n, 5)
   fval
 }
 

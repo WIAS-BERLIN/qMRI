@@ -63,8 +63,8 @@ static const R_FortranMethodDef fmethods[] = {
             {"irfluid", (DL_FUNC) &irfluid_ , 5, irfluid_t},
             {"irmix", (DL_FUNC) &irmix_ , 7, irmix_t},
             {"irmixfv", (DL_FUNC) &irmixfv_ , 6, irmixfv_t},
-            {"irmix5", (DL_FUNC) &irmix5_ , 5, irmix_t},
-            {"irmix5fv", (DL_FUNC) &irmix5fv_ , 4, irmixfv_t},
+            {"irmix5", (DL_FUNC) &irmix5_ , 5, irmix5_t},
+            {"irmix5fv", (DL_FUNC) &irmix5fv_ , 4, irmix5fv_t},
             {"irmix0", (DL_FUNC) &irmix0_ , 9, irmix0_t},
             {NULL, NULL, 0,NULL}
 };

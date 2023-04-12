@@ -81,8 +81,8 @@ C
          grad(i,1)=(z1-th3*z3)*vz
          grad(i,2)=(th13*2.d0*z2*invtime(i))*vz
          grad(i,3)=(1.d0-th1)*z3*vz
-         grad(i,4)=z4*vz
-         grad(i,5)=2.d0*z1*invtime(i)*dsign(1.d0,z4)
+         grad(i,4)=(th15*2.d0*z4*invtime(i))*vz
+         grad(i,5)=th1*z5*vz
       END DO
       RETURN
       END

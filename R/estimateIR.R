@@ -516,7 +516,7 @@ IRdata <- IRsolidobj$IRdata
       # initial parameters
   dim(IRdata) <- c(dimdata[1],prod(dim(segm)))
   IRdataSolid <- IRdata[,mask]
-  thetas <- matrix(0,3,nvoxel)
+  thetas <- matrix(0,npar,nvoxel)
   thetas[5,] <- Sf[mask]
   thetas[4,] <- Rf[mask]
   thetas[3,] <- Sx[mask]
@@ -534,10 +534,10 @@ IRdata <- IRsolidobj$IRdata
 ##   initialize using grid search and optim
 ##
          th <- pmin(upper,pmax(lower,th))
-                           res <- if (method[1] == "NLR") try(optim(th, LSIRmix5, LSIRmix2grad,
+                           res <- if (method[1] == "NLR") try(optim(th, LSIRmix5, LSIRmix5grad,
                                                     Y=ivec, InvTimes=InvTimesScaled,
                                                     method="L-BFGS-B",lower=lower,upper=upper))
-                           else try(optim(th, LSIRmix2QL, LSIRmix5QLgrad,
+                           else try(optim(th, LSIRmix5QL, LSIRmix5QLgrad,
                                           Y=ivec, InvTimes=InvTimesScaled,
                                           CL = CL, sig = sig, L = L,
                                           method="L-BFGS-B",lower=lower,upper=upper))
@@ -691,7 +691,7 @@ estimateIRfull2 <- function(IRsolidobj, InvTimes, segm,
   # initial parameters
   dim(IRdata) <- c(dimdata[1],prod(dim(segm)))
   IRdataSolid <- IRdata[,mask]
-  thetas <- matrix(0,3,nvoxel)
+  thetas <- matrix(0,npar,nvoxel)
   thetas[5,] <- Sf[mask]
   thetas[4,] <- Rf[mask]
   thetas[3,] <- Sx[mask]

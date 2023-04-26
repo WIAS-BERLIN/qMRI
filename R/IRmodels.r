@@ -56,7 +56,7 @@ IRmix2fv <- function(par, InvTimes, S0f, Rf){
   fval
 }
 
-IRmix5 <- function(par, InvTimes, S0f, Rf){
+IRmix5 <- function(par, InvTimes){
   ##
   ## Inversion Recovery MRI 2 compartments (fluid/solid) with fixed fluid parameters
   ##
@@ -75,7 +75,7 @@ IRmix5 <- function(par, InvTimes, S0f, Rf){
   fval
 }
 
-IRmix5fv <- function(par, InvTimes, S0f, Rf){
+IRmix5fv <- function(par, InvTimes){
   ##
   ## Inversion Recovery MRI 2 compartments (fluid/solid) with fixed fluid parameters
   ##

@@ -88,6 +88,10 @@ estimateIRfluid <- function(IRdataobj,
    if (method[1] == "QL") {
      sig <- sigma/dataScale
      CL <- sig * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
+   } else {
+     # just declare for parallel call
+     sig <- 1
+     CL <- 1
    }
    # initial parameters
      dim(IRdata) <- c(dimdata[1],prod(dim(segm)))
@@ -99,8 +103,17 @@ estimateIRfluid <- function(IRdataobj,
      thetas[2,] <- log(2)/InvTimes[itmin]*TEScale
      if (verbose){
         cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
-        pb <- txtProgressBar(0, nvoxel, style = 3)
+        if(setCores()==1) pb <- txtProgressBar(0, nvoxel, style = 3)
      }
+     if( setCores() >1){
+       x <- array(0,c(ntimes+2,nvoxel))
+       x[1:2,] <- thetas
+       x[-(1:2),] <- IRdataFluid/dataScale
+ #      ergs <- array(0, c(npar+1,nvoxel)) 
+       ergs <- plmatrix(x,pIRfluid,InvTimesScaled, method, CL, sig, L, varest, lower, upper)
+       modelCoeff <- ergs[1:npar,]
+       isConv <- ergs[npar+1,]
+     }  else
      for(xyz in 1:nvoxel){
      
      ivec <- IRdataFluid[, xyz]/dataScale
@@ -158,7 +171,7 @@ estimateIRfluid <- function(IRdataobj,
   Sf <- median(modelCoeff[1,],na.rm=TRUE)
   Rf <- median(modelCoeff[2,],na.rm=TRUE)
   if (verbose){
-    close(pb)
+    if(setCores()==1) close(pb)
     cat("Finished estimation", format(Sys.time()), "\n","Sf",Sf,"Rf",Rf,"\n")
   }
   dim(IRdata) <- dimdata
@@ -217,7 +230,11 @@ estimateIRsolid <- function(IRfluidobj,
    if (method[1] == "QL") {
          sig <- sigma/dataScale
          CL <- sig * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
-      }
+   } else {
+     # just declare for parallel call, won't be used
+     sig <- 1
+     CL <- 1
+   }
       # initial parameters
       dim(IRdata) <- c(dimdata[1],prod(dim(segm)))
       IRdataSolid <- IRdata[,mask]
@@ -227,8 +244,19 @@ estimateIRsolid <- function(IRfluidobj,
       thetas[1,] <- 0.3
       if (verbose){
          cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
-         pb <- txtProgressBar(0, nvoxel, style = 3)
+         if(setCores() == 1) pb <- txtProgressBar(0, nvoxel, style = 3)
       }
+      if( setCores() >1){
+        x <- array(0,c(ntimes+npar,nvoxel))
+        x[1:npar,] <- thetas
+        x[-(1:npar),] <- IRdataSolid/dataScale
+ #       ergs <- array(0, c(npar+npar*npar+2,nvoxel)) 
+        ergs <- plmatrix(x,pIRsolid,InvTimesScaled, Rfluid, Sfluid, method, CL, sig, L, varest, lower, upper)
+        isConv <- ergs[npar+npar*npar+2]
+        modelCoeff <- ergs[1:npar, ] 
+        InvCov <- ergs[npar+(1:npar*npar), ] 
+        rsigma <- ergs[npar+npar+npar+1,] 
+      }  else {
       th1 <- (1:8)/10
       th2 <- Rfluid*c(.5,.6,.7,.8,.9,1.1,1.2)
       th3 <- Sfluid*(1:9)/10
@@ -307,8 +335,9 @@ estimateIRsolid <- function(IRfluidobj,
          }
          if (verbose) if(xyz%/%1000*1000==xyz) setTxtProgressBar(pb, xyz)
       }
+      }
       if (verbose){
-        close(pb)
+        if(setCores(1)==1) close(pb)
         cat("Finished estimation", format(Sys.time()), "\n")
       }
       fx[mask] <- modelCoeff[1,]

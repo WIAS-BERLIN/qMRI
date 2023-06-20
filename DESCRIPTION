@@ -1,15 +1,15 @@
 Package: qMRI
 Type: Package
 Title: Methods for Quantitative Magnetic Resonance Imaging ('qMRI')
-Version: 1.2.5
-Date: 2023-03-20
+Version: 1.2.6
+Date: 2023-06-20
 Authors@R: c(person("Joerg", "Polzehl", role = c("aut"),
                     email = "joerg.polzehl@wias-berlin.de"),
              person("Karsten", "Tabelow", role = c("aut", "cre"),
                     email = "karsten.tabelow@wias-berlin.de"),
              person("WIAS Berlin", role = c("cph", "fnd")))
 Maintainer: Karsten Tabelow <karsten.tabelow@wias-berlin.de>
-Depends: R (>= 3.5), awsMethods (>= 1.0), methods
+Depends: R (>= 3.5), awsMethods (>= 1.0), methods, parallel
 Imports: oro.nifti (>= 0.9), stringr, aws (>= 2.4), adimpro (>= 0.9)
 LazyData: TRUE
 Description: Implementation of methods for estimation of quantitative maps

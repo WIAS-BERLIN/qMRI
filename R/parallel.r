@@ -15,10 +15,12 @@ plmatrix <- function(x, FUN, ..., mc.cores = setCores(,reprt=FALSE)){
 }
 # in: thetas , IRdataFluid, InvTimesScaled
 # out: isConv, modelcoef
-pIRfluid <- function(x, InvTimesScaled, method, CL, sig, L, varest, lower=c(0,0),
+pIRfluid <- function(x, InvTimesScaled, method, sigma, CL, sig, L, varest, lower=c(0,0),
                      upper=c(2,2)){
    nvoxel <- dim(x)[2]
    npar <- 2
+   ntimes <- length(InvTimesScaled)
+   sind <- rep(1,ntimes)
    thetas <- x[1:2,]
    IRdataFluid <- x[-c(1:2),]
 ergs <- array(0,c(npar+1,nvoxel))
@@ -76,7 +78,7 @@ for(xyz in 1:nvoxel){
 ergs
 }
 
-pIRsolid <- function(x, InvTimesScaled, Rfluid, Sfluid, method, CL, sig, L,
+pIRsolid <- function(x, InvTimesScaled, Rfluid, Sfluid, method, sigma, CL, sig, L,
                      varest, 
                      lower=c(0,0,0),
                      upper=c(.95,2,2)){
@@ -84,7 +86,9 @@ pIRsolid <- function(x, InvTimesScaled, Rfluid, Sfluid, method, CL, sig, L,
   npar <- 3
   thetas <- x[1:npar,]
   IRdataSolid <- x[-c(1:npar),]
-  df <- length(InvTimesScaled)-3
+  ntimes <- length(InvTimesScaled)
+  sind <- rep(1,ntimes)
+  df <- ntimes-3
   ergs <- array(0,c(npar+npar*npar+2,nvoxel))
   th1 <- (1:8)/10
   th2 <- Rfluid*c(.5,.6,.7,.8,.9,1.1,1.2)

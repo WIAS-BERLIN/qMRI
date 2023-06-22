@@ -110,7 +110,8 @@ estimateIRfluid <- function(IRdataobj,
        x[1:2,] <- thetas
        x[-(1:2),] <- IRdataFluid/dataScale
  #      ergs <- array(0, c(npar+1,nvoxel)) 
-       ergs <- plmatrix(x,pIRfluid,InvTimesScaled, method, CL, sig, L, varest, lower, upper)
+       ergs <- plmatrix(x,pIRfluid,InvTimesScaled, method, 
+                        sigma, CL, sig, L, varest, lower, upper)
        modelCoeff <- ergs[1:npar,]
        isConv <- ergs[npar+1,]
      }  else
@@ -251,7 +252,8 @@ estimateIRsolid <- function(IRfluidobj,
         x[1:npar,] <- thetas
         x[-(1:npar),] <- IRdataSolid/dataScale
  #       ergs <- array(0, c(npar+npar*npar+2,nvoxel)) 
-        ergs <- plmatrix(x,pIRsolid,InvTimesScaled, Rfluid, Sfluid, method, CL, sig, L, varest, lower, upper)
+        ergs <- plmatrix(x,pIRsolid,InvTimesScaled, Rfluid, Sfluid, method,
+                         sigma, CL, sig, L, varest, lower, upper)
         isConv <- ergs[npar+npar*npar+2]
         modelCoeff <- ergs[1:npar, ] 
         InvCov <- ergs[npar+(1:npar*npar), ] 

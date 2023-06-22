@@ -152,6 +152,7 @@ with data for inversion time $TI$ distributed as $Rician(\xi(TI; S_f, R_1^f), \s
 The parameters $S_f$ and $R_1^f$ are assumed not to vary within CSF.
 
 <<5>>=
+setCores(2) # parallel mode using 2 threads
 IRfluid <- estimateIRfluid(IRdata, method="NLR", verbose=FALSE)
 cat("Estimated parameters Sf:", IRfluid$Sf, 
                         " Rf:", IRfluid$Rf, "\n")

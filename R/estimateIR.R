@@ -254,9 +254,9 @@ estimateIRsolid <- function(IRfluidobj,
  #       ergs <- array(0, c(npar+npar*npar+2,nvoxel)) 
         ergs <- plmatrix(x,pIRsolid,InvTimesScaled, Rfluid, Sfluid, method,
                          sigma, CL, sig, L, varest, lower, upper)
-        isConv <- ergs[npar+npar*npar+2]
+        isConv <- ergs[npar+npar*npar+2,]
         modelCoeff <- ergs[1:npar, ] 
-        InvCov <- ergs[npar+(1:npar*npar), ] 
+        InvCov <- ergs[npar+1:(npar*npar), ] 
         rsigma <- ergs[npar+npar+npar+1,] 
       }  else {
       th1 <- (1:8)/10
@@ -345,7 +345,7 @@ estimateIRsolid <- function(IRfluidobj,
       fx[mask] <- modelCoeff[1,]
       Rx[mask] <- modelCoeff[2,]
       Sx[mask] <- modelCoeff[3,]
-      ICovx[,,mask] <- invCov
+      ICovx[,,mask] <- InvCov
       Convx[mask] <- isConv
       rsdx[mask] <- rsigma
       ICovx[1,2,] <- ICovx[2,1,] <- ICovx[1,2,]*TEScale

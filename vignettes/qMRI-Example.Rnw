@@ -194,6 +194,7 @@ from an MPM sequence by the relaxation rate $R_2^\star$ for the
 signal decay with the echo time $T\!E$ and the three absolute
 values for $T\!E = 0$. Parameters in this model can be estimated by
 <<5>>=
+setCores(2)
 modelMPM <- estimateESTATICS(mpm,
                              method = "NLR",
                              verbose = FALSE)

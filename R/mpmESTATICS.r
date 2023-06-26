@@ -270,10 +270,10 @@ estimateESTATICS <- function (mpmdata,
      sind <- switch(modelp1,rep(1,nT1), c(rep(1,nT1),rep(2,nPD)),
                                 c(rep(1,nT1), rep(2,nMT), rep(3,nPD)))
      ddata <- extract(mpmdata,"ddata")[ind,,,,drop=FALSE]
-     shat <- ddata
+     shat <- ddata[ind,,,]
      for( i in 1:modelp1){
-        shat[i,,,] <- aws::awsLocalSigma(ddata[i,,,], steps=16,
-            mask=extract(mpmdata,"mask"), ncoils=1, hsig=2.5,
+        shat[i,,,] <- aws::awsLocalSigma(ddata[ind[i],,,], steps=16,
+            mask=extract(mpmdata,"mask"), ncoils=L, hsig=2.5,
             lambda=6,family="Gauss")$sigma
      }
      dim(shat) <- c(modelp1,prod(sdim))
@@ -281,8 +281,10 @@ estimateESTATICS <- function (mpmdata,
      shat[shat==0] <- quantile(shat,.8)
      if(is.null(sigma)) sigma <- median(shat)
      shat <- shat/dataScale
-   } else shat <- NULL
-
+   } else {
+      shat <- array(0,c(modelp1,nvoxel))
+      sind <- NULL
+    }
   ## obbtain initial estimates from linearized model
   thetas <- initth(mpmdata, TEScale, dataScale)
   ## now only contains estimates for voxel in mask
@@ -299,12 +301,16 @@ estimateESTATICS <- function (mpmdata,
       CL <- CLarray
     } else if (all(dim(sigma) == sdim)) {
       homsigma <- FALSE
+      sigma <- sigma[mask]
+      CLarray <- CLarray[mask]
+    ## only need values within mask
     } else {
       stop("Dimension of argument sigma does not match the data")
     }
-    sigma <- sigma[mask]
-    CLarray <- CLarray[mask]
-    ## only need values within mask
+  } else {
+  # not used
+     sigma <- 1
+     CLarray <- 1
   }
 
   ## create inde vectors for the data with different weighting (T1w, MTw, PDw)
@@ -330,8 +336,29 @@ estimateESTATICS <- function (mpmdata,
 
   if (verbose){
      cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
-     pb <- txtProgressBar(0, nvoxel, style = 3)
+     if(setCores()==1) pb <- txtProgressBar(0, nvoxel, style = 3)
    }
+if( setCores() >1){
+        x <- array(0,c(mpmdata$nFiles+npar+modelp1+2,nvoxel))
+        x[mpmdata$nFiles+1:npar,] <- thetas
+        x[1:mpmdata$nFiles,] <- mpmdata$ddata/dataScale
+        x[mpmdata$nFiles+npar+1:modelp1,] <- shat
+        x[mpmdata$nFiles+npar+modelp1+1,] <- sigma
+        x[mpmdata$nFiles+npar+modelp1+2,] <- CLarray
+ #       ergs <- array(0, c(npar+npar*npar+2,nvoxel))
+       ergs <- switch(mpmdata$model+1,plmatrix(x,pEstESTATICS0,method,varest,
+                                     xmat,wghts,maxR2star,L,lower,upper,sind),
+                   plmatrix(x,pEstESTATICS1,method,varest,
+                                     xmat,wghts,maxR2star,L,lower,upper,sind),
+                   plmatrix(x,pEstESTATICS2,method,varest,
+                                     xmat,wghts,maxR2star,L,lower,upper,sind))
+        isConv <- ergs[npar+npar*npar+1,]
+        modelCoeff <- ergs[1:npar, ]
+        InvCov <- ergs[npar+1:(npar*npar), ]
+        dim(InvCov) <- c(npar,npar,nvoxel)
+        rsigma <- ergs[npar+npar*npar+2,]
+
+} else {
   for(xyz in 1:nvoxel){
 
           if (method == "QL") {
@@ -550,8 +577,9 @@ estimateESTATICS <- function (mpmdata,
 #    if (verbose) if(xyz%/%10000*10000==xyz) cat("completed", xyz, "of", nvoxel, "voxel  time", format(Sys.time()), "\n")
 if (verbose) if(xyz%/%1000*1000==xyz) setTxtProgressBar(pb, xyz)
   }#z
+  }
   if (verbose){
-    close(pb)
+    if(setCores()==1) close(pb)
     cat("Finished estimation", format(Sys.time()), "\n")
   }
 

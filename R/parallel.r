@@ -169,3 +169,394 @@ pIRsolid <- function(x, InvTimesScaled, Rfluid, Sfluid, method, sigma, CL, sig, 
   }  
   ergs
 }
+
+pEstESTATICS2 <- function(x,method,varest,xmat,wghts,maxR2star,L,lower,upper,sind){
+
+#   ddata  :  x[1:ndata,]
+#   thetas :  x[ndata+1:4,]
+#   shat:     x[ndata+5:7,]
+#   sigma:    x[ndata+8,]
+#   CL:       x[ndata+9,]
+npar <- 4
+ndata <- dim(xmat)[1]
+inddata   <- 1:ndata
+indth     <- ndata+1:4
+indshat   <- ndata+5:7
+indsigma  <- ndata+8
+indcl     <- ndata+9
+nvoxel <- dim(x)[2]
+ergs <- array(0,c(npar+npar*npar+2,nvoxel))
+indcoeff <- 1:npar
+indiCov <- npar+(1:(npar*npar))
+indConv <- npar*(npar+1)+1
+indrsig <- npar*(npar+1)+2
+for(xyz in 1:nvoxel){
+  
+  if (method == "QL") {
+      sig <- x[indsigma,xyz]
+      CL <- x[indcl,xyz]
+  }
+  
+  ivec <- x[inddata, xyz]#/dataScale
+  th <- x[indth, xyz]
+  
+    res <- if (method == "NLR") try(nls(ivec ~ estatics3(par, xmat),
+                                        data = list(xmat = xmat),
+                                        start = list(par = th),
+                                        weights = wghts,
+                                        control = list(maxiter = 200,
+                                                       warnOnly = TRUE)))
+    else try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
+                 data = list(xmat = xmat,
+                             CL = CL,
+                             sig = sig,
+                             L = L),
+                 start = list(par = th),
+                 weights = wghts,
+                 control = list(maxiter = 200,
+                                warnOnly = TRUE)))
+    if (inherits(res, "try-error")){
+      # retry with port algorithm and bounds
+      th <- pmin(upper,pmax(lower,th))
+      res <- if (method == "NLR") try(nls(ivec ~ estatics3(par, xmat),
+                                          data = list(xmat = xmat),
+                                          start = list(par = th),
+                                          algorithm="port",
+                                          weights = wghts,
+                                          control = list(maxiter = 200,
+                                                         warnOnly = TRUE),
+                                          lower=lower, upper=upper))
+      else try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
+                   data = list(xmat = xmat,
+                               CL = CL,
+                               sig = sig,
+                               L = L),
+                   start = list(par = th),
+                   algorithm="port",
+                   weights = wghts,
+                   control = list(maxiter = 200,
+                                  warnOnly = TRUE),
+                   lower=lower, upper=upper))
+    }
+  
+  if (!inherits(res, "try-error")) {
+    sres <- if(varest=="RSS") getnlspars(res) else
+      getnlspars2(res, x[indshat, xyz], sind )
+    ergs[indConv,xyz] <- as.integer(res$convInfo$isConv)
+    ergs[indcoeff, xyz] <- sres$coefficients
+    if (sres$sigma != 0) {
+      ergs[indiCov, xyz] <- as.vector(sres$invCov)
+      ergs[indrsig,xyz] <- sres$sigma
+    }
+  }
+  
+  if (inherits(res, "try-error") || coef(res)[npar] > maxR2star || coef(res)[npar] < 0) {
+    
+    ## fallback for not converged or R2star out of range
+    sres <- if(varest=="RSS") linearizedESTATICS(ivec, xmat, maxR2star, wghts) else
+      linearizedESTATICS2(ivec, xmat, maxR2star, x[indshat, xyz], sind ,wghts)
+    ## thats already the solution for NLR if R2star is fixed
+    isThresh <- sres$invCov[npar, npar] == 0
+    ergs[indConv,xyz] <- 255 ## partially linearized NLR model
+    xmat0 <- sres$xmat
+    th <- sres$theta
+    ergs[1:(npar-1), xyz] <- sres$theta
+    ergs[npar, xyz] <- sres$R2star
+    if (sres$sigma2 != 0) {
+      ergs[indiCov , xyz] <- as.vector(sres$invCov)
+      ergs[indrsig,xyz] <- sqrt(sres$sigma2)
+    }
+    
+    if (method == "QL") {
+      xmat0 <- sres$xmat
+      # xmat0 containes design matrix for linear problem with fixed R2star
+      # ony have nonlinearity from QL
+         res <- try(nls(ivec ~ estatics3QLfixedR2(par, xmat, CL, sig, L),
+                       data = list(xmat = xmat0,
+                                   CL = CL,
+                                   sig = sig,
+                                   L = L),
+                       start = list(par = th),
+                       algorithm ="port",
+                       weights = wghts,
+                       control = list(maxiter = 200,
+                                      warnOnly = TRUE),
+                       lower=lower[1:3], upper=upper[1:3]))
+       if (!inherits(res,"try-error")) {
+        ergs[indConv,xyz] <- as.integer(res$convInfo$isConv)
+        sres <- getnlspars(res)
+        ergs[1:(npar-1), xyz] <- sres$coefficients
+        if (sres$sigma != 0) {
+          invCovtmp <- sres$XtX
+          ergs[indiCov[c(1:3,5:7,9:11)], xyz] <- as.vector(invCovtmp/sres$sigma^2)
+          ergs[indrsig,xyz] <- sres$sigma
+        }
+      } else {
+        ergs[indConv,xyz] <- -1
+      }
+    }
+  }}
+  ergs
+}
+
+pEstESTATICS1 <- function(x,method,varest,xmat,wghts,maxR2star,L,lower,upper,sind){
+  
+  
+#   ddata  :  x[1:ndata,]
+#   thetas :  x[ndata+1:3,]
+#   shat:     x[ndata+4:5,]
+#   sigma:    x[ndata+6,]
+#   CL:       x[ndata+7,]
+npar <- 3
+ndata <- dim(xmat)[1]
+inddata   <- 1:ndata
+indth     <- ndata+1:3
+indshat   <- ndata+4:5
+indsigma  <- ndata+6
+indcl     <- ndata+7
+nvoxel <- dim(x)[2]
+ergs <- array(0,c(npar+npar*npar+2,nvoxel))
+indcoeff <- 1:npar
+indiCov <- npar+(1:(npar*npar))
+indConv <- npar*(npar+1)+1
+indrsig <- npar*(npar+1)+2
+  for(xyz in 1:nvoxel){
+    
+    if (method == "QL") {
+        sig <- x[indsigma,xyz]
+        CL <- x[indcl,xyz]
+    }
+    
+    ivec <- x[inddata, xyz]#/dataScale
+    th <- x[indth, xyz]
+    
+      res <- if (method == "NLR") try(nls(ivec ~ estatics2(par, xmat),
+                                          data = list(xmat = xmat),
+                                          start = list(par = th),
+                                          weights = wghts,
+                                          control = list(maxiter = 200,
+                                                         warnOnly = TRUE)))
+      else try(nls(ivec ~ estatics2QL(par, xmat, CL, sig, L),
+                   data = list(xmat = xmat,
+                               CL = CL,
+                               sig = sig,
+                               L = L),
+                   start = list(par = th),
+                   weights = wghts,
+                   control = list(maxiter = 200,
+                                  warnOnly = TRUE)))
+      if (inherits(res, "try-error")){
+        # retry with port algorithm and bounds
+        th <- pmin(upper,pmax(lower,th))
+        res <- if (method == "NLR") try(nls(ivec ~ estatics2(par, xmat),
+                                            data = list(xmat = xmat),
+                                            start = list(par = th),
+                                            algorithm="port",
+                                            weights = wghts,
+                                            control = list(maxiter = 200,
+                                                           warnOnly = TRUE),
+                                            lower=lower, upper=upper))
+        else try(nls(ivec ~ estatics2QL(par, xmat, CL, sig, L),
+                     data = list(xmat = xmat,
+                                 CL = CL,
+                                 sig = sig,
+                                 L = L),
+                     start = list(par = th),
+                     algorithm="port",
+                     weights = wghts,
+                     control = list(maxiter = 200,
+                                    warnOnly = TRUE),
+                     lower=lower, upper=upper))
+      }
+
+    if (!inherits(res, "try-error")) {
+      sres <- if(varest=="RSS") getnlspars(res) else
+        getnlspars2(res, x[indshat, xyz], sind )
+      ergs[indConv,xyz] <- as.integer(res$convInfo$isConv)
+      ergs[indcoeff, xyz] <- sres$coefficients
+      if (sres$sigma != 0) {
+        ergs[indiCov,  xyz] <- as.vector(sres$invCov)
+        ergs[indrsig, xyz] <- sres$sigma
+      }
+    }
+    
+    if (inherits(res, "try-error") || coef(res)[npar] > maxR2star || coef(res)[npar] < 0) {
+      
+      ## fallback for not converged or R2star out of range
+      sres <- if(varest=="RSS") linearizedESTATICS(ivec, xmat, maxR2star, wghts) else
+        linearizedESTATICS2(ivec, xmat, maxR2star, x[indshat, xyz], sind ,wghts)
+      ## thats already the solution for NLR if R2star is fixed
+      isThresh <- sres$invCov[npar, npar] == 0
+      ergs[indConv, xyz] <- 255 ## partially linearized NLR model
+      xmat0 <- sres$xmat
+      th <- sres$theta
+      ergs[1:(npar-1), xyz] <- sres$theta
+      ergs[npar, xyz] <- sres$R2star
+      if (sres$sigma2 != 0) {
+        ergs[indiCov , xyz] <- as.vector(sres$invCov)
+        ergs[indrsig, xyz] <- sqrt(sres$sigma2)
+      }
+      
+      if (method == "QL") {
+        xmat0 <- sres$xmat
+        # xmat0 containes design matrix for linear problem with fixed R2star
+        # ony have nonlinearity from QL
+          res <- try(nls(ivec ~ estatics2QLfixedR2(par, xmat, CL, sig, L),
+                         data = list(xmat = xmat0,
+                                     CL = CL,
+                                     sig = sig,
+                                     L = L),
+                         start = list(par = th),
+                         algorithm ="port",
+                         weights = wghts,
+                         control = list(maxiter = 200,
+                                        warnOnly = TRUE),
+                         lower=lower[1:2], upper=upper[1:2]))
+        if (!inherits(res,"try-error")) {
+          ergs[indConv, xyz] <- as.integer(res$convInfo$isConv)
+          sres <- getnlspars(res)
+          ergs[1:(npar-1), xyz] <- sres$coefficients
+          if (sres$sigma != 0) {
+            invCovtmp <- sres$XtX
+            ergs[indiCov[c(1:2,4:5)], xyz] <- invCovtmp/sres$sigma^2
+            ergs[indrsig, xyz] <- sres$sigma
+          }
+        } else {
+          ergs[indConv, xyz] <- -1
+        }
+      }
+    }}
+    ergs
+}
+
+pEstESTATICS0 <- function(x,method,varest,xmat,wghts,maxR2star,L,lower,upper,sind){
+  
+#   ddata  :  x[1:ndata,]
+#   thetas :  x[ndata+1:2,]
+#   shat:     x[ndata+3,]
+#   sigma:    x[ndata+4,]
+#   CL:       x[ndata+5,]
+npar <- 2
+ndata <- dim(xmat)[1]
+inddata   <- 1:ndata
+indth     <- ndata+1:2
+indshat   <- ndata+3
+indsigma  <- ndata+4
+indcl     <- ndata+5
+nvoxel <- dim(x)[2]
+ergs <- array(0,c(npar+npar*npar+2,nvoxel))
+indcoeff <- 1:npar
+indiCov <- npar+(1:(npar*npar))
+indConv <- npar*(npar+1)+1
+indrsig <- npar*(npar+1)+2
+  for(xyz in 1:nvoxel){
+    
+    if (method == "QL") {
+        sig <- x[indsigma,xyz]
+        CL <- x[indcl,xyz]
+    }
+    
+    ivec <- x[inddata, xyz]#/dataScale
+    th <- x[indth, xyz]
+    
+
+      res <- if (method == "NLR") try(nls(ivec ~ estatics1(par, xmat),
+                                          data = list(xmat = xmat),
+                                          start = list(par = th),
+                                          weights = wghts,
+                                          control = list(maxiter = 200,
+                                                         warnOnly = TRUE)))
+      else try(nls(ivec ~ estatics1QL(par, xmat, CL, sig, L),
+                   data = list(xmat = xmat,
+                               CL = CL,
+                               sig = sig,
+                               L = L),
+                   start = list(par = th),
+                   weights = wghts,
+                   control = list(maxiter = 200,
+                                  warnOnly = TRUE)))
+      if (inherits(res, "try-error")){
+        # retry with port algorithm and bounds
+        th <- pmin(upper,pmax(lower,th))
+        res <- if (method == "NLR") try(nls(ivec ~ estatics1(par, xmat),
+                                            data = list(xmat = xmat),
+                                            start = list(par = th),
+                                            algorithm="port",
+                                            weights = wghts,
+                                            control = list(maxiter = 200,
+                                                           warnOnly = TRUE),
+                                            lower=lower, upper=upper))
+        else try(nls(ivec ~ estatics1QL(par, xmat, CL, sig, L),
+                     data = list(xmat = xmat,
+                                 CL = CL,
+                                 sig = sig,
+                                 L = L),
+                     start = list(par = th),
+                     algorithm = "port",
+                     weights = wghts,
+                     control = list(maxiter = 200,
+                                    warnOnly = TRUE),
+                     lower=lower, upper=upper))
+        
+      }
+    
+    if (!inherits(res, "try-error")) {
+      sres <- if(varest=="RSS") getnlspars(res) else
+        getnlspars2(res, x[indshat, xyz], sind )
+      ergs[indConv, xyz] <- as.integer(res$convInfo$isConv)
+      ergs[indcoeff, xyz] <- sres$coefficients
+      if (sres$sigma != 0) {
+        ergs[indiCov , xyz] <- as.vector(sres$invCov)
+        ergs[indrsig, xyz] <- sres$sigma
+      }
+    }
+    
+    if (inherits(res, "try-error") || coef(res)[npar] > maxR2star || coef(res)[npar] < 0) {
+      
+      ## fallback for not converged or R2star out of range
+      sres <- if(varest=="RSS") linearizedESTATICS(ivec, xmat, maxR2star, wghts) else
+        linearizedESTATICS2(ivec, xmat, maxR2star, x[indshat, xyz], sind ,wghts)
+      ## thats already the solution for NLR if R2star is fixed
+      isThresh <- sres$invCov[npar, npar] == 0
+      ergs[indConv, xyz] <- 255 ## partially linearized NLR model
+      xmat0 <- sres$xmat
+      th <- sres$theta
+      ergs[1:(npar-1), xyz] <- sres$theta
+      ergs[npar, xyz] <- sres$R2star
+      if (sres$sigma2 != 0) {
+        ergs[indiCov , xyz] <- as.vector(sres$invCov)
+        ergs[indrsig, xyz] <- sqrt(sres$sigma2)
+      }
+      
+      if (method == "QL") {
+        xmat0 <- sres$xmat
+        # xmat0 containes design matrix for linear problem with fixed R2star
+        # ony have nonlinearity from QL
+
+          res <- try(nls(ivec ~ estatics1QLfixedR2(par, xmat, CL, sig, L),
+                         data = list(xmat = xmat0,
+                                     CL = CL,
+                                     sig = sig,
+                                     L = L),
+                         start = list(par = th),
+                         algorithm ="port",
+                         weights = wghts,
+                         control = list(maxiter = 200,
+                                        warnOnly = TRUE),
+                         lower=lower[1], upper=upper[1]))
+        if (!inherits(res,"try-error")) {
+          ergs[indConv, xyz] <- as.integer(res$convInfo$isConv)
+          sres <- getnlspars(res)
+          ergs[1:(npar-1), xyz] <- sres$coefficients
+          if (sres$sigma != 0) {
+            invCovtmp <- sres$XtX
+            ergs[indiCov[1], xyz] <- invCovtmp/sres$sigma^2
+            ergs[indrsig, xyz] <- sres$sigma
+          }
+        } else {
+          ergs[indConv, xyz] <- -1
+        }
+      }
+    }}
+    ergs
+}

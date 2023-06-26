@@ -257,7 +257,8 @@ estimateIRsolid <- function(IRfluidobj,
         isConv <- ergs[npar+npar*npar+2,]
         modelCoeff <- ergs[1:npar, ] 
         InvCov <- ergs[npar+1:(npar*npar), ] 
-        rsigma <- ergs[npar+npar+npar+1,] 
+        dim(InvCov) <- c(npar,npar,nvoxel)
+        rsigma <- ergs[npar+npar*npar+1,]
       }  else {
       th1 <- (1:8)/10
       th2 <- Rfluid*c(.5,.6,.7,.8,.9,1.1,1.2)

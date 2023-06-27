@@ -354,8 +354,8 @@ if( setCores() >1){
                                      xmat,wghts,maxR2star,L,lower,upper,sind))
         isConv <- ergs[npar+npar*npar+1,]
         modelCoeff <- ergs[1:npar, ]
-        InvCov <- ergs[npar+1:(npar*npar), ]
-        dim(InvCov) <- c(npar,npar,nvoxel)
+        invCov <- ergs[npar+1:(npar*npar), ]
+        dim(invCov) <- c(npar,npar,nvoxel)
         rsigma <- ergs[npar+npar*npar+2,]
 
 } else {

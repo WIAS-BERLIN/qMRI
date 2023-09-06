@@ -7,7 +7,7 @@ init:
   - rm -f travis-tool.sh
   - ps: |
         $ErrorActionPreference = "Stop"
-        Invoke-WebRequest http://raw.github.com/krlmlr/r-appveyor/master/scripts/appveyor-tool.ps1 -OutFile "..\appveyor-tool.ps1"
+        Invoke-WebRequest https://raw.github.com/krlmlr/r-appveyor/master/scripts/appveyor-tool.ps1 -OutFile "..\appveyor-tool.ps1"
         Import-Module '..\appveyor-tool.ps1'
 
 platform: x64
@@ -31,15 +31,15 @@ environment:
       R_VER: 3.6
 
     - R_VERSION: oldrel
-      CRAN: http://cran.rstudio.com
+      CRAN: https://cran.rstudio.com
       R_VER: 3.5
 
     - R_VERSION: 3.4
-      CRAN: http://cran.rstudio.com
+      CRAN: https://cran.rstudio.com
       R_VER: 3.4
 
     - R_VERSION: 3.3.3
-      CRAN: http://cran.rstudio.com
+      CRAN: https://cran.rstudio.com
       R_VER: 3.3
 
 install:

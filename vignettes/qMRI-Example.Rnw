@@ -13,10 +13,10 @@
 	Pages = {95},
 	Pmid = {23772204},
 	Title = {Quantitative multi-parameter mapping of {R1, PD(*), MT, and R2(*) at 3T}: a multi-center validation.},
-	Url = {http://dx.doi.org/10.3389/fnins.2013.00095},
+	Url = {https://dx.doi.org/10.3389/fnins.2013.00095},
 	Volume = {7},
 	Year = {2013},
-	Bdsk-Url-1 = {http://dx.doi.org/10.3389/fnins.2013.00095}}
+	Bdsk-Url-1 = {https://dx.doi.org/10.3389/fnins.2013.00095}}
 
  @article{Weiskopf2014,
 	Author = {N. Weiskopf and M. F. Callaghan and O. Josephs and A. Lutti and S. Mohammadi},
@@ -36,7 +36,7 @@
 	Title = {hMRI -- A toolbox for quantitative MRI in neuroscience and clinical research},
 	Volume = {194},
 	Year = {2019},
-	Bdsk-Url-1 = {http://www.sciencedirect.com/science/article/pii/S1053811919300291},
+	Bdsk-Url-1 = {https://www.sciencedirect.com/science/article/pii/S1053811919300291},
 	Bdsk-Url-2 = {https://doi.org/10.1016/j.neuroimage.2019.01.029}}
 
  @conference{Tabelow2017,
@@ -85,11 +85,11 @@
 	Number = {2520},
 	Title = {Patch-wise adaptive weights smoothing},
 	Type = {Preprint},
-	Url = {http://www.wias-berlin.de/preprint/2432/wias\_preprints_2432.pdf},
+	Url = {https://www.wias-berlin.de/preprint/2432/wias\_preprints_2432.pdf},
 	Year = {2018},
-	Bdsk-Url-1 = {http://www.wias-berlin.de/preprint/2432/wias_preprints_2432.pdf},
+	Bdsk-Url-1 = {https://www.wias-berlin.de/preprint/2432/wias_preprints_2432.pdf},
 	Bdsk-Url-2 = {https://doi.org/10.20347/WIAS.PREPRINT.2520},
-	Bdsk-Url-3 = {http://www.wias-berlin.de/preprint/2432/wias%5C_preprints_2432.pdf}}
+	Bdsk-Url-3 = {https://www.wias-berlin.de/preprint/2432/wias%5C_preprints_2432.pdf}}
 
 	@Book{MRBIbook,
 	  title =     {Magnetic Resonance Brain Imaging: Modeling and Data Analysis Using R},
@@ -121,7 +121,7 @@
 This document illustrates the workflow of analyzing quantitative Magnetic Resonance Imaging (qMRI)
 data in the framework of Multi-Parameter Mapping (MPM) experiments~\parencite{Weiskopf2013}.
 The example uses artificial noisy MPM data based on the analysis results of a publicly
-available MPM dataset, see \url{http://hmri.info}: The original data was modeled
+available MPM dataset, see \url{https://hmri.info}: The original data was modeled
 using the ESTATICS model~\parencite{Weiskopf2014}. Its four adaptively smoothed parameter
 maps were used to generate the artificial data on a selected (small) sub cube with Rician
 noise by creating corresponding signal echos following the ESTATICS model equation.

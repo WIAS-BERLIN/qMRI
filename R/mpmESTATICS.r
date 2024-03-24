@@ -129,9 +129,9 @@ readMPMData  <-  function(t1Files  = NULL,
   nT1 <- length(t1Files)
   nMT <- length(mtFiles)
   nPD <- length(pdFiles)
-  zerovoxel <- apply(ddata[1:nT1,] <= 0, 2, all)
-  if(model>0) zerovoxel <- zerovoxel|apply(ddata[nT1+nMT+1:nPD,] <= 0, 2, all)
-  if(model==2) zerovoxel <- zerovoxel|apply(ddata[nT1+1:nMT,] <= 0, 2, all)
+  zerovoxel <- apply(ddata[1:nT1,] <= 0, 2, any)
+  if(model>0) zerovoxel <- zerovoxel|apply(ddata[nT1+nMT+1:nPD,] <= 0, 2, any)
+  if(model==2) zerovoxel <- zerovoxel|apply(ddata[nT1+1:nMT,] <= 0, 2, any)
   mask[mask] <- !zerovoxel ## exclude zerovoxel from mask
   ddata <- ddata[, !zerovoxel] ## remove zerovoxel from ddata
 

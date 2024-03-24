@@ -4,7 +4,7 @@
 \title{Estimate parameters in Inversion Recovery MRI experiments model for CSF voxel 
 }
 \description{
-The Inversion Recovery MRI signal in voxel containing only CSF follows is modeled as  $S_{InvTime} = par[1] * abs( 1 - 2 * exp(-InvTime*par[2]) )$ dependings on two parameters. These parameters are assumed to be tissue (and scanner) dependent. 
+The Inversion Recovery MRI signal in voxel containing only CSF follows is modeled as  $S_InvTime = par[1] * abs( 1 - 2 * exp(-InvTime*par[2]) )$ dependings on two parameters. These parameters are assumed to be tissue (and scanner) dependent. 
 }
 \usage{
 estimateIRfluid(IRdataobj, TEScale = 100, dataScale = 1000,
@@ -25,7 +25,7 @@ Internal scale factor for MR signals. This influences parameter scales in numeri
   Either \code{"NLS"} for nonlinear least squares (ignores Rician bias) or \code{"QL"} for Quasi-Likelihood. The second option is more accurate but requires additional information and is computationally more expensive.  
 }
   \item{varest}{
-  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package {\code{aws}}. Only to be used in case that no image registration was needed as preprocessing.
+  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package \code{aws}. Only to be used in case that no image registration was needed as preprocessing.
 }
   \item{verbose}{
 Logical. Provide some runtime diagnostics.
@@ -38,7 +38,7 @@ Upper bounds for parameter values.
 }
 }
 \details{
-The Inversion Recovery MRI signal in voxel containing only CSF follows is modeled as  $S_{InvTime} = par[1] * abs( 1 - 2 * exp(-InvTime*par[2]) )$ dependings on two parameters. These parameters are assumed to be tissue (and scanner) dependent.
+The Inversion Recovery MRI signal in voxel containing only CSF follows is modeled as  $S_InvTime = par[1] * abs( 1 - 2 * exp(-InvTime*par[2]) )$ dependings on two parameters. These parameters are assumed to be tissue (and scanner) dependent.
 }
 \value{
 List of class \code{IRfluid} with components

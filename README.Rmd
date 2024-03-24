@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 # qMRI
 
 <!-- badges: start -->
-[![Travis build status](https://www.travis-ci.com/muschellij2/qMRI.svg?branch=master)](https://travis-ci.com/muschellij2/qMRI)
+[![Travis build status](https://app.travis-ci.com/github/muschellij2/qMRI?branch=master)](https://app.travis-ci.com/)
 [![AppVeyor build status](https://ci.appveyor.com/api/projects/status/github/muschellij2/qMRI?branch=master&svg=true)](https://ci.appveyor.com/project/muschellij2/qMRI)
 <!-- badges: end -->
 

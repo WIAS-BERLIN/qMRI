@@ -28,7 +28,7 @@ estimateIR(IRdataobj, TEScale = 100, dataScale = 1000, method = c("NLR", "QL"),
   Either \code{"NLS"} for nonlinear least squares (ignores Rician bias) or \code{"QL"} for Quasi-Likelihood. The second option is more accurate but requires additional information and is computationally more expensive.
 }
   \item{varest}{
-  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package {\code{aws}}. Only to be used in case that no image registration was needed as preprocessing.
+  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package \code{aws}. Only to be used in case that no image registration was needed as preprocessing.
 }
 \item{fixed}{
  Should adaptive smoothing performed for Sx and Rx maps and fx maps reestimated afterwards ?

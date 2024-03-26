@@ -841,12 +841,14 @@ imageQI <- function(qi,
 
   if (qi$model == 2) {
     def.par <- par(mfrow = c(2, 2), mar = c(3, 3, 3, 0))
+    on.exit(par(def.par))
     rimage(indx, indy, r2star, zlim = c(0, 0.05), main = "R2star")
     rimage(indx, indy, r1, zlim = c(0.0002, 0.0015), main = "R1")
     rimage(indx, indy, pd, zlim = c(0, 10000), main = "PD")
     rimage(indx, indy, delta, zlim = c(0, 0.03), main = "MT")
   } else {
     def.par <- par(mfrow = c(2, 2), mar = c(3, 3, 3, 0))
+    on.exit(par(def.par))
     rimage(indx, indy, r2star, zlim = c(0, 0.05), main = "R2star")
     rimage(indx, indy, r1, zlim = c(0.0002, 0.0015), main = "R1")
     rimage(indx, indy, pd, zlim = c(0, 10000), main = "PD")

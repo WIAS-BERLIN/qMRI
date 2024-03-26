@@ -68,7 +68,8 @@ For an more extended introduction we refer to \cite{MRBIbook2} Chapter 6.
 
 \section{Generating the IR MRI data}
 <<0,echo=FALSE>>=
-options(digits=3)
+old <- options(digits=3)
+on.exit(options(old))
 @
 First, we specify the directory where the data are stored within the package
 <<0b>>=
@@ -187,7 +188,8 @@ sIRmix <- estimateIRsolidfixed(sIRmix, verbose=FALSE)
 We shortly illustrate the estimated maps (central slice) that we gain
 
 <<9, fig = TRUE, width=16,height=3>>=
-par(mfrow=c(1,4),mar=c(3,3,3,.5),mgp=c(2,1,0))
+oldpar <- par(mfrow=c(1,4),mar=c(3,3,3,.5),mgp=c(2,1,0))
+on.exit(par(oldpar))
 library(adimpro)
 rimage(segm[,,2])
 title("Segmentation")

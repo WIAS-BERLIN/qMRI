@@ -215,6 +215,7 @@ data <- extract(mpm,"ddata")
 if(require(adimpro)){
 rimage.options(ylab = "z")
 oldpar <- par(mfrow=c(1,3),mar=c(3,3,3,1),mgp=c(2,1,0))
+on.exit(par(oldpar))
 rimage(data[1,,11,], main="first T1w image")
 rimage(data[9,,11,], main="first MTw image")
 rimage(data[15,,11,], main="first PDw image")

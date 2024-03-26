@@ -79,6 +79,7 @@ modelMPM <- estimateESTATICS(mpm, method = "NLR")
 if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
 oldpar <- par(mfrow=c(2,2),mar=c(3,3,3,1),mgp=c(2,1,0))
+on.exit(par(oldpar))
 pnames <- c("T1","MT","PD","R2star")
 modelCoeff <- extract(modelMPM,"modelCoeff")
 for(i in 1:4){

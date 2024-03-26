@@ -1,6 +1,5 @@
 \name{writeQI}
 \alias{writeQI}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Write estimated maps  in standardized form as NIfTI files.
 }
@@ -12,7 +11,6 @@ as compressed NIfTI files into directory the specified directory.
 \usage{
 writeQI(qi, dir = NULL, prefix="qmap", verbose = TRUE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{qi}{
   Object of class 'qMaps' as returned from function
@@ -110,6 +108,4 @@ for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
 writeQI(qMRIMaps, dir=outDir, prefix="qmap")
 par(oldpar)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ IO }% use one of  RShowDoc("KEYWORDS")
+\keyword{ IO }

@@ -1,6 +1,5 @@
 \name{estimateESTATICS}
 \alias{estimateESTATICS}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
  Estimate parameters in the ESTATICS model.
 }
@@ -17,7 +16,6 @@ estimateESTATICS(mpmdata, TEScale = 100, dataScale = 1000, method = c("NLR", "QL
                  sigma = NULL, L = 1, maxR2star = 50,
                  varest = c("RSS", "data"), verbose = TRUE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{mpmdata}{
    Object of class MPMData as created by \code{\link{readMPMData}}.
@@ -138,7 +136,5 @@ modelMPMQL <- estimateESTATICS(mpm, method = "QL",
                   sigma = array(sigma,mpm$sdim), L = 1)
 }
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ models }% use one of  RShowDoc("KEYWORDS")
-\keyword{ regression }% __ONLY ONE__ keyword per line
+\keyword{ models }
+\keyword{ regression }

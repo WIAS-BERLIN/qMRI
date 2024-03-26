@@ -17,7 +17,6 @@
 \alias{[.IRfluid}
 \alias{[.IRmixed}
 
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Methods to extract information from objects of class \code{"MPMData"},
 \code{"ESTATICSModel"}, \code{"sESTATICSModel"}, \code{"qMaps"},
@@ -48,7 +47,6 @@ The [-methods can be used to reduce objects of class
 \S3method{[}{IRfluid}(x, i, j, k, ...)
 \S3method{[}{IRmixed}(x, i, j, k, ...)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{x}{
   object of class \code{"MPMData"}, \code{"ESTATICSModel"}, \code{"sESTATICSModel"}
@@ -75,7 +73,6 @@ The [-methods can be used to reduce objects of class
 }
 \section{Methods}{
 \describe{
-  %\itemize{
   \item{class(x) = "ANY"}{ Returns a warning for \code{extract}}
 
   \item{class(x) = "MPMData"}{
@@ -257,5 +254,5 @@ for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
 }
 par(oldpar)
 }
-\keyword{ methods }% use one of  RShowDoc("KEYWORDS")
-\keyword{ manip }% __ONLY ONE__ keyword per line
+\keyword{ methods }
+\keyword{ manip }

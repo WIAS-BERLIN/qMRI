@@ -1,6 +1,5 @@
 \name{readMPMData}
 \alias{readMPMData}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Read experimental Multi-Parameter Mapping (MPM) data.
 }
@@ -11,7 +10,6 @@ The function reads data generated in Multimodal Parameter Mapping (MPM) experime
 readMPMData(t1Files = NULL, pdFiles = NULL, mtFiles = NULL, maskFile = NULL,
             TR = NULL, TE = NULL, FA = NULL, wghts = NULL, verbose = TRUE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{t1Files}{
     Vector of filenames corresponding to T1 weighted images (in Nifti-Format) with varying TE
@@ -73,9 +71,6 @@ Modeling and Data Analysis Using R. Springer, Use R! series. Doi:10.1007/978-3-0
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
 J\"org Polzehl \email{polzehl@wias-berlin.de}
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 \code{\link{estimateESTATICS}}, \code{\link{calculateQI}},
 \code{\link{smoothESTATICS}}, \code{\link{writeESTATICS}},
@@ -113,7 +108,4 @@ mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
 }
-
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ IO }% use one of  RShowDoc("KEYWORDS")
+\keyword{ IO }

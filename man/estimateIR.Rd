@@ -1,18 +1,16 @@
 \name{estimateIR}
 \alias{estimateIR}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Estimate IRMRI parameters
 }
 \description{
-Parameter estimation ( intensity, relaxation rate, proportion of fluid) in Inversion Recovery MRI data.
+Parameter estimation (intensity, relaxation rate, proportion of fluid) in Inversion Recovery MRI data.
 }
 \usage{
 estimateIR(IRdataobj, TEScale = 100, dataScale = 1000, method = c("NLR", "QL"),
            varest = c("RSS","data"), fixed = TRUE, smoothMethod=c("PAWS","Depth"),
            kstar = 24, alpha = .025, bysegment = TRUE, verbose = TRUE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{IRdataobj}{
 4D array of IRMRI signals. First dimension corresponds to Inversion times (InvTime).
@@ -28,7 +26,7 @@ estimateIR(IRdataobj, TEScale = 100, dataScale = 1000, method = c("NLR", "QL"),
   Either \code{"NLS"} for nonlinear least squares (ignores Rician bias) or \code{"QL"} for Quasi-Likelihood. The second option is more accurate but requires additional information and is computationally more expensive.
 }
   \item{varest}{
-  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package {\code{aws}}. Only to be used in case that no image registration was needed as preprocessing.
+  Method to, in case of \code{method="QR"}, estimate \code{sigma}if not provided. Either from residual sums of squares (\code{"RSS"}) or MR signals (\code{"data"}) using function \code{varest} from package \code{aws}. Only to be used in case that no image registration was needed as preprocessing.
 }
 \item{fixed}{
  Should adaptive smoothing performed for Sx and Rx maps and fx maps reestimated afterwards ?
@@ -76,12 +74,8 @@ Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
 J\"org Polzehl \email{polzehl@wias-berlin.de}
 
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
  \code{\link{estimateIRfluid}}, \code{\link{estimateIRsolid}}, \code{\link{estimateIRsolidfixed}},\code{\link{smoothIRSolid}}
-%% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----
@@ -108,11 +102,6 @@ function (IRdata, InvTimes, segments, fixed = TRUE, smoothMethod = c("Depth",
     ergsSmooth
   }
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory (show via RShowDoc("KEYWORDS")):
  \keyword{ models }
  \keyword{ regression }
-% Use only one keyword per line.
-% For non-standard keywords, use \concept instead of \keyword:
  \concept{ IRMRI }
-% Use only one concept per line.

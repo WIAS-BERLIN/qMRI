@@ -1,7 +1,6 @@
 \name{awssigmc}
 \alias{awslsigmc}
 \alias{awssigmc}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Estimate noise variance for multicoil MR systems
 }
@@ -30,7 +29,6 @@ awslsigmc(y, steps, mask = NULL, ncoils = 1, vext = c(1, 1), lambda = 5, minni =
          hsig = 5, sigma = NULL, family = c("NCchi"), verbose = FALSE, 
          trace=FALSE, u=NULL)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{y}{
     3D array, usually obtained from an object of class \code{dwi} as

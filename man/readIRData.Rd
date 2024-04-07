@@ -1,6 +1,5 @@
 \name{readIRData}
 \alias{readIRData}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
    Prepare IRMRI dataset
 }
@@ -11,7 +10,6 @@ The function reads IRMRI images given as NIfTI files in t1Files, inversion times
 readIRData(t1Files, InvTimes, segmFile, sigma = NULL, L = 1,
            segmCodes = c("GM", "WM", "CSF"))
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{t1Files}{
    Names of NIfTI files containing the recorded images.
@@ -45,9 +43,6 @@ A list of class \code{"IRdata"} with components
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
 J\"org Polzehl \email{polzehl@wias-berlin.de}
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
  \code{\link{estimateIRfluid}}, \code{\link{estimateIRsolid}}, \code{\link{estimateIR}},\code{\link{smoothIRSolid}}
 }
@@ -103,12 +98,5 @@ function (t1Files, InvTimes, segmFile, sigma = NULL, L = 1, segmCodes = c("GM",
     data
   }
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory (show via RShowDoc("KEYWORDS")):
 \keyword{ utililities }
-% \keyword{ ~kwd2 }
-% Use only one keyword per line.
-% For non-standard keywords, use \concept instead of \keyword:
  \concept{ IRMRI }
-% \concept{ ~cpt2 }
-% Use only one concept per line.

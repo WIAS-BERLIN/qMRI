@@ -1,6 +1,5 @@
 \name{smoothESTATICS}
 \alias{smoothESTATICS}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Adaptive smoothing of ESTATICS parameters and MPM data
 }
@@ -15,7 +14,6 @@ the estimated parameter maps and their covariances.
 smoothESTATICS(mpmESTATICSModel, mpmData = NULL, kstar = 16, alpha = 0.025,
                patchsize = 0, mscbw =5, wghts = NULL, verbose = TRUE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{mpmESTATICSModel}{
 Object of class 'ESTATICSModel' as returned from function \code{\link{estimateESTATICS}}.
@@ -80,9 +78,6 @@ Modeling and Data Analysis Using R. Springer, Use R! series. Doi:10.1007/978-3-0
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
 J\"org Polzehl \email{polzehl@wias-berlin.de}
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
 \code{\link{readMPMData}}, \code{\link{estimateESTATICS}}
 }
@@ -137,6 +132,7 @@ modelMPMsp1 <- smoothESTATICS(modelMPM,
 if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
 oldpar <- par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
+on.exit(par(oldpar))
 pnames <- c("T1","MT","PD","R2star")
 modelCoeff <- extract(modelMPM,"modelCoeff")
 for(i in 1:4){
@@ -152,5 +148,5 @@ for(i in 1:4){
 par(oldpar)
 }
 }
-\keyword{ model }% use one of  RShowDoc("KEYWORDS")
-\keyword{ smooth }% __ONLY ONE__ keyword per line
+\keyword{ model }
+\keyword{ smooth }

@@ -129,9 +129,9 @@ readMPMData  <-  function(t1Files  = NULL,
   nT1 <- length(t1Files)
   nMT <- length(mtFiles)
   nPD <- length(pdFiles)
-  zerovoxel <- apply(ddata[1:nT1,] <= 0, 2, all)
-  if(model>0) zerovoxel <- zerovoxel|apply(ddata[nT1+nMT+1:nPD,] <= 0, 2, all)
-  if(model==2) zerovoxel <- zerovoxel|apply(ddata[nT1+1:nMT,] <= 0, 2, all)
+  zerovoxel <- apply(ddata[1:nT1,] <= 0, 2, any)
+  if(model>0) zerovoxel <- zerovoxel|apply(ddata[nT1+nMT+1:nPD,] <= 0, 2, any)
+  if(model==2) zerovoxel <- zerovoxel|apply(ddata[nT1+1:nMT,] <= 0, 2, any)
   mask[mask] <- !zerovoxel ## exclude zerovoxel from mask
   ddata <- ddata[, !zerovoxel] ## remove zerovoxel from ddata
 
@@ -841,12 +841,14 @@ imageQI <- function(qi,
 
   if (qi$model == 2) {
     def.par <- par(mfrow = c(2, 2), mar = c(3, 3, 3, 0))
+    on.exit(par(def.par))
     rimage(indx, indy, r2star, zlim = c(0, 0.05), main = "R2star")
     rimage(indx, indy, r1, zlim = c(0.0002, 0.0015), main = "R1")
     rimage(indx, indy, pd, zlim = c(0, 10000), main = "PD")
     rimage(indx, indy, delta, zlim = c(0, 0.03), main = "MT")
   } else {
     def.par <- par(mfrow = c(2, 2), mar = c(3, 3, 3, 0))
+    on.exit(par(def.par))
     rimage(indx, indy, r2star, zlim = c(0, 0.05), main = "R2star")
     rimage(indx, indy, r1, zlim = c(0.0002, 0.0015), main = "R1")
     rimage(indx, indy, pd, zlim = c(0, 10000), main = "PD")

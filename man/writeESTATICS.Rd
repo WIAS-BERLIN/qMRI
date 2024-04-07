@@ -1,6 +1,5 @@
 \name{writeESTATICS}
 \alias{writeESTATICS}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Write maps of ESTATICS parameters in standardized form as NIfTI files.
 }
@@ -15,7 +14,6 @@ Write maps of ESTATICS parameters in standardized form as NIfTI files.
 \usage{
 writeESTATICS(mpmESTATICSModel, dir = NULL, prefix = "estatics", verbose = TRUE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{mpmESTATICSModel}{
 Object of class 'ESTATICSModel' or 'sESTATICSModel' as returned from function
@@ -84,6 +82,7 @@ modelMPM <- estimateESTATICS(mpm, method = "NLR")
 if(require(adimpro)){
 rimage.options(zquantiles=c(.01,.99), ylab="z")
 oldpar <- par(mfrow=c(2,2),mar=c(3,3,3,1),mgp=c(2,1,0))
+on.exit(par(oldpar))
 pnames <- c("T1","MT","PD","R2star")
 modelCoeff <- extract(modelMPM,"modelCoeff")
 for(i in 1:4){
@@ -97,6 +96,4 @@ for(i in 1:4){
 writeESTATICS(modelMPM, dir=outDir, prefix="estatics")
 par(oldpar)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ IO }% use one of  RShowDoc("KEYWORDS")
+\keyword{ IO }

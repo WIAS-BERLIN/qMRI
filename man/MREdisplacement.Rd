@@ -1,6 +1,5 @@
 \name{MREdisplacement}
 \alias{MREdisplacement}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Calculate the motion induced signal phase for IR-MRE in biphasic material 
 }
@@ -12,14 +11,12 @@ are extracted from an object of class \code{"IRmixed"} calculated from data of a
 MREdisplacement(MagnFiles1, PhaseFiles1, MagnFiles2, PhaseFiles2, TI2 = 2400,
                 IRmixobj, method = c("full", "approx"),rescale=FALSE,verbose=FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{MagnFiles1}{
   Filenames of magnitude images recorded with inversion time \code{IT=Inf} .
 }
   \item{PhaseFiles1}{
   Filenames of phase images recorded with inversion time \code{IT=Inf} .
-%%     ~~Describe \code{PhaseFiles1} here~~
 }
   \item{MagnFiles2}{
     Filenames of magnitude images recorded with inversion time \code{IT=IT2}.
@@ -55,14 +52,10 @@ A list of class \code{"IRMREbiphasic"} with components
 \author{
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
 J\"org Polzehl \email{polzehl@wias-berlin.de}
-%%  ~~who you are~~
 }
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
  \code{\link{estimateIRfluid}}, \code{\link{estimateIRsolid}}, \code{\link{estimateIRsolidfixed}},\code{\link{smoothIRSolid}}
-%% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----
@@ -124,12 +117,4 @@ function (MagnFiles1, PhaseFiles1, MagnFiles2, PhaseFiles2, TI2 = 2400,
     phif[!masks] <- 0
   }
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory (show via RShowDoc("KEYWORDS")):
-% \keyword{ ~kwd1 }
-% \keyword{ ~kwd2 }
-% Use only one keyword per line.
-% For non-standard keywords, use \concept instead of \keyword:
 \concept{ IR-MRE }
-% \concept{ ~cpt2 }
-% Use only one concept per line.

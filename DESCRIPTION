@@ -1,8 +1,8 @@
 Package: qMRI
 Type: Package
 Title: Methods for Quantitative Magnetic Resonance Imaging ('qMRI')
-Version: 1.2.7
-Date: 2023-09-13
+Version: 1.2.7.1
+Date: 2024-04-07
 Authors@R: c(person("Joerg", "Polzehl", role = c("aut"),
                     email = "joerg.polzehl@wias-berlin.de"),
              person("Karsten", "Tabelow", role = c("aut", "cre"),
@@ -24,7 +24,7 @@ Description: Implementation of methods for estimation of quantitative maps
     Magnetic Resonance Brain Imaging, Chapter 6, Springer, Use R! Series.
     <doi:10.1007/978-3-030-29184-6_6>.
 License: GPL (>= 2)
-Copyright: This package is Copyright (C) 2015-2020 Weierstrass
+Copyright: This package is Copyright (C) 2015-2024 Weierstrass
         Institute for Applied Analysis and Stochastics.
 URL: https://www.wias-berlin.de/research/ats/imaging/
 Suggests:

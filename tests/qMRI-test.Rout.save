@@ -15,6 +15,9 @@ Tippen Sie 'demo()' für einige Demos, 'help()' für on-line Hilfe, oder
 'help.start()' für eine HTML Browserschnittstelle zur Hilfe.
 Tippen Sie 'q()', um R zu verlassen.
 
+[Vorher gesicherter Workspace wiederhergestellt]
+
+> options(warn=1)
 > library(qMRI)
 Lade nötiges Paket: awsMethods
 
@@ -132,4 +135,4 @@ mean of estimated quantitative maps using QL
 > 
 > proc.time()
        User      System verstrichen 
-      8.959       0.049       9.468 
+      9.192       0.055       9.765 

@@ -1,3 +1,4 @@
+options(warn=1)
 library(qMRI)
 dataDir <- system.file("extdata",package="qMRI")
 #

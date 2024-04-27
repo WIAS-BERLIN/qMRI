@@ -34,7 +34,7 @@ for(xyz in 1:nvoxel){
                                          data = list(InvTimesScaled),
                                          start = list(par = th),
                                          control = list(maxiter = 200,
-                                                        warnOnly = TRUE)),silent=TRUE)
+                                                        warnOnly = FALSE)),silent=TRUE)
   else try(nls(ivec ~ IRhomogenQL(par, InvTimesScaled, CL, sig, L),
                data = list(InvTimesScaled,
                            CL = CL,
@@ -42,7 +42,7 @@ for(xyz in 1:nvoxel){
                            L = L),
                start = list(par = th),
                control = list(maxiter = 200,
-                              warnOnly = TRUE)),silent=TRUE)
+                              warnOnly = FALSE)),silent=TRUE)
   if (!inherits(res, "try-error")){
     thhat <- coef(res)
     outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
@@ -55,7 +55,7 @@ for(xyz in 1:nvoxel){
                                            start = list(par = th),
                                            algorithm="port",
                                            control = list(maxiter = 200,
-                                                          warnOnly = TRUE),
+                                                          warnOnly = FALSE),
                                            lower=lower, upper=upper),silent=TRUE)
     else try(nls(ivec ~ IRhomogenQL(par, InvTimesScaled, CL, sig, L),
                  data = list(InvTimesScaled=InvTimesScaled,
@@ -65,7 +65,7 @@ for(xyz in 1:nvoxel){
                  start = list(par = th),
                  algorithm="port",
                  control = list(maxiter = 200,
-                                warnOnly = TRUE),
+                                warnOnly = FALSE),
                  lower=lower, upper=upper),silent=TRUE)
   }
   if (!inherits(res, "try-error")) {
@@ -126,13 +126,13 @@ pIRsolid <- function(x, InvTimesScaled, Rfluid, Sfluid, method, sigma, CL, sig, 
                                            data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid),
                                            start = list(par = th),
                                            control = list(maxiter = 500,
-                                                          warnOnly = TRUE)),silent=TRUE)
+                                                          warnOnly = FALSE)),silent=TRUE)
     else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, CL, sig, L),
                  data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid,
                              CL = CL, sig = sig, L = L),
                  start = list(par = th),
                  control = list(maxiter = 500,
-                                warnOnly = TRUE)),silent=TRUE)
+                                warnOnly = FALSE)),silent=TRUE)
     if (!inherits(res, "try-error")){
       thhat <- coef(res)
       outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
@@ -145,7 +145,7 @@ pIRsolid <- function(x, InvTimesScaled, Rfluid, Sfluid, method, sigma, CL, sig, 
                                              start = list(par = th),
                                              algorithm="port",
                                              control = list(maxiter = 500,
-                                                            warnOnly = TRUE),
+                                                            warnOnly = FALSE),
                                              lower=lower, upper=upper),silent=TRUE)
       else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, CL, sig, L),
                    data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid,
@@ -153,7 +153,7 @@ pIRsolid <- function(x, InvTimesScaled, Rfluid, Sfluid, method, sigma, CL, sig, 
                    start = list(par = th),
                    algorithm="port",
                    control = list(maxiter = 500,
-                                  warnOnly = TRUE),
+                                  warnOnly = FALSE),
                    lower=lower, upper=upper),silent=TRUE)
     }
     if (!inherits(res, "try-error")) {
@@ -205,7 +205,7 @@ for(xyz in 1:nvoxel){
                                         start = list(par = th),
                                         weights = wghts,
                                         control = list(maxiter = 200,
-                                                       warnOnly = TRUE)))
+                                                       warnOnly = FALSE)))
     else try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
                  data = list(xmat = xmat,
                              CL = CL,
@@ -214,7 +214,7 @@ for(xyz in 1:nvoxel){
                  start = list(par = th),
                  weights = wghts,
                  control = list(maxiter = 200,
-                                warnOnly = TRUE)))
+                                warnOnly = FALSE)))
     if (inherits(res, "try-error")){
       # retry with port algorithm and bounds
       th <- pmin(upper,pmax(lower,th))
@@ -224,7 +224,7 @@ for(xyz in 1:nvoxel){
                                           algorithm="port",
                                           weights = wghts,
                                           control = list(maxiter = 200,
-                                                         warnOnly = TRUE),
+                                                         warnOnly = FALSE),
                                           lower=lower, upper=upper))
       else try(nls(ivec ~ estatics3QL(par, xmat, CL, sig, L),
                    data = list(xmat = xmat,
@@ -235,7 +235,7 @@ for(xyz in 1:nvoxel){
                    algorithm="port",
                    weights = wghts,
                    control = list(maxiter = 200,
-                                  warnOnly = TRUE),
+                                  warnOnly = FALSE),
                    lower=lower, upper=upper))
     }
   
@@ -280,7 +280,7 @@ for(xyz in 1:nvoxel){
                        algorithm ="port",
                        weights = wghts,
                        control = list(maxiter = 200,
-                                      warnOnly = TRUE),
+                                      warnOnly = FALSE),
                        lower=lower[1:3], upper=upper[1:3]))
        if (!inherits(res,"try-error")) {
         ergs[indConv,xyz] <- as.integer(res$convInfo$isConv)
@@ -335,7 +335,7 @@ indrsig <- npar*(npar+1)+2
                                           start = list(par = th),
                                           weights = wghts,
                                           control = list(maxiter = 200,
-                                                         warnOnly = TRUE)))
+                                                         warnOnly = FALSE)))
       else try(nls(ivec ~ estatics2QL(par, xmat, CL, sig, L),
                    data = list(xmat = xmat,
                                CL = CL,
@@ -344,7 +344,7 @@ indrsig <- npar*(npar+1)+2
                    start = list(par = th),
                    weights = wghts,
                    control = list(maxiter = 200,
-                                  warnOnly = TRUE)))
+                                  warnOnly = FALSE)))
       if (inherits(res, "try-error")){
         # retry with port algorithm and bounds
         th <- pmin(upper,pmax(lower,th))
@@ -354,7 +354,7 @@ indrsig <- npar*(npar+1)+2
                                             algorithm="port",
                                             weights = wghts,
                                             control = list(maxiter = 200,
-                                                           warnOnly = TRUE),
+                                                           warnOnly = FALSE),
                                             lower=lower, upper=upper))
         else try(nls(ivec ~ estatics2QL(par, xmat, CL, sig, L),
                      data = list(xmat = xmat,
@@ -365,7 +365,7 @@ indrsig <- npar*(npar+1)+2
                      algorithm="port",
                      weights = wghts,
                      control = list(maxiter = 200,
-                                    warnOnly = TRUE),
+                                    warnOnly = FALSE),
                      lower=lower, upper=upper))
       }
 
@@ -410,7 +410,7 @@ indrsig <- npar*(npar+1)+2
                          algorithm ="port",
                          weights = wghts,
                          control = list(maxiter = 200,
-                                        warnOnly = TRUE),
+                                        warnOnly = FALSE),
                          lower=lower[1:2], upper=upper[1:2]))
         if (!inherits(res,"try-error")) {
           ergs[indConv, xyz] <- as.integer(res$convInfo$isConv)
@@ -465,7 +465,7 @@ indrsig <- npar*(npar+1)+2
                                           start = list(par = th),
                                           weights = wghts,
                                           control = list(maxiter = 200,
-                                                         warnOnly = TRUE)))
+                                                         warnOnly = FALSE)))
       else try(nls(ivec ~ estatics1QL(par, xmat, CL, sig, L),
                    data = list(xmat = xmat,
                                CL = CL,
@@ -474,7 +474,7 @@ indrsig <- npar*(npar+1)+2
                    start = list(par = th),
                    weights = wghts,
                    control = list(maxiter = 200,
-                                  warnOnly = TRUE)))
+                                  warnOnly = FALSE)))
       if (inherits(res, "try-error")){
         # retry with port algorithm and bounds
         th <- pmin(upper,pmax(lower,th))
@@ -484,7 +484,7 @@ indrsig <- npar*(npar+1)+2
                                             algorithm="port",
                                             weights = wghts,
                                             control = list(maxiter = 200,
-                                                           warnOnly = TRUE),
+                                                           warnOnly = FALSE),
                                             lower=lower, upper=upper))
         else try(nls(ivec ~ estatics1QL(par, xmat, CL, sig, L),
                      data = list(xmat = xmat,
@@ -495,7 +495,7 @@ indrsig <- npar*(npar+1)+2
                      algorithm = "port",
                      weights = wghts,
                      control = list(maxiter = 200,
-                                    warnOnly = TRUE),
+                                    warnOnly = FALSE),
                      lower=lower, upper=upper))
         
       }
@@ -542,7 +542,7 @@ indrsig <- npar*(npar+1)+2
                          algorithm ="port",
                          weights = wghts,
                          control = list(maxiter = 200,
-                                        warnOnly = TRUE),
+                                        warnOnly = FALSE),
                          lower=lower[1], upper=upper[1]))
         if (!inherits(res,"try-error")) {
           ergs[indConv, xyz] <- as.integer(res$convInfo$isConv)

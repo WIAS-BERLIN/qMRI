@@ -124,7 +124,7 @@ estimateIRfluid <- function(IRdataobj,
                                            data = list(InvTimesScaled),
                                            start = list(par = th),
                                            control = list(maxiter = 200,
-                                                          warnOnly = TRUE)),silent=TRUE)
+                                                          warnOnly = FALSE)),silent=TRUE)
        else try(nls(ivec ~ IRhomogenQL(par, InvTimesScaled, CL, sig, L),
                     data = list(InvTimesScaled,
                                 CL = CL,
@@ -132,7 +132,7 @@ estimateIRfluid <- function(IRdataobj,
                                 L = L),
                     start = list(par = th),
                     control = list(maxiter = 200,
-                                   warnOnly = TRUE)),silent=TRUE)
+                                   warnOnly = FALSE)),silent=TRUE)
        if (!inherits(res, "try-error")){
           thhat <- coef(res)
           outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
@@ -145,7 +145,7 @@ estimateIRfluid <- function(IRdataobj,
                                              start = list(par = th),
                                                algorithm="port",
                                              control = list(maxiter = 200,
-                                                            warnOnly = TRUE),
+                                                            warnOnly = FALSE),
                                              lower=lower, upper=upper),silent=TRUE)
          else try(nls(ivec ~ IRhomogenQL(par, InvTimesScaled, CL, sig, L),
                       data = list(InvTimesScaled=InvTimesScaled,
@@ -155,7 +155,7 @@ estimateIRfluid <- function(IRdataobj,
                       start = list(par = th),
                       algorithm="port",
                       control = list(maxiter = 200,
-                                     warnOnly = TRUE),
+                                     warnOnly = FALSE),
                       lower=lower, upper=upper),silent=TRUE)
        }
        if (!inherits(res, "try-error")) {
@@ -296,13 +296,13 @@ estimateIRsolid <- function(IRfluidobj,
                                              data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid),
                                              start = list(par = th),
                                              control = list(maxiter = 500,
-                                                            warnOnly = TRUE)),silent=TRUE)
+                                                            warnOnly = FALSE)),silent=TRUE)
          else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, CL, sig, L),
                       data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid,
                                   CL = CL, sig = sig, L = L),
                       start = list(par = th),
                       control = list(maxiter = 500,
-                                     warnOnly = TRUE)),silent=TRUE)
+                                     warnOnly = FALSE)),silent=TRUE)
          if (!inherits(res, "try-error")){
            thhat <- coef(res)
            outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
@@ -315,7 +315,7 @@ estimateIRsolid <- function(IRfluidobj,
                                                 start = list(par = th),
                                                 algorithm="port",
                                                 control = list(maxiter = 500,
-                                                               warnOnly = TRUE),
+                                                               warnOnly = FALSE),
                                                 lower=lower, upper=upper),silent=TRUE)
             else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, CL, sig, L),
                                      data = list(ITS=InvTimesScaled, Sfluid=Sfluid, Rfluid=Rfluid,
@@ -323,7 +323,7 @@ estimateIRsolid <- function(IRfluidobj,
                          start = list(par = th),
                          algorithm="port",
                          control = list(maxiter = 500,
-                                        warnOnly = TRUE),
+                                        warnOnly = FALSE),
                          lower=lower, upper=upper),silent=TRUE)
          }
          if (!inherits(res, "try-error")) {
@@ -583,13 +583,13 @@ IRdata <- IRsolidobj$IRdata
                                              data = list(ITS=InvTimesScaled),
                                              start = list(par = th),
                                              control = list(maxiter = 500,
-                                                            warnOnly = TRUE)),silent=TRUE)
+                                                            warnOnly = FALSE)),silent=TRUE)
          else try(nls(ivec ~ IRmix5QL(par, ITS, CL, sig, L),
                       data = list(ITS=InvTimesScaled,
                                   CL = CL, sig = sig, L = L),
                       start = list(par = th),
                       control = list(maxiter = 500,
-                                     warnOnly = TRUE)),silent=TRUE)
+                                     warnOnly = FALSE)),silent=TRUE)
          if (!inherits(res, "try-error")){
            thhat <- coef(res)
            outofrange <- any(thhat != pmin(upper,pmax(lower,thhat)))
@@ -602,7 +602,7 @@ IRdata <- IRsolidobj$IRdata
                                                 start = list(par = th),
                                                 algorithm="port",
                                                 control = list(maxiter = 500,
-                                                               warnOnly = TRUE),
+                                                               warnOnly = FALSE),
                                                 lower=lower, upper=upper),silent=TRUE)
             else try(nls(ivec ~ IRmix5QL(par, ITS, CL, sig, L),
                                      data = list(ITS=InvTimesScaled,
@@ -610,7 +610,7 @@ IRdata <- IRsolidobj$IRdata
                          start = list(par = th),
                          algorithm="port",
                          control = list(maxiter = 500,
-                                        warnOnly = TRUE),
+                                        warnOnly = FALSE),
                          lower=lower, upper=upper),silent=TRUE)
          }
          if (!inherits(res, "try-error")) {
@@ -864,13 +864,13 @@ estimateIRsolidfixed <- function(IRmixedobj, TEScale = 100,
                                           data = list(ITS=InvTimesScaled, Sf=Sfluid, Ss=Ss, Rf=Rfluid, Rs=Rs),
                                           start = list(par = th),
                                           control = list(maxiter = 200,
-                                                         warnOnly = TRUE)),silent=TRUE)
+                                                         warnOnly = FALSE)),silent=TRUE)
       else try(nls(ivec ~ IRmix2fixQL(par, ITS, Sf, Ss, Rf, Rs, CL, sig, L),
                    data = list(ITS=InvTimesScaled, Sf=Sfluid, Ss=Ss, Rf=Rfluid, Rs=Rs,
                                CL = CL, sig = sig, L = L),
                    start = list(par = th),
                    control = list(maxiter = 200,
-                                  warnOnly = TRUE)),silent=TRUE)
+                                  warnOnly = FALSE)),silent=TRUE)
       if (inherits(res, "try-error")){
          # retry with port algorithm and bounds
          th <- pmin(upper,pmax(lower,th))
@@ -878,7 +878,7 @@ estimateIRsolidfixed <- function(IRmixedobj, TEScale = 100,
                                              data = list(ITS=InvTimesScaled, Sf=Sfluid, Ss=Ss, Rf=Rfluid, Rs=Rs),                                             start = list(par = th),
                                              algorithm="port",
                                              control = list(maxiter = 200,
-                                                            warnOnly = TRUE),
+                                                            warnOnly = FALSE),
                                              lower=lower, upper=upper),silent=TRUE)
          else try(nls(ivec ~ IRmix2fixQL(par, ITS, Sf, Ss, Rf, Rs, CL, sig, L),
                       data = list(ITS=InvTimesScaled, Sf=Sfluid, Ss=Ss, Rf=Rfluid, Rs=Rs,
@@ -886,7 +886,7 @@ estimateIRsolidfixed <- function(IRmixedobj, TEScale = 100,
                       start = list(par = th),
                       algorithm="port",
                       control = list(maxiter = 200,
-                                     warnOnly = TRUE),
+                                     warnOnly = FALSE),
                       lower=lower, upper=upper),silent=TRUE)
       }
       if (!inherits(res, "try-error")) {

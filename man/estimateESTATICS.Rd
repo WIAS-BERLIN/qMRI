@@ -80,8 +80,13 @@ PD(*), MT, and R2(*) at 3T: a multi-center validation. Front Neurosci,
 Wellcome Trust Centre for Neuroimaging, UCL Institute of Neurology,
 University College London, UK., 2013, 7, 95
 
-J. Polzehl, K. Tabelow (2019). Magnetic Resonance Brain Imaging:
-Modeling and Data Analysis Using R. Springer, Use R! series. Doi:10.1007/978-3-030-29184-6.
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging:
+Modeling and Data Analysis Using R, 2nd Edition, Chapter 6, Springer, Use R! Series.
+    <doi:10.1007/978-3-031-38949-8_6>.
+
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging - 
+Modeling and Data Analysis Using R: Code and Data.
+    \url{https://doi.org/10.20347/WIAS.DATA.6}.
 
 }
 \author{

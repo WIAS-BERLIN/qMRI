@@ -42,6 +42,16 @@ smoothIRSolid(IRmixedobj, kstar = 24, patchsize = 1, alpha = 0.025,
 \value{
 an object of class \code{"IRmixed"}, but with components Sx and Rx replaced. The object carries an additional component \code{bi} containing an array of sum of weights characterizing the amount of smoothing.
 }
+\references{
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging:
+Modeling and Data Analysis Using R, 2nd Edition, Chapter 7, Springer, Use R! Series.
+    <doi:10.1007/978-3-031-38949-8_7>.
+
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging - 
+Modeling and Data Analysis Using R: Code and Data.
+    \url{https://doi.org/10.20347/WIAS.DATA.6}.
+
+}
 \author{
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
 J\"org Polzehl \email{polzehl@wias-berlin.de}
@@ -49,32 +59,6 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 
 \seealso{
  \code{\link{estimateIRfluid}}, \code{\link{estimateIRsolid}}, \code{\link{estimateIRsolidfixed}},\code{\link{estimateIR}}
-}
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (ergs, segm, kstar = 24, ladjust = 1)
-{
-    mask <- segm > 1
-    nvoxel <- sum(mask)
-    bpars <- array(0, c(2, nvoxel))
-    icovbpars <- array(0, c(2, 2, nvoxel))
-    bpars[1, ] <- ergs$Rx[mask]
-    bpars[2, ] <- ergs$Sx[mask]
-    ICovx <- ergs$ICovx
-    dim(ICovx) <- c(3, 3, prod(dim(mask)))
-    icovbpars <- ICovx[-1, -1, mask]
-    z <- vpawscov2(bpars, kstar, icovbpars/ladjust, segm > 1)
-    ergs$Rx[mask] <- z$theta[1, ]
-    ergs$Sx[mask] <- z$theta[2, ]
-    bi <- array(0, dim(mask))
-    bi[mask] <- z$bi
-    ergs$bi <- bi
-    ergs
-  }
 }
  \keyword{ utilities }
  \keyword{ smooth }

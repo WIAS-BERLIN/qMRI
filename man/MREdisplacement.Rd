@@ -49,6 +49,12 @@ A list of class \code{"IRMREbiphasic"} with components
 \item{phisolid}{displacement solid}
 \item{phifluid}{displacement fluid}
 }
+\references{
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging:
+Modeling and Data Analysis Using R, 2nd Edition, Chapter 7, Springer, Use R! Series.
+    <doi:10.1007/978-3-031-38949-8_7>.
+}
+
 \author{
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
 J\"org Polzehl \email{polzehl@wias-berlin.de}
@@ -56,65 +62,5 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 
 \seealso{
  \code{\link{estimateIRfluid}}, \code{\link{estimateIRsolid}}, \code{\link{estimateIRsolidfixed}},\code{\link{smoothIRSolid}}
-}
-\examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (MagnFiles1, PhaseFiles1, MagnFiles2, PhaseFiles2, TI2 = 2400, 
-    IRmixobj, method = c("full", "approx"), verbose = FALSE) 
-{
-    segm <- IRmixobj
-    sdim <- dim(segm)
-    nfiles <- length(MagnFiles1)
-    if (length(PhaseFiles1) != nfiles || length(MagnFiles2) != 
-        nfiles || length(PhaseFiles2) != nfiles) {
-        stop("Incompatible lengths of filelists")
-    }
-    imgdim1 <- readNIfTI(MagnFiles1, read_data = FALSE)@dim_[2:4]
-    imgdim2 <- readNIfTI(MagnFiles2, read_data = FALSE)@dim_[2:4]
-    imgdim3 <- readNIfTI(PhaseFiles1, read_data = FALSE)@dim_[2:4]
-    imgdim4 <- readNIfTI(PhaseFiles2, read_data = FALSE)@dim_[2:4]
-    if (any(imgdim1 != sdim) || any(imgdim2 != sdim) || any(imgdim3 != 
-        sdim) || any(imgdim4 != sdim)) {
-        stop("Incompatible image dimensions")
-    }
-    Mimg1 <- Mimg2 <- phiimg1 <- phiimg2 <- array(0, c(sdim, 
-        nfiles))
-    for (i in 1:nfiles) {
-        Mimg1[, , , i] <- readNIfTI(MagnFiles1, reorient = FALSE)@.Data
-        phiimg1[, , , i] <- readNIfTI(PhaseFiles1, reorient = FALSE, 
-            rescale = FALSE)@.Data
-        Mimg2[, , , i] <- readNIfTI(MagnFiles2, reorient = FALSE)@.Data
-        phiimg2[, , , i] <- readNIfTI(PhaseFiles2, reorient = FALSE, 
-            rescale = FALSE)@.Data
-        rngimg <- range(phiimg1, phiimg2)
-        cat("range of phase images", rngimg, "\n")
-        phiimg1 <- phiimg1/max(abs(rngimg)) * pi
-        phiimg2 <- phiimg2/max(abs(rngimg)) * pi
-    }
-    Rf <- IRmixobj$Rf
-    R1x <- IRmixobj$Rx
-    masksolid <- segm > 1
-    CCs <- array(1 - 2 * exp(-TI2 * R1x), dim(Mimg1))
-    CCf <- array(1 - 2 * exp(-TI2 * Rf), dim(Mimg1))
-    masks <- array(masksolid[, , 2:6], dim(Mimg1))
-    if ("full" \%in\% method) {
-        ss <- CCf * Mimg1 * sin(phiimg1) - Mimg2 * sin(phiimg2)
-        cs <- CCf * Mimg1 * cos(phiimg1) - Mimg2 * cos(phiimg2)
-    }
-    else {
-        ss <- -Mimg2 * sin(phiimg2)
-        cs <- -Mimg2 * cos(phiimg2)
-    }
-    sf <- -CCs * Mimg1 * sin(phiimg1) + Mimg2 * sin(phiimg2)
-    cf <- -CCs * Mimg1 * cos(phiimg1) + Mimg2 * cos(phiimg2)
-    phis <- atan2(cs, ss)
-    phif <- atan2(cf, sf)
-    phis[!masks] <- 0
-    phif[!masks] <- 0
-  }
 }
 \concept{ IR-MRE }

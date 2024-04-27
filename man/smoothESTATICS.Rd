@@ -71,8 +71,13 @@ J. Polzehl, V. Spokoiny,  Propagation-separation approach for local likelihood e
 
 J. Polzehl, K. Papafitsorus, K. Tabelow (2018). Patch-wise adaptive weights smoothing. WIAS-Preprint 2520.
 
-J. Polzehl, K. Tabelow (2019). Magnetic Resonance Brain Imaging:
-Modeling and Data Analysis Using R. Springer, Use R! series. Doi:10.1007/978-3-030-29184-6.
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging:
+Modeling and Data Analysis Using R, 2nd Edition, Chapter 6, Springer, Use R! Series.
+    <doi:10.1007/978-3-031-38949-8_6>.
+
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging - 
+Modeling and Data Analysis Using R: Code and Data.
+    \url{https://doi.org/10.20347/WIAS.DATA.6}.
 }
 \author{
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
@@ -82,7 +87,7 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link{readMPMData}}, \code{\link{estimateESTATICS}}
 }
 \examples{
-\donttest{
+\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 #
 #  set file names for T1w, MTw and PDw images

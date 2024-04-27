@@ -173,87 +173,14 @@ The [-methods can be used to reduce objects of class
   A list with components carrying the names of the options specified in
   argument \code{what}.
 }
+\references{
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging:
+Modeling and Data Analysis Using R, 2nd Edition, Chapter 7, Springer, Use R! Series.
+    <doi:10.1007/978-3-031-38949-8_7>.
+}
 \author{
   Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
   J\"org Polzehl \email{polzehl@wias-berlin.de}
-}
-\examples{
-dataDir <- system.file("extdata",package="qMRI")
-#
-#  set file names for T1w, MTw and PDw images
-#
-t1Names <- paste0("t1w_",1:8,".nii.gz")
-mtNames <- paste0("mtw_",1:6,".nii.gz")
-pdNames <- paste0("pdw_",1:8,".nii.gz")
-t1Files <- file.path(dataDir, t1Names)
-mtFiles <- file.path(dataDir, mtNames)
-pdFiles <- file.path(dataDir, pdNames)
-#
-#  file names of mask and B1 field map
-#
-B1File <- file.path(dataDir, "B1map.nii.gz")
-maskFile <- file.path(dataDir, "mask0.nii.gz")
-#
-#  Acquisition parameters (TE, TR, Flip Angle) for T1w, MTw and PDw images
-#
-TE <- c(2.3, 4.6, 6.9, 9.2, 11.5, 13.8, 16.1, 18.4,
-        2.3, 4.6, 6.9, 9.2, 11.5, 13.8,
-        2.3, 4.6, 6.9, 9.2, 11.5, 13.8, 16.1, 18.4)
-TR <- rep(25, 22)
-FA <- c(rep(21, 8), rep(6, 6), rep(6, 8))
-#
-#   read MPM example data
-#
-library(qMRI)
-mpm <- readMPMData(t1Files, pdFiles, mtFiles,
-                   maskFile, TR = TR, TE = TE,
-                   FA = FA, verbose = FALSE)
-#
-#  display some data
-#
-data <- extract(mpm,"ddata")
-if(require(adimpro)){
-rimage.options(ylab = "z")
-oldpar <- par(mfrow=c(1,3),mar=c(3,3,3,1),mgp=c(2,1,0))
-on.exit(par(oldpar))
-rimage(data[1,,11,], main="first T1w image")
-rimage(data[9,,11,], main="first MTw image")
-rimage(data[15,,11,], main="first PDw image")
-}
-#
-#  Estimate Parameters in the ESTATICS model
-#
-modelMPM <- estimateESTATICS(mpm, method = "NLR")
-#
-#  Parameter maps and residual standard deviation
-#
-z <- extract(modelMPM,c("rsigma","modelCoeff"))
-if(require(adimpro)){
-rimage.options(ylab = "z")
-par(mfrow=c(1,5),mar=c(3,3,3,1),mgp=c(2,1,0))
-rimage(z$modelCoeff[1,,11,], main="S_T1")
-rimage(z$modelCoeff[2,,11,], main="S_MT")
-rimage(z$modelCoeff[3,,11,], main="S_PD")
-rimage(z$modelCoeff[4,,11,], main="R2star")
-rimage(z$rsigma[,11,], main="Residual sd")
-}
-#
-#  Compute quantitative maps (R1, R2star, PD, MT)
-#
-qMRIMaps <- calculateQI(modelMPM,
-                        b1File = B1File,
-                        TR2 = 3.4)
-#
-#  resulting quantitative maps for central coronal slice
-#
-if(require(adimpro)){
-rimage.options(zquantiles=c(.01,.99), ylab="z")
-par(mfrow=c(2,4),mar=c(3,3,3,1),mgp=c(2,1,0))
-nmaps <- c("R1","R2star","PD","MT")
-qmap <- extract(qMRIMaps,nmaps)
-for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
-}
-par(oldpar)
 }
 \keyword{ methods }
 \keyword{ manip }

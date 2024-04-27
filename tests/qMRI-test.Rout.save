@@ -15,8 +15,6 @@ Tippen Sie 'demo()' für einige Demos, 'help()' für on-line Hilfe, oder
 'help.start()' für eine HTML Browserschnittstelle zur Hilfe.
 Tippen Sie 'q()', um R zu verlassen.
 
-[Vorher gesicherter Workspace wiederhergestellt]
-
 > options(warn=1)
 > library(qMRI)
 Lade nötiges Paket: awsMethods
@@ -131,8 +129,8 @@ calculating MT ... done
 > cat("mean of estimated quantitative maps using QL\n",
 +     mean(qmQL$R1[mask]), mean(qmQL$R2star[mask]), mean(qmQL$MT[mask]), mean(qmQL$PD[mask]),"\n")
 mean of estimated quantitative maps using QL
- 0.7726782 18.74334 0.9159381 5774.669 
+ 0.7726694 18.72987 0.9158866 5774.011 
 > 
 > proc.time()
        User      System verstrichen 
-      9.192       0.055       9.765 
+      8.983       0.050       9.463 

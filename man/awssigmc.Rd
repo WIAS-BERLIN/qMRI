@@ -102,4 +102,7 @@ awslsigmc(y, steps, mask = NULL, ncoils = 1, vext = c(1, 1), lambda = 5, minni =
 \author{
   J\"org Polzehl \email{polzehl@wias-berlin.de}
 }
+\seealso{
+\code{\link[aws:aws-package]{aws}}
+}
 \keyword{ smooth }

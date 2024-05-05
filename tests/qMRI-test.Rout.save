@@ -133,4 +133,4 @@ mean of estimated quantitative maps using QL
 > 
 > proc.time()
        User      System verstrichen 
-      8.983       0.050       9.463 
+      9.139       0.107       9.734 

@@ -53,6 +53,16 @@ List of class \code{IRmixed} with components
 \item{varest}{Method used for variance estimation}
 The arrays contain entries for all voxel with \code{segments\%in\%1:3}.
 }
+\references{
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging:
+Modeling and Data Analysis Using R, 2nd Edition, Chapter 7, Springer, Use R! Series.
+    <doi:10.1007/978-3-031-38949-8_7>.
+    
+  J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging - 
+Modeling and Data Analysis Using R: Code and Data.
+    \url{https://doi.org/10.20347/WIAS.DATA.6}.
+  
+}
 \author{
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
 J\"org Polzehl \email{polzehl@wias-berlin.de}
@@ -61,126 +71,60 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
  \code{\link{estimateIRfluid}}, \code{\link{estimateIR}}, \code{\link{estimateIRsolidfixed}},\code{\link{smoothIRSolid}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (IRdata, InvTimes, segments, Sfluid, Rfluid, TEScale = 100, 
-    dataScale = 1000, method = c("NLR", "QL"), sigma = NULL, 
-    L = 1, maxR2star = 50, varest = c("RSS", "data"), verbose = TRUE, 
-    lower = c(0, 0, 0), upper = c(0.95, 2, 2)) 
-{
-    mask <- segments > 1
-    nvoxel <- sum(mask)
-    ntimes <- length(InvTimes)
-    InvTimes[InvTimes == Inf] <- 50 * max(InvTimes[InvTimes != 
-        Inf])
-    dimdata <- dim(IRdata)
-    if (dimdata[1] != ntimes) 
-        stop("estimateIRsolid: incompatible length of InvTimes")
-    if (any(dimdata[-1] != dim(mask))) 
-        stop("estimateIRsolid: incompatible dimension of segments")
-    InvTimesScaled <- InvTimes/TEScale
-    npar <- 3
-    fx <- Rx <- Sx <- rsdx <- array(0, dim(mask))
-    ICovx <- array(0, c(3, 3, prod(dim(mask))))
-    Convx <- array(0, dim(mask))
-    fx[segments == 1] <- 1
-    Rx[segments == 1] <- Rfluid
-    Sx[segments == 1] <- Sfluid
-    Convx[segments == 1] <- 1
-    ICovx[1, 1, segments == 1] <- 1e+20
-    ICovx[2, 2, segments == 1] <- 1e+20
-    ICovx[3, 3, segments == 1] <- 1e+20
-    isConv <- array(FALSE, nvoxel)
-    isThresh <- array(FALSE, nvoxel)
-    modelCoeff <- array(0, c(npar, nvoxel))
-    invCov <- array(0, c(npar, npar, nvoxel))
-    rsigma <- array(0, nvoxel)
-    if (method[1] == "QL") {
-        if (is.null(sigma)) {
-            method <- "NLR"
-            warning("estimateIRsolid: method QL needs sigma estimated from fluid or supplied")
-        }
-        sig <- sigma/dataScale
-        CL <- sig * sqrt(pi/2) * gamma(L + 0.5)/gamma(L)/gamma(1.5)
-    }
-    dim(IRdata) <- c(dimdata[1], prod(dim(segments)))
-    IRdataSolid <- IRdata[, mask]
-    thetas <- matrix(0, 3, nvoxel)
-    thetas[3, ] <- IRdataSolid[(1:ntimes)[InvTimes == max(InvTimes)][1], 
-        ]/dataScale
-    thetas[2, ] <- 1/median(InvTimesScaled)
-    thetas[1, ] <- 0.3
-    if (verbose) {
-        cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), 
-            "\n")
-        pb <- txtProgressBar(0, nvoxel, style = 3)
-    }
-    for (xyz in 1:nvoxel) {
-        ivec <- IRdataSolid[, xyz]/dataScale
-        th <- thetas[, xyz]
-        res <- if (method[1] == "NLR") 
-            try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid), 
-                data = list(ITS = InvTimesScaled, Sfluid = Sfluid, 
-                  Rfluid = Rfluid), start = list(par = th), control = list(maxiter = 200, 
-                  warnOnly = TRUE)), silent = TRUE)
-        else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, 
-            CL, sig, L), data = list(ITS = InvTimesScaled, Sfluid = Sfluid, 
-            Rfluid = Rfluid, CL = CL, sig = sig, L = L), start = list(par = th), 
-            control = list(maxiter = 200, warnOnly = TRUE)), 
-            silent = TRUE)
-        if (class(res) != "try-error") {
-            thhat <- coef(res)
-            outofrange <- any(thhat != pmin(upper, pmax(lower, 
-                thhat)))
-        }
-        if (class(res) == "try-error" || outofrange) {
-            th <- pmin(upper, pmax(lower, th))
-            res <- if (method[1] == "NLR") 
-                try(nls(ivec ~ IRmix2(par, ITS, Sfluid, Rfluid), 
-                  data = list(ITS = InvTimesScaled, Sfluid = Sfluid, 
-                    Rfluid = Rfluid), start = list(par = th), 
-                  algorithm = "port", control = list(maxiter = 200, 
-                    warnOnly = TRUE), lower = lower, upper = upper), 
-                  silent = TRUE)
-            else try(nls(ivec ~ IRmix2QL(par, ITS, Sfluid, Rfluid, 
-                CL, sig, L), data = list(ITS = InvTimesScaled, 
-                Sfluid = Sfluid, Rfluid = Rfluid, CL = CL, sig = sig, 
-                L = L), start = list(par = th), algorithm = "port", 
-                control = list(maxiter = 200, warnOnly = TRUE), 
-                lower = lower, upper = upper), silent = TRUE)
-        }
-        if (class(res) != "try-error") {
-            sres <- if (varest[1] == "RSS") 
-                getnlspars(res)
-            else getnlspars2(res, shat[, xyz], sind)
-            isConv[xyz] <- as.integer(res$convInfo$isConv)
-            modelCoeff[, xyz] <- sres$coefficients
-            if (sres$sigma != 0) {
-                invCov[, , xyz] <- sres$invCov
-                rsigma[xyz] <- sres$sigma
-            }
-        }
-        if (verbose) 
-            if (xyz\%/\%1000 * 1000 == xyz) 
-                setTxtProgressBar(pb, xyz)
-    }
-    if (verbose) {
-        close(pb)
-        cat("Finished estimation", format(Sys.time()), "\n")
-    }
-    fx[mask] <- modelCoeff[1, ]
-    Rx[mask] <- modelCoeff[2, ]
-    Sx[mask] <- modelCoeff[3, ]
-    ICovx[, , mask] <- invCov
-    dim(ICovx) <- c(3, 3, dim(mask))
-    Convx[mask] <- isConv
-    rsdx[mask] <- rsigma
-    list(fx = fx, Rx = Rx, Sx = Sx, Sf = Sfluid, Rf = Rfluid, 
-        ICovx = ICovx, Convx = Convx, sigma = sigma, rsdx = rsdx)
-  }
+\dontrun{
+dataDir0 <- system.file("extdataIR", package = "qMRI")
+dataDir <- tempdir("IRdata")
+library(oro.nifti)
+library(qMRI)
+segm <- readNIfTI(file.path(dataDir0,"Brainweb_segm"))
+Sf <- 900
+Rf <- 0.000285
+Sgm <- 400
+Rgm <- 0.00075
+fgm <- .15
+Swm <- 370
+Rwm <- 0.0011
+fwm <- .05
+InvTimes <- c(100, 200, 400, 600, 800, 1200, 1600, 2000, 2500, 3000, 
+              3500, 4000, 4500, 5000, 6000, Inf)
+InvTimes0 <- c(100, 200, 400, 600, 800, 1200, 1600, 2000, 2500, 3000, 
+              3500, 4000, 4500, 5000, 6000, 15000)
+x <- seq(100,12000,10)
+## generate IR signal
+fintCSF <- qMRI:::IRhomogen(c(Sf,Rf),InvTimes0)
+fintGM <- qMRI:::IRmix2(c(fgm,Rgm,Sgm),InvTimes0,Sf,Rf)
+fintWM <- qMRI:::IRmix2(c(fwm,Rwm,Swm),InvTimes0,Sf,Rf)
+## generate data
+sigma <- 40
+nTimes <- length(InvTimes0)
+nCSF <- sum(segm==1)
+nGM <- sum(segm==2)
+nWM <- sum(segm==3)
+IRdata <- array(0,c(nTimes,prod(dim(segm))))
+IRdata[,segm==1] <- sqrt(rnorm(nTimes*nCSF,fintCSF,sigma)^2+
+                         rnorm(nTimes*nCSF,0,sigma)^2)
+IRdata[,segm==2] <- sqrt(rnorm(nTimes*nGM,fintGM,sigma)^2+
+                         rnorm(nTimes*nGM,0,sigma)^2)
+IRdata[,segm==3] <- sqrt(rnorm(nTimes*nWM,fintWM,sigma)^2+
+                         rnorm(nTimes*nWM,0,sigma)^2)
+dim(IRdata) <- c(nTimes,dim(segm))
+for(i in 1:9) writeNIfTI(as.nifti(IRdata[i,,,]), 
+                         file.path(dataDir,paste0("IR0",i)))
+for(i in 10:nTimes) writeNIfTI(as.nifti(IRdata[i,,,]), 
+                         file.path(dataDir,paste0("IR",i)))
+## generate IRdata object
+t1Files <- list.files(dataDir,"*.nii.gz",full.names=TRUE)
+segmFile <- file.path(dataDir0,"Brainweb_segm")
+IRdata <- readIRData(t1Files, InvTimes0, segmFile, sigma=sigma,
+                     L=1, segmCodes=c("CSF","GM","WM"))
+## estimate fluid
+setCores(2) # parallel mode using 2 threads
+IRfluid <- estimateIRfluid(IRdata, method="NLR", verbose=FALSE)
+cat("Estimated parameters Sf:", IRfluid$Sf, 
+                        " Rf:", IRfluid$Rf, "\n")
+## estimate solid
+IRmix <- estimateIRsolid(IRfluid, verbose=FALSE)
+}
 }
  \keyword{ models}
  \keyword{ regression }

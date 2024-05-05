@@ -42,6 +42,16 @@ smoothIRSolid(IRmixedobj, kstar = 24, patchsize = 1, alpha = 0.025,
 \value{
 an object of class \code{"IRmixed"}, but with components Sx and Rx replaced. The object carries an additional component \code{bi} containing an array of sum of weights characterizing the amount of smoothing.
 }
+\references{
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging:
+Modeling and Data Analysis Using R, 2nd Edition, Chapter 7, Springer, Use R! Series.
+    <doi:10.1007/978-3-031-38949-8_7>.
+
+J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging - 
+Modeling and Data Analysis Using R: Code and Data.
+    \url{https://doi.org/10.20347/WIAS.DATA.6}.
+
+}
 \author{
 Karsten Tabelow \email{tabelow@wias-berlin.de}\cr
 J\"org Polzehl \email{polzehl@wias-berlin.de}
@@ -51,30 +61,62 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
  \code{\link{estimateIRfluid}}, \code{\link{estimateIRsolid}}, \code{\link{estimateIRsolidfixed}},\code{\link{estimateIR}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
-
-## The function is currently defined as
-function (ergs, segm, kstar = 24, ladjust = 1)
-{
-    mask <- segm > 1
-    nvoxel <- sum(mask)
-    bpars <- array(0, c(2, nvoxel))
-    icovbpars <- array(0, c(2, 2, nvoxel))
-    bpars[1, ] <- ergs$Rx[mask]
-    bpars[2, ] <- ergs$Sx[mask]
-    ICovx <- ergs$ICovx
-    dim(ICovx) <- c(3, 3, prod(dim(mask)))
-    icovbpars <- ICovx[-1, -1, mask]
-    z <- vpawscov2(bpars, kstar, icovbpars/ladjust, segm > 1)
-    ergs$Rx[mask] <- z$theta[1, ]
-    ergs$Sx[mask] <- z$theta[2, ]
-    bi <- array(0, dim(mask))
-    bi[mask] <- z$bi
-    ergs$bi <- bi
-    ergs
-  }
+\dontrun{
+dataDir0 <- system.file("extdataIR", package = "qMRI")
+dataDir <- tempdir("IRdata")
+library(oro.nifti)
+library(qMRI)
+segm <- readNIfTI(file.path(dataDir0,"Brainweb_segm"))
+Sf <- 900
+Rf <- 0.000285
+Sgm <- 400
+Rgm <- 0.00075
+fgm <- .15
+Swm <- 370
+Rwm <- 0.0011
+fwm <- .05
+InvTimes <- c(100, 200, 400, 600, 800, 1200, 1600, 2000, 2500, 3000, 
+              3500, 4000, 4500, 5000, 6000, Inf)
+InvTimes0 <- c(100, 200, 400, 600, 800, 1200, 1600, 2000, 2500, 3000, 
+              3500, 4000, 4500, 5000, 6000, 15000)
+x <- seq(100,12000,10)
+## generate IR signal
+fintCSF <- qMRI:::IRhomogen(c(Sf,Rf),InvTimes0)
+fintGM <- qMRI:::IRmix2(c(fgm,Rgm,Sgm),InvTimes0,Sf,Rf)
+fintWM <- qMRI:::IRmix2(c(fwm,Rwm,Swm),InvTimes0,Sf,Rf)
+## generate data
+sigma <- 40
+nTimes <- length(InvTimes0)
+nCSF <- sum(segm==1)
+nGM <- sum(segm==2)
+nWM <- sum(segm==3)
+IRdata <- array(0,c(nTimes,prod(dim(segm))))
+IRdata[,segm==1] <- sqrt(rnorm(nTimes*nCSF,fintCSF,sigma)^2+
+                         rnorm(nTimes*nCSF,0,sigma)^2)
+IRdata[,segm==2] <- sqrt(rnorm(nTimes*nGM,fintGM,sigma)^2+
+                         rnorm(nTimes*nGM,0,sigma)^2)
+IRdata[,segm==3] <- sqrt(rnorm(nTimes*nWM,fintWM,sigma)^2+
+                         rnorm(nTimes*nWM,0,sigma)^2)
+dim(IRdata) <- c(nTimes,dim(segm))
+for(i in 1:9) writeNIfTI(as.nifti(IRdata[i,,,]), 
+                         file.path(dataDir,paste0("IR0",i)))
+for(i in 10:nTimes) writeNIfTI(as.nifti(IRdata[i,,,]), 
+                         file.path(dataDir,paste0("IR",i)))
+## generate IRdata object
+t1Files <- list.files(dataDir,"*.nii.gz",full.names=TRUE)
+segmFile <- file.path(dataDir0,"Brainweb_segm")
+IRdata <- readIRData(t1Files, InvTimes0, segmFile, sigma=sigma,
+                     L=1, segmCodes=c("CSF","GM","WM"))
+## estimate fluid
+setCores(2) # parallel mode using 2 threads
+IRfluid <- estimateIRfluid(IRdata, method="NLR", verbose=FALSE)
+cat("Estimated parameters Sf:", IRfluid$Sf, 
+                        " Rf:", IRfluid$Rf, "\n")
+## estimate solid
+IRmix <- estimateIRsolid(IRfluid, verbose=FALSE)
+## smoothing
+sIRmix <- smoothIRSolid(IRmix, alpha=1e-4, verbose=FALSE)
+}
 }
  \keyword{ utilities }
  \keyword{ smooth }

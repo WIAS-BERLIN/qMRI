@@ -33,7 +33,7 @@ Modeling and Data Analysis Using R, 2nd Edition, Chapter 6 and 7, Springer, Use 
     
   J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging - 
 Modeling and Data Analysis Using R: Code and Data.
-    \url{https://doi.org/10.20347/WIAS.DATA.6}.
+    <doi:10.20347/WIAS.DATA.6>.
 
 }
 \examples{

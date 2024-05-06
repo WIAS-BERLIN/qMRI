@@ -20,7 +20,7 @@ Description: Implementation of methods for estimation of quantitative maps
     Magnetic Resonance Brain Imaging, 2nd Edition, Chapter 6 and 7, Springer, Use R! Series.
     <doi:10.1007/978-3-031-38949-8>.
     J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging - Modeling and Data Analysis Using R: Code and Data.
-    \url{https://doi.org/10.20347/WIAS.DATA.6} provides extensive example code and data.
+    <doi:10.20347/WIAS.DATA.6> provides extensive example code and data.
 License: GPL (>= 2)
 Copyright: This package is Copyright (C) 2015-2024 Weierstrass
         Institute for Applied Analysis and Stochastics.

@@ -1,8 +1,8 @@
 Package: qMRI
 Type: Package
 Title: Methods for Quantitative Magnetic Resonance Imaging ('qMRI')
-Version: 1.2.7.5
-Date: 2024-05-05
+Version: 1.2.7.6
+Date: 2024-05-17
 Authors@R: c(person("Joerg", "Polzehl", role = c("aut"),
                     email = "joerg.polzehl@wias-berlin.de"),
              person("Karsten", "Tabelow", role = c("aut", "cre"),
@@ -17,9 +17,9 @@ Description: Implementation of methods for estimation of quantitative maps
     <doi:10.3389/fnins.2013.00095>) and analysis of Inversion Recovery MRI data.
     Usage of the package is described in
     Polzehl and Tabelow (2023),
-    Magnetic Resonance Brain Imaging, 2nd Edition, Chapter 6 and 7, Springer, Use R! Series.
+    "Magnetic Resonance Brain Imaging", 2nd Edition, Chapter 6 and 7, Springer, Use R! Series.
     <doi:10.1007/978-3-031-38949-8>.
-    J. Polzehl and K. Tabelow (2023), Magnetic Resonance Brain Imaging - Modeling and Data Analysis Using R: Code and Data.
+    J. Polzehl and K. Tabelow (2023), "Magnetic Resonance Brain Imaging - Modeling and Data Analysis Using R: Code and Data."
     <doi:10.20347/WIAS.DATA.6> provides extensive example code and data.
 License: GPL (>= 2)
 Copyright: This package is Copyright (C) 2015-2024 Weierstrass

@@ -19,7 +19,7 @@ export("extract.MPMData","extract.ESTATICSModel","extract.sESTATICSModel","extra
 export("extract.IRdata","extract.IRfluid","extract.IRmixed")
 export("[.MPMData","[.ESTATICSModel","[.sESTATICSModel","[.qMaps")
 export("[.IRdata","[.IRfluid","[.IRmixed")
-export(readIRData,estimateIRfluid, estimateIRsolid, estimateIRsolidfixed, estimateIR, smoothIRSolid, MREdisplacement)
+export(generateIRData, readIRData, estimateIRfluid, estimateIRsolid, estimateIRsolidfixed, estimateIR, smoothIRSolid, MREdisplacement)
 export(writeESTATICS,writeQI)
 S3method(extract,MPMData)
 S3method(extract,ESTATICSModel)

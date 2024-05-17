@@ -57,7 +57,6 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
  \code{\link{estimateIRfluid}}, \code{\link{estimateIRsolid}}, \code{\link{estimateIR}},\code{\link{smoothIRSolid}}
 }
 \examples{
-\dontrun{
 dataDir0 <- system.file("extdataIR", package = "qMRI")
 dataDir <- tempdir("IRdata")
 library(oro.nifti)
@@ -71,29 +70,12 @@ fgm <- .15
 Swm <- 370
 Rwm <- 0.0011
 fwm <- .05
-InvTimes <- c(100, 200, 400, 600, 800, 1200, 1600, 2000, 2500, 3000, 
-              3500, 4000, 4500, 5000, 6000, Inf)
 InvTimes0 <- c(100, 200, 400, 600, 800, 1200, 1600, 2000, 2500, 3000, 
               3500, 4000, 4500, 5000, 6000, 15000)
-x <- seq(100,12000,10)
-## generate IR signal
-fintCSF <- qMRI:::IRhomogen(c(Sf,Rf),InvTimes0)
-fintGM <- qMRI:::IRmix2(c(fgm,Rgm,Sgm),InvTimes0,Sf,Rf)
-fintWM <- qMRI:::IRmix2(c(fwm,Rwm,Swm),InvTimes0,Sf,Rf)
-## generate data
-sigma <- 40
 nTimes <- length(InvTimes0)
-nCSF <- sum(segm==1)
-nGM <- sum(segm==2)
-nWM <- sum(segm==3)
-IRdata <- array(0,c(nTimes,prod(dim(segm))))
-IRdata[,segm==1] <- sqrt(rnorm(nTimes*nCSF,fintCSF,sigma)^2+
-                         rnorm(nTimes*nCSF,0,sigma)^2)
-IRdata[,segm==2] <- sqrt(rnorm(nTimes*nGM,fintGM,sigma)^2+
-                         rnorm(nTimes*nGM,0,sigma)^2)
-IRdata[,segm==3] <- sqrt(rnorm(nTimes*nWM,fintWM,sigma)^2+
-                         rnorm(nTimes*nWM,0,sigma)^2)
-dim(IRdata) <- c(nTimes,dim(segm))
+sigma <- 40
+## generate IR signal
+IRdata <- generateIRData(segm, c(Sf,Rf), c(fgm,Rgm,Sgm), c(fwm,Rwm,Swm), InvTimes0, sigma)
 for(i in 1:9) writeNIfTI(as.nifti(IRdata[i,,,]), 
                          file.path(dataDir,paste0("IR0",i)))
 for(i in 10:nTimes) writeNIfTI(as.nifti(IRdata[i,,,]), 
@@ -103,7 +85,6 @@ t1Files <- list.files(dataDir,"*.nii.gz",full.names=TRUE)
 segmFile <- file.path(dataDir0,"Brainweb_segm")
 IRdata <- readIRData(t1Files, InvTimes0, segmFile, sigma=sigma,
                      L=1, segmCodes=c("CSF","GM","WM"))
-}
 }
 \keyword{ utililities }
  \concept{ IRMRI }

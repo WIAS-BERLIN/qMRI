@@ -338,7 +338,7 @@ estimateESTATICS <- function (mpmdata,
      cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
      if(setCores()==1) pb <- txtProgressBar(0, nvoxel, style = 3)
    }
-if( setCores() >1){
+if( setCores(, reprt=FALSE) >1){
         x <- array(0,c(mpmdata$nFiles+npar+modelp1+2,nvoxel))
         x[mpmdata$nFiles+1:npar,] <- thetas
         x[1:mpmdata$nFiles,] <- mpmdata$ddata/dataScale

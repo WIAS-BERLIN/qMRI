@@ -114,7 +114,6 @@ mean of estimated quantitative maps
 > sigma <- 50
 > modelMPMQL <- estimateESTATICS(mpm, method = "QL",
 +                 sigma = array(sigma, mpm$sdim), L = 1, verbose=FALSE)
-  Total CPU cores available: 20  CPU cores in use: 2.
 > qMRIMapsQL <- calculateQI(modelMPMQL,
 +                 b1File = B1File,
 +                 TR2 = 3.4)
@@ -133,4 +132,4 @@ mean of estimated quantitative maps using QL
 > 
 > proc.time()
        User      System verstrichen 
-      9.139       0.107       9.734 
+      8.814       0.027       9.286 

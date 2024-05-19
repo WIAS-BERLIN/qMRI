@@ -105,7 +105,7 @@ estimateIRfluid <- function(IRdataobj,
         cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
         if(setCores()==1) pb <- txtProgressBar(0, nvoxel, style = 3)
      }
-     if( setCores() >1){
+     if( setCores(, reprt=FALSE) >1){
        x <- array(0,c(ntimes+2,nvoxel))
        x[1:2,] <- thetas
        x[-(1:2),] <- IRdataFluid/dataScale
@@ -247,7 +247,7 @@ estimateIRsolid <- function(IRfluidobj,
          cat("Start estimation in", nvoxel, "voxel at", format(Sys.time()), "\n")
          if(setCores() == 1) pb <- txtProgressBar(0, nvoxel, style = 3)
       }
-      if( setCores() >1){
+      if( setCores(, reprt=FALSE) >1){
         x <- array(0,c(ntimes+npar,nvoxel))
         x[1:npar,] <- thetas
         x[-(1:npar),] <- IRdataSolid/dataScale

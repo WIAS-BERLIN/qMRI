@@ -105,10 +105,10 @@ cat("Estimated parameters Sf:", IRfluid$Sf,
                         " Rf:", IRfluid$Rf, "\n")
 ## estimate solid
 IRmix <- estimateIRsolid(IRfluid, verbose=FALSE)
-## smoothing (runs as example and in vignette but fails in check )
-#sIRmix <- smoothIRSolid(IRmix, alpha=1e-4, verbose=FALSE)
+## smoothing 
+sIRmix <- smoothIRSolid(IRmix, alpha=1e-4, partial=FALSE, verbose=FALSE)
 ## reestimate
-#sIRmix <- estimateIRsolidfixed(sIRmix, verbose=FALSE)
+sIRmix <- estimateIRsolidfixed(sIRmix, verbose=FALSE)
 }
 }
  \keyword{ models}

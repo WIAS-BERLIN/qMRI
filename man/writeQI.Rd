@@ -47,7 +47,6 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link{readMPMData}}, \code{\link{estimateESTATICS}},\code{\link{calculateQI}}
 }
 \examples{
-\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 outDir <- tempdir()
 #
@@ -118,6 +117,5 @@ for (i in 1:4) rimage(qmap[[i]][,11,],main=nmaps[i])
 #
 writeQI(qMRIMaps, dir=outDir, prefix="qmap")
 par(oldpar)
-}
 }
 \keyword{ IO }

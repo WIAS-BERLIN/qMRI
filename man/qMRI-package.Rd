@@ -37,7 +37,7 @@ Modeling and Data Analysis Using R: Code and Data.
 
 }
 \examples{
-\dontrun{
+\donttest{
 dataDir <- system.file("extdata",package="qMRI")
 #
 #  set file names for T1w, MTw and PDw images

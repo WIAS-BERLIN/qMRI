@@ -50,7 +50,6 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link{smoothESTATICS}}
 }
 \examples{
-\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 outDir <- tempdir()
 #
@@ -105,6 +104,5 @@ for(i in 1:4){
 #
 writeESTATICS(modelMPM, dir=outDir, prefix="estatics")
 par(oldpar)
-}
 }
 \keyword{ IO }

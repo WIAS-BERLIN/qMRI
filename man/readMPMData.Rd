@@ -83,7 +83,6 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \code{\link[aws]{awsLocalSigma}}
 }
 \examples{
-\dontrun{
 dataDir <- system.file("extdata",package="qMRI")
 #
 #  set file names for T1w, MTw and PDw images
@@ -114,6 +113,5 @@ library(qMRI)
 mpm <- readMPMData(t1Files, pdFiles, mtFiles,
                    maskFile, TR = TR, TE = TE,
                    FA = FA, verbose = FALSE)
-}
 }
 \keyword{ IO }

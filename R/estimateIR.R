@@ -220,9 +220,9 @@ estimateIRsolid <- function(IRfluidobj,
    Sx[segm==1] <- Sfluid
    Convx[segm==1] <- 1
    # set ICovx for fluid as (numerically) diag(rep(Inf),3)
-   ICovx[1,1,segm==1] <- 1e20
-   ICovx[2,2,segm==1] <- 1e20
-   ICovx[3,3,segm==1] <- 1e20
+   ICovx[1,1,segm==1] <- 1e10
+   ICovx[2,2,segm==1] <- 1e10
+   ICovx[3,3,segm==1] <- 1e10
    isConv <- array(FALSE, nvoxel)
    isThresh <- array(FALSE, nvoxel)
    modelCoeff <- array(0, c(npar, nvoxel))

@@ -91,7 +91,7 @@ J\"org Polzehl \email{polzehl@wias-berlin.de}
 \donttest{
 ## runs about 30 seconds
 dataDir0 <- system.file("extdataIR", package = "qMRI")
-dataDir <- tempdir("IRdata")
+dataDir <- tempdir()
 library(oro.nifti)
 library(qMRI)
 segm <- readNIfTI(file.path(dataDir0,"Brainweb_segm"))

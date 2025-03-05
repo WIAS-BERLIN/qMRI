@@ -74,7 +74,7 @@ on.exit(options(old))
 First, we specify the directory where the data are stored within the package
 <<0b>>=
 dataDir0 <- system.file("extdataIR", package = "qMRI")
-dataDir <- tempdir("IRdata")
+dataDir <- tempdir()
 library(oro.nifti)
 @
 

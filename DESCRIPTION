@@ -1,8 +1,8 @@
 Package: qMRI
 Type: Package
 Title: Methods for Quantitative Magnetic Resonance Imaging ('qMRI')
-Version: 1.2.7.8
-Date: 2024-12-09
+Version: 1.2.7.9
+Date: 2025-03-05
 Authors@R: c(person("Joerg", "Polzehl", role = c("aut"),
                     email = "joerg.polzehl@wias-berlin.de"),
              person("Karsten", "Tabelow", role = c("aut", "cre"),
